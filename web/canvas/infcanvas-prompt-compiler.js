@@ -483,31 +483,53 @@ function injectMediaSlots(prompt, media, caps) {
   return total;
 }
 
-/* Fallback for stock workflows whose LoadImage is hard-coded to an example
-   filename (e.g. BiRefNet background removal ships "the_lily_veil.png"), with
-   neither a {{image}} token nor an image_N slot. All the mechanisms above
-   miss those, so the example name survives into the API prompt and ComfyUI
-   rejects it as "Invalid image file". When nothing else claimed the main
-   image, write the first wired picture into every bare LoadImage (a literal
-   string `image`, not a link). Gated strictly by state so {{image}}, legacy
-   img2img and image_N templates stay untouched. */
-function injectBareLoadImage(prompt, paths, state) {
-  if (!paths || !paths.length || !state || state.placeholder || state.slots) return 0;
-  const bare = Object.keys(prompt).filter((id) => {
+/* Fallback for stock / imported workflows whose media LOAD node is hard-coded
+   to an example filename (music cover ships "yue2_reference_song.flac", BiRefNet
+   ships "the_lily_veil.png"…), with neither a {{media}} token nor a numbered
+   image_N / video_N / audio_N slot. Tokens and slots are claimed by the paths
+   above, so the example name survives into the API prompt and ComfyUI silently
+   generates from the bundled demo instead of the user's wired asset. This is
+   the generic third path: for every medium, write wired assets into literal
+   LOAD nodes in wire order. Covers image / video / audio via the shared
+   LOAD_KIND + LOAD_FIELD maps; text is deliberately excluded — its own generic
+   paths (applyNodeInputs by nodeId:key, injectFallbackPrompt down the sampler
+   positive port) already reach literal text inputs without a loader node.
+   Gated per medium by state[kind] = { placeholder, slots } so a template that
+   uses a token or numbered slots for that medium is never double-written. */
+const BARE_MEDIA_KINDS = ["image", "video", "audio"];
+function bareLoadTargets(prompt, kind) {
+  const classType = Object.keys(LOAD_KIND).find((name) => LOAD_KIND[name] === kind);
+  const field = LOAD_FIELD[kind];
+  if (!classType || !field) return [];
+  return Object.keys(prompt).filter((id) => {
     const node = prompt[id];
-    return node && node.class_type === "LoadImage"
-      && node.inputs && typeof node.inputs.image === "string";
+    return node && node.class_type === classType
+      && node.inputs && typeof node.inputs[field] === "string";
   }).sort((a, b) => {
     const na = Number(a), nb = Number(b);
     if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
     return String(a).localeCompare(String(b));
   });
+}
+function injectBareMedia(prompt, media, state) {
+  if (!prompt || !media) return 0;
   let filled = 0;
-  for (let i = 0; i < bare.length && i < paths.length; i++) {
-    prompt[bare[i]].inputs.image = paths[i];
-    filled++;
+  for (const kind of BARE_MEDIA_KINDS) {
+    const paths = media[kind] || [];
+    const gate = state?.[kind];
+    if (!paths.length || !gate || gate.placeholder || gate.slots) continue;
+    const bare = bareLoadTargets(prompt, kind);
+    const field = LOAD_FIELD[kind];
+    for (let i = 0; i < bare.length && i < paths.length; i++) {
+      prompt[bare[i]].inputs[field] = paths[i];
+      filled++;
+    }
   }
   return filled;
+}
+/* Legacy name kept for the symbol re-export in infcanvas-core.js. */
+function injectBareLoadImage(prompt, paths, state) {
+  return injectBareMedia(prompt, { image: paths }, { image: state });
 }
 
 function assetPath(asset) {
@@ -817,18 +839,20 @@ async function buildPrompt(kind, template, data, inputs, loras = []) {
   if (mediaIn.image.length || mediaIn.video.length || mediaIn.audio.length) {
     injectMediaSlots(prompt, mediaIn, template?._mediaCaps);
   }
-  /* Bare-LoadImage fallback: single-image stock workflows (BiRefNet, RMBG,
-     CUCIDA…) hard-code an example filename with no {{image}} token and no
-     image_N slot, so injectMediaSlots fills nothing and ComfyUI validates the
-     example name. If no other path claimed the image, rewrite those bare
-     LoadImage nodes in wire order. Skipped when a placeholder / legacy img2img
-     path already set the image, or when slot injection found real groups. */
-  if (mediaIn.image.length) {
-    const hasPlaceholder = consumed.image || legacyImage;
-    const slotGroups = scanMediaGroups(prompt).byKind.image.length;
-    injectBareLoadImage(prompt, mediaIn.image, {
-      placeholder: hasPlaceholder,
-      slots: slotGroups > 0,
+  /* Bare-Loader fallback: stock / imported workflows hard-code an example
+     filename (music cover's LoadAudio → yue2_reference_song.flac, BiRefNet's
+     LoadImage → the_lily_veil.png…) with no {{media}} token and no numbered
+     slot, so buildPrompt's other paths fill nothing and ComfyUI generates from
+     the bundled demo. Rewrite those literal LOAD nodes in wire order, per
+     medium, only when neither a placeholder nor numbered slots claimed that
+     medium. This is the generic mechanism — it applies to ANY imported
+     workflow that ships a hard-coded image / video / audio asset. */
+  {
+    const byKind = scanMediaGroups(prompt).byKind;
+    injectBareMedia(prompt, mediaIn, {
+      image: { placeholder: consumed.image || legacyImage, slots: byKind.image.length > 0 },
+      video: { placeholder: consumed.video, slots: byKind.video.length > 0 },
+      audio: { placeholder: consumed.audio, slots: byKind.audio.length > 0 },
     });
   }
   /* Trigger words from wired LoRA stacks go into the POSITIVE text encoder.
@@ -854,7 +878,7 @@ async function buildPrompt(kind, template, data, inputs, loras = []) {
     resolvePassThrough, collectUpstreamCleanups, collectInputs, collectLoras,
     injectLoras, injectLoraTriggers, mediaSlotNum, traceMediaChain, scanMediaGroups,
     makeMediaIdGen, renumberSlotKey, nextMediaSlotNum, cloneMediaGroup,
-    detachMediaGroup, injectMediaSlots, injectBareLoadImage, assetPath,
+    detachMediaGroup, injectMediaSlots, injectBareMedia, injectBareLoadImage, assetPath,
     applyNodeInputs, fallbackPromptTargets, injectFallbackPrompt, injectExposedFields, seedOrRandom, buildPrompt,
   };
 }
