@@ -210,6 +210,8 @@
       id: TRANSLATE_MODEL_ID,
       type: "select",
       group: "canvas",
+      section: "translation",
+      sectionLabel: "settings.translationSection",
       label: "settings.translateModel",
       desc: "settings.translateModelDesc",
       hint: "settings.translateModelHint",
@@ -443,39 +445,38 @@
     return makeSwitch(item);
   }
 
-  /* 2026-11-24 用户定稿：设置项改成 ComfyUI 设置页那种整行排版——
-     左侧「粗体标题 + 灰色说明」两行，右侧控件，行与行之间横线分隔。
-     全部用宿主 utility class，不引入自绘 CSS。 */
+  /* FormItem.vue 真值：<div class="flex min-h-8 items-center gap-2"> +
+     <div class="flex grow items-center"><span class="text-sm text-muted-foreground">
+     名字 + info 图标</span></div> + <div class="flex justify-end">控件</div>。
+     截图里加粗的是 SettingGroup 的 <h3 class="text-base"> 分组标题，不是设置名。 */
   function makeFormItem(item) {
-    const row = el("div", "flex min-h-8 items-center justify-between gap-3 py-1");
-    const labelBox = el("div", "flex min-w-0 flex-col gap-1");
-    const titleLine = el("div", "flex items-center gap-1");
-    const label = el("span", "text-sm font-bold text-foreground");
+    const row = el("div", "flex min-h-8 items-center gap-2");
+    const labelBox = el("div", "flex grow items-center");
+    const label = el("span", "text-sm text-muted-foreground");
     label.setAttribute("id", item.id + "-label");
-    /* name-prefix：语言行在标题前塞 language Tag。 */
     if (item.icon) {
       label.appendChild(el("i", SETTING_ICON + item.icon));
       label.appendChild(document.createTextNode(" "));
     }
     label.appendChild(document.createTextNode(t(item.label)));
-    titleLine.appendChild(label);
     if (item.desc) {
-      const info = el("i", "pi pi-info-circle");
+      label.appendChild(document.createTextNode(" "));
+      const info = el("i", "icon-[lucide--info]");
       bindTip(info, () => t(item.desc));
-      titleLine.appendChild(info);
+      label.appendChild(info);
     }
-    labelBox.appendChild(titleLine);
-    if (item.desc) labelBox.appendChild(el("span", "text-xs text-muted-foreground", t(item.desc)));
-    /* 常驻提醒（如「模型越大越慢」）跟说明一样作为灰色小字，不必悬停才看到。 */
-    if (item.hint) labelBox.appendChild(el("span", "text-xs text-muted-foreground", t(item.hint)));
-    const controlBox = el("div", "flex shrink-0 items-center");
+    labelBox.appendChild(label);
+    /* 常驻提醒（如「模型越大越慢」）作为灰色小字跟在名字后面。 */
+    if (item.hint) labelBox.appendChild(el("span", "ml-2 text-xs text-muted-foreground", t(item.hint)));
+    const controlBox = el("div", "flex justify-end");
     controlBox.appendChild(makeControl(item));
     row.append(labelBox, controlBox);
     return row;
   }
 
-  /* SettingGroup.vue：<h3 class="text-base">标题 + 每个 setting 一行，
-     行底 border-b border-border 横线分隔；分组之间 divider my-8 border-t。 */
+  /* SettingGroup.vue 真值：<div class="my-8 border-t" /> 只放在「分组之间」，
+     分组内多个 setting 之间只有 mb-3，没有横线（截图「错误系统」下 4 个开关
+     中间就没有线）。每组一个 <h3 class="text-base"> 粗体标题。 */
   function renderGroups(host) {
     const query = searchQuery.trim().toLowerCase();
     /* 内置工作流管理是复合视图，不是单值设置项：它有自己的导航分组，直接把
@@ -511,21 +512,36 @@
       host.replaceChildren(outer);
       return;
     }
-    const groupBox = el("div", "setting-group");
     const title = NAV_GROUPS.flatMap((g) => g.items).find((it) => it.id === activeGroup);
-    /* SettingGroup.vue: <h3 class="text-base">。原生 h3 是 16px/700 + 上下 margin
-       16px（真机实测 y 差 16），不要补 m-0/font-normal。
-       2026-11-21：仅「画布设置」标题与首个设置项之间的间距按用户要求调整
-       （原生 16px → 18px → 20px）；标题上边距、项间距 mb-3(12px) 均保持原生。 */
-    const groupTitle = el("h3", "text-base", query ? t("settings.searchResults") : t(title ? title.label: "shortcuts.canvasSettings"));
-    groupTitle.style.marginBottom = "calc(var(--spacing, 4px) * 5)";
-    groupBox.appendChild(groupTitle);
+    /* 按 section 拆成多个 SettingGroup：组间 my-8 border-t，组内 mb-3 无横线。
+       搜索态所有命中项归到同一组，标题用「搜索结果」。 */
+    const sections = [];
     for (const item of matched) {
-      const rowWrap = el("div", "setting-item border-b border-border py-4 last:border-b-0");
-      rowWrap.appendChild(makeFormItem(item));
-      groupBox.appendChild(rowWrap);
+      const id = query ? "search" : (item.section || "canvas");
+      let section = sections.find((s) => s.id === id);
+      if (!section) {
+        const label = query ? "settings.searchResults"
+          : (item.sectionLabel || (title ? title.label : "shortcuts.canvasSettings"));
+        section = { id, label, items: [] };
+        sections.push(section);
+      }
+      section.items.push(item);
     }
-    frag.appendChild(groupBox);
+    sections.forEach((section, index) => {
+      if (index > 0) frag.appendChild(el("div", "my-8 border-t"));
+      const groupBox = el("div", "setting-group");
+      /* 原生 h3 是 16px/700 + 上下 margin 16px，勿补 m-0/font-normal。
+         2026-11-21 用户定稿：标题与首个设置项间距 20px。 */
+      const groupTitle = el("h3", "text-base", t(section.label));
+      groupTitle.style.marginBottom = "calc(var(--spacing, 4px) * 5)";
+      groupBox.appendChild(groupTitle);
+      for (const item of section.items) {
+        const rowWrap = el("div", "setting-item mb-3");
+        rowWrap.appendChild(makeFormItem(item));
+        groupBox.appendChild(rowWrap);
+      }
+      frag.appendChild(groupBox);
+    });
     host.replaceChildren(frag);
   }
 
