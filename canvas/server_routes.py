@@ -1275,6 +1275,7 @@ async def api_builtin_manage(request: web.Request) -> web.Response:
     # dialog's default state in sync with the generate-node selectors.
     first_of: dict[str, str] = {}
     sidecar_default: dict[str, str] = {}
+    pool: dict[str, set[str]] = {}
     for name in _builtin_names():
         if name in hidden or os.path.isfile(_workflow_path(name)):
             continue
@@ -1282,13 +1283,18 @@ async def api_builtin_manage(request: web.Request) -> web.Response:
         category = _category_of(raw)
         if not category:
             continue
+        pool.setdefault(category, set()).add(name)
         first_of.setdefault(category, name)
         if raw.get("is_default") is True:
             sidecar_default.setdefault(category, name)
     effective: dict[str, str] = {}
     for category, fallback in first_of.items():
         candidate = pinned.get(category)
-        if candidate not in first_of.values():
+        # A pin is valid iff it names a workflow in THIS category's pool.
+        # Checking against first_of.values() (one entry per category) wrongly
+        # rejected any pin that wasn't its category's first item, silently
+        # reverting the default to the bundled one on the next render.
+        if candidate not in pool.get(category, set()):
             candidate = sidecar_default.get(category) or fallback
         effective[category] = candidate
     items: list[dict] = []
