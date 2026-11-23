@@ -185,11 +185,12 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
           </button>
           <button v-if="!editing && hasDisplayText" type="button"
                   class="icn__text-copy icn__text-translate nodrag nopan"
-                  :class="{ 'is-active': !!translated, 'is-busy': translating }"
-                  v-tip="translated ? $t('trans.showOriginal') : $t('trans.toLanguage', { lang: targetLangName })"
-                  :aria-label="translated ? $t('trans.showOriginal') : $t('trans.toLanguage', { lang: targetLangName })"
+                  :class="{ 'is-active': !!translated && !translating }"
+                  v-tip="translating ? $t('trans.translating') : (translated ? $t('trans.showOriginal') : $t('trans.toLanguage', { lang: targetLangName }))"
+                  :aria-label="translating ? $t('trans.translating') : (translated ? $t('trans.showOriginal') : $t('trans.toLanguage', { lang: targetLangName }))"
                   @pointerdown.stop @mousedown.stop @dblclick.stop @click.stop="toggleTranslate">
-            <IcIcon name="translate" :size="14" />
+            <i v-if="translating" class="icon-[lucide--loader-circle] animate-spin motion-reduce:animate-none text-xs" aria-hidden="true"></i>
+            <IcIcon v-else name="translate" :size="14" />
           </button>
           <div v-if="!editing && !hasDisplayText" class="icn__gen-empty icn__gen-empty--ghost">
             <IcIcon :name="emptyIcon" :size="emptyIconSize" />
