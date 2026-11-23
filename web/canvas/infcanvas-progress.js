@@ -830,7 +830,25 @@ NS.generate = {
     NS.flow?.history?.absorb?.();
     let promptId = null;
     try {
-      const queued = await API().queuePrompt(0, { output: prompt, workflow: {} });
+      /* Native ComfyUI reads Comfy.Execution.PreviewMethod from its setting
+         store and passes it as queuePrompt's 3rd arg; that becomes
+         extra_data.preview_method, which the backend uses to enable the live
+         latent preview. Without it the backend defaults to `none` and emits
+         no preview frames at all — the canvas must forward the same setting
+         or every generation stays preview-less even when the user enabled it
+         in ComfyUI settings. Read from the backend settings endpoint (works
+         regardless of the frontend framework); fail-open if unavailable. */
+      let previewMethod;
+      try {
+        const res = await API().fetchApi("/settings");
+        if (res?.ok) {
+          const cfg = await res.json();
+          previewMethod = cfg?.["Comfy.Execution.PreviewMethod"];
+        }
+      } catch (e) { /* fail-open: queue without override */ }
+      const queueOptions = previewMethod && previewMethod !== "default"
+        ? { previewMethod } : undefined;
+      const queued = await API().queuePrompt(0, { output: prompt, workflow: {} }, queueOptions);
       if (!queued?.prompt_id) throw new Error(window.InfCanvas.i18n.t("core.submitFailedNoPromptId"));
       promptId = queued.prompt_id;
       /* Persist the id on the node so the left-hand 取消 button can cancel
