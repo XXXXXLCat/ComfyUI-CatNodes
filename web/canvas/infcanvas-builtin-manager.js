@@ -140,12 +140,13 @@
 
   function renderRow(item) {
     const row = el("div", "mb-2 rounded-lg border bg-card p-4");
-    /* Header: display name + default pill + visibility switch. */
+    /* Header: display name + default pill + visibility switch. The pill is the
+       only default marker; the row below has no duplicate "current default". */
     const head = el("div", "flex items-center gap-2");
     const name = el("span", "min-w-0 flex-1 truncate text-sm text-foreground", item.name);
     head.appendChild(name);
     if (item.is_default) {
-      const pill = el("span", "shrink-0 rounded-full bg-primary/10 px-2 py-1 text-xs font-bold text-foreground",
+      const pill = el("span", "shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-sm font-bold text-foreground",
         t("builtinMgr.default"));
       head.appendChild(pill);
     }
@@ -181,14 +182,11 @@
     head.appendChild(sw);
     row.appendChild(head);
 
-    /* Default control: a radio-like button, one default per category. */
+    /* Default control: only non-default items get a "set default" button;
+       the default item already shows a pill in the header, no duplicate row. */
     const defaultBar = el("div", "mt-3 flex items-center gap-2");
-    if (item.is_default) {
-      const marker = el("i", "icon-[lucide--check] size-4 text-primary");
-      defaultBar.appendChild(marker);
-      defaultBar.appendChild(el("span", "text-xs text-muted-foreground", t("builtinMgr.currentDefault")));
-    } else if (!item.hidden) {
-      const btn = el("button", BTN + " h-8 rounded-lg bg-secondary px-3 py-1 text-xs text-foreground hover:bg-accent",
+    if (!item.is_default && !item.hidden) {
+      const btn = el("button", BTN + " h-8 rounded-lg bg-secondary px-3 py-1 text-sm text-foreground hover:bg-accent",
         t("builtinMgr.setDefault"));
       btn.type = "button";
       btn.addEventListener("click", async (event) => {
@@ -211,21 +209,21 @@
       });
       defaultBar.appendChild(btn);
     }
-    row.appendChild(defaultBar);
+    if (defaultBar.childElementCount) row.appendChild(defaultBar);
 
-    /* Model manifest, two lines per model:
-         line 1: [folder=copy path] [download] filename ✓  — icons BEFORE the name
-         line 2: canonical logical path (also clickable to copy). */
+    /* Model manifest, ONE line per model:
+       [folder=copy path] [download] filename ✓  models/<folder>/<file>
+       Icon buttons share the exact same class so their backgrounds match. */
     if (item.models?.length) {
-      const modelBox = el("div", "mt-3 border-t pt-3");
-      modelBox.appendChild(el("div", "mb-1 text-xs font-bold text-muted-foreground", t("builtinMgr.models")));
+      const modelBox = el("div", "mt-3");
+      modelBox.appendChild(el("div", "mb-1 text-sm font-bold text-muted-foreground", t("builtinMgr.models")));
+      const ICON_BTN = BTN + " size-5 shrink-0 border-none bg-transparent p-0 text-muted-foreground hover:text-foreground";
       for (const model of item.models) {
         const installed = model.installed === true;
-        const block = el("div", "py-1 text-xs");
-        const nameLine = el("div", "flex flex-wrap items-center gap-x-1.5 gap-y-1");
+        const line = el("div", "flex flex-wrap items-center gap-x-2 gap-y-1 py-1 text-sm");
 
-        /* Single folder icon before the name: click to copy the model folder path. */
-        const copyBtn = el("button", BTN + " size-5 p-0 text-muted-foreground hover:text-foreground");
+        /* Folder icon: click to copy the model folder path. */
+        const copyBtn = el("button", ICON_BTN);
         copyBtn.type = "button";
         copyBtn.appendChild(el("i", "icon-[lucide--folder] size-3.5"));
         bindTip(copyBtn, () => t("builtinMgr.copyFolder"), "top");
@@ -233,47 +231,48 @@
           event.stopPropagation();
           copyModelFolder(model);
         });
-        nameLine.appendChild(copyBtn);
+        line.appendChild(copyBtn);
 
-        /* Download icon before the name (disabled placeholder when no URL). */
+        /* Download icon: same class/colour; disabled state only fades opacity. */
         if (model.url) {
-          const link = el("a", BTN + " size-5 p-0 text-primary");
+          const link = el("a", ICON_BTN + " text-primary");
           link.href = model.url;
           link.target = "_blank";
           link.rel = "noopener noreferrer";
           link.appendChild(el("i", "icon-[lucide--download] size-3.5"));
           bindTip(link, () => t("builtinMgr.download"), "top");
-          nameLine.appendChild(link);
+          line.appendChild(link);
         } else {
-          const dlOff = el("span", "inline-flex size-5 items-center justify-center text-muted-foreground opacity-50");
+          const dlOff = el("button", ICON_BTN + " cursor-default opacity-50");
+          dlOff.type = "button";
+          dlOff.disabled = true;
           dlOff.appendChild(el("i", "icon-[lucide--download] size-3.5"));
           bindTip(dlOff, () => t("builtinMgr.noUrl"), "top");
-          nameLine.appendChild(dlOff);
+          line.appendChild(dlOff);
         }
 
-        /* Filename + installed check/x immediately after it. */
-        nameLine.appendChild(el("span", "font-mono text-foreground", model.name));
+        /* Filename + check, with a comfortable gap before the trailing path. */
+        line.appendChild(el("span", "font-mono text-foreground", model.name));
         const mark = el("i", installed
-          ? "icon-[lucide--circle-check] size-3 text-primary"
-          : "icon-[lucide--circle-x] size-3 text-muted-foreground");
+          ? "ml-1 icon-[lucide--circle-check] size-3.5 text-primary"
+          : "ml-1 icon-[lucide--circle-x] size-3.5 text-muted-foreground");
         bindTip(mark, () => installed && model.path
           ? t("builtinMgr.installed") + ": " + model.path
           : t(installed ? "builtinMgr.installed" : "builtinMgr.missing"), "top");
-        nameLine.appendChild(mark);
-        block.appendChild(nameLine);
+        line.appendChild(mark);
 
-        /* Line 2: canonical logical path, still clickable to copy, no icon. */
-        const pathPart = el("div",
-          "mt-0.5 cursor-pointer font-mono text-muted-foreground hover:text-foreground",
+        /* Canonical path right after the check, still clickable to copy. */
+        const pathPart = el("span",
+          "cursor-pointer font-mono text-muted-foreground hover:text-foreground",
           "models/" + (model.folder || "other") + "/" + model.name);
         bindTip(pathPart, () => t("builtinMgr.copyFolder"), "top");
         pathPart.addEventListener("click", (event) => {
           event.stopPropagation();
           copyModelFolder(model);
         });
-        block.appendChild(pathPart);
+        line.appendChild(pathPart);
 
-        modelBox.appendChild(block);
+        modelBox.appendChild(line);
       }
       row.appendChild(modelBox);
     }
