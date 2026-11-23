@@ -23,12 +23,14 @@ from aiohttp import web
 from server import PromptServer
 
 PACK_ROOT = os.path.dirname(os.path.realpath(__file__))
+PLUGIN_ROOT = os.path.dirname(PACK_ROOT)
 
 # Namespace folder for this plugin's data inside ``user/<user>/``. Canvas
 # documents (in canvases/), api_settings.json and the user's workflow templates
-# (in api/) all live under it. The plugin ships no workflow templates; users
-# add their own through the API dialog.
+# (in api/) all live under it. The plugin also ships read-only default templates
+# in <plugin root>/workflows/; a user file with the same stem always wins.
 PLUGIN_DATA_DIR = "Cat-Nodes"
+BUILTIN_WORKFLOW_DIR = os.path.join(PLUGIN_ROOT, "workflows")
 
 # Canvas names come from unconflictedName()/duplicateDoc() as e.g.
 # "Unsaved Canvas (3)" and "Foo (Copy)", and users may type Chinese names.
@@ -103,9 +105,9 @@ def _canvas_dir() -> str:
 def _workflow_dir() -> str:
     """Per-user workflow templates, under user/<用户>/Cat-Nodes/api/.
 
-    No bundled templates are seeded: the plugin deliberately ships none, and
-    users add workflows through the API dialog. The directory is created empty
-    on first access so the dialog can list/save into it.
+    Bundled templates live in <plugin root>/workflows/ and are never copied
+    here: the user directory stays writable and shadows built-ins by name.
+    The directory is created empty on first access so the dialog can save.
     """
     path = os.path.join(_user_root(), PLUGIN_DATA_DIR, "api")
     os.makedirs(path, exist_ok=True)
@@ -436,6 +438,24 @@ def _workflow_path(name: str) -> str:
     return os.path.join(_workflow_dir(), name + ".json")
 
 
+def _builtin_workflow_path(name: str) -> str:
+    return os.path.join(BUILTIN_WORKFLOW_DIR, name + ".json")
+
+
+def _builtin_fields_path(name: str) -> str:
+    return os.path.join(BUILTIN_WORKFLOW_DIR, name + ".fields.json")
+
+
+def _is_builtin_only(name: str) -> bool:
+    """True when this stem resolves to a shipped template, not a user file.
+
+    A user file with the same stem wins everywhere, so read-only guards must
+    check BOTH paths before rejecting an edit.
+    """
+    return (not os.path.isfile(_workflow_path(name))
+            and os.path.isfile(_builtin_workflow_path(name)))
+
+
 # Workflow categories shown in the API dialog and used by the generate nodes
 # to filter their API selector. Keep this list in sync with the node tabs.
 WORKFLOW_CATEGORIES = [
@@ -490,23 +510,46 @@ def _fields_path(name: str) -> str:
     return os.path.join(_workflow_dir(), name + ".fields.json")
 
 
-def _load_raw_fields(name: str) -> dict:
-    """Raw fields.json as a dict ({fields, category}); {} when absent/invalid."""
+def _read_fields_file(path: str) -> dict:
+    """Raw fields sidecar as a dict; {} when absent/invalid."""
     try:
-        with open(_fields_path(name), "r", encoding="utf-8") as handle:
+        with open(path, "r", encoding="utf-8") as handle:
             raw = json.load(handle)
     except Exception:
         return {}
     return raw if isinstance(raw, dict) else {}
 
 
-def _load_category(name: str) -> str:
-    category = _normalize_category(_load_raw_fields(name).get("category", ""))
+def _load_raw_fields(name: str) -> dict:
+    """Raw user fields.json ({fields, category}); {} when absent/invalid."""
+    return _read_fields_file(_fields_path(name))
+
+
+def _load_builtin_raw_fields(name: str) -> dict:
+    """Shipped fields sidecar; `is_default: true` pins a category default."""
+    return _read_fields_file(_builtin_fields_path(name))
+
+
+def _category_of(raw: dict) -> str:
+    category = _normalize_category(raw.get("category", ""))
     return category if category in WORKFLOW_CATEGORIES else ""
 
 
-def _read_workflow_data(name: str) -> dict | None:
-    path = _workflow_path(name)
+def _load_category(name: str) -> str:
+    """User category only — build/edit endpoints must not see built-in data."""
+    return _category_of(_load_raw_fields(name))
+
+
+def _load_builtin_category(name: str) -> str:
+    return _category_of(_load_builtin_raw_fields(name))
+
+
+def _workflow_category(name: str) -> str:
+    """Category for read paths: user first, shipped sidecar as fallback."""
+    return _load_category(name) or _load_builtin_category(name)
+
+
+def _read_json_object(path: str) -> dict | None:
     if not os.path.isfile(path):
         return None
     try:
@@ -515,6 +558,16 @@ def _read_workflow_data(name: str) -> dict | None:
     except Exception:
         return None
     return data if isinstance(data, dict) else None
+
+
+def _read_workflow_data(name: str) -> dict | None:
+    """Read a user workflow. Built-ins are a separate read-only overlay."""
+    return _read_json_object(_workflow_path(name))
+
+
+def _read_effective_workflow(name: str) -> dict | None:
+    """User file wins; shipped template is the fallback."""
+    return _read_workflow_data(name) or _read_json_object(_builtin_workflow_path(name))
 
 
 def _api_nodes(data: Any) -> dict:
@@ -689,11 +742,11 @@ def _prepare_workflow(workflow: Any) -> tuple[dict, bool, list[str]]:
 
 
 def _load_fields(name: str) -> list[dict]:
-    try:
-        with open(_fields_path(name), "r", encoding="utf-8") as handle:
-            raw = json.load(handle)
-    except Exception:
-        return []
+    """Exposed fields for read paths; a built-in sidecar is used only when no
+    user workflow shadows that name (see _is_builtin_only)."""
+    raw = _load_raw_fields(name)
+    if _is_builtin_only(name):
+        raw = _load_builtin_raw_fields(name)
     fields = raw.get("fields") if isinstance(raw, dict) else None
     return [item for item in fields if isinstance(item, dict)] if isinstance(fields, list) else []
 
@@ -954,7 +1007,7 @@ async def api_save_workflow(request: web.Request) -> web.Response:
 
 async def api_get_workflow(request: web.Request) -> web.Response:
     name = _safe_workflow_name(request.match_info.get("name", ""))
-    data = _read_workflow_data(name)
+    data = _read_effective_workflow(name)
     if data is None:
         return web.json_response({"error": _err("工作流不存在", "Workflow not found")}, status=404)
     return web.json_response({"name": name, "workflow": data})
@@ -962,6 +1015,8 @@ async def api_get_workflow(request: web.Request) -> web.Response:
 
 async def api_delete_workflow(request: web.Request) -> web.Response:
     name = _safe_workflow_name(request.match_info.get("name", ""))
+    if _is_builtin_only(name):
+        return web.json_response({"error": _err("内置工作流只读", "Built-in workflow is read-only")}, status=409)
     if _read_workflow_data(name) is None:
         return web.json_response({"error": _err("工作流不存在", "Workflow not found")}, status=404)
     os.remove(_workflow_path(name))
@@ -996,9 +1051,9 @@ async def api_set_default(request: web.Request) -> web.Response:
     nothing has been pinned yet.
     """
     name = _safe_workflow_name(request.match_info.get("name", ""))
-    if not os.path.isfile(_workflow_path(name)):
+    if _read_effective_workflow(name) is None:
         return web.json_response({"error": _err("工作流不存在", "Workflow not found")}, status=404)
-    category = _load_category(name)
+    category = _workflow_category(name)
     if not category:
         return web.json_response({"error": _err("请先给这个工作流设置分类", "Set a category for this workflow first")}, status=400)
     try:
@@ -1024,6 +1079,8 @@ async def api_rename_workflow(request: web.Request) -> web.Response:
     <name>.json and <name>.fields.json and rewrites the saved drag order.
     Nodes reference the same stem, so the client retargets them afterwards."""
     name = _safe_workflow_name(request.match_info.get("name", ""))
+    if _is_builtin_only(name):
+        return web.json_response({"error": _err("内置工作流只读", "Built-in workflow is read-only")}, status=409)
     if not os.path.isfile(_workflow_path(name)):
         return web.json_response({"error": _err("工作流不存在", "Workflow not found")}, status=404)
     try:
@@ -1063,12 +1120,12 @@ async def api_rename_workflow(request: web.Request) -> web.Response:
 
 async def api_get_fields(request: web.Request) -> web.Response:
     name = _safe_workflow_name(request.match_info.get("name", ""))
-    workflow = _read_workflow_data(name)
+    workflow = _read_effective_workflow(name)
     if workflow is None:
         return web.json_response({"error": _err("工作流不存在", "Workflow not found")}, status=404)
     return web.json_response({
         "fields": _public_fields(name, workflow),
-        "category": _load_category(name),
+        "category": _workflow_category(name),
         "categories": WORKFLOW_CATEGORIES,
         "prompt_placeholder": _has_prompt_placeholder(workflow),
     })
@@ -1076,6 +1133,8 @@ async def api_get_fields(request: web.Request) -> web.Response:
 
 async def api_save_category(request: web.Request) -> web.Response:
     name = _safe_workflow_name(request.match_info.get("name", ""))
+    if _is_builtin_only(name):
+        return web.json_response({"error": _err("内置工作流只读", "Built-in workflow is read-only")}, status=409)
     if not os.path.isfile(_workflow_path(name)):
         return web.json_response({"error": _err("工作流不存在", "Workflow not found")}, status=404)
     try:
@@ -1104,6 +1163,8 @@ async def api_save_category(request: web.Request) -> web.Response:
 
 async def api_save_fields(request: web.Request) -> web.Response:
     name = _safe_workflow_name(request.match_info.get("name", ""))
+    if _is_builtin_only(name):
+        return web.json_response({"error": _err("内置工作流只读", "Built-in workflow is read-only")}, status=409)
     workflow = _read_workflow_data(name)
     if workflow is None:
         return web.json_response({"error": _err("工作流不存在", "Workflow not found")}, status=404)
@@ -1130,13 +1191,16 @@ async def api_save_fields(request: web.Request) -> web.Response:
 async def list_workflows(request: web.Request) -> web.Response:
     """Workflow list for both the generate-node selector and the API dialog.
 
-    Keeps the original id/kind/name/requires_config/hint shape, adds `nodes`,
-    `filename` and `updated`, and applies the dialog's drag order.
+    Keeps the id/kind/name/requires_config/hint shape, adds `nodes`, `filename`,
+    `updated`, `builtin` and `builtin_default`, and applies the dialog's drag
+    order. Bundled templates are a read-only overlay: a user file with the same
+    stem shadows its built-in counterpart completely.
     """
     order = _load_api_settings().get("workflow_order") or []
     ranked = {str(name): index for index, name in enumerate(order)}
     workflows = []
     wf_dir = _workflow_dir()
+    user_names: set[str] = set()
     if os.path.isdir(wf_dir):
         for filename in sorted(os.listdir(wf_dir)):
             if not filename.endswith(".json") or filename.endswith(".fields.json"):
@@ -1150,6 +1214,7 @@ async def list_workflows(request: web.Request) -> web.Response:
             if not isinstance(data, dict):
                 continue
             name = filename[:-5]
+            user_names.add(name)
             workflows.append({
                 "id": name,
                 "filename": name,
@@ -1161,27 +1226,66 @@ async def list_workflows(request: web.Request) -> web.Response:
                 "updated": int(os.path.getmtime(path)),
                 "category": _load_category(name),
                 "builtin": False,
+                "builtin_default": False,
             })
-    workflows.sort(key=lambda item: (ranked.get(item["id"], len(ranked)), item["id"]))
-    # One default per category. A pinned name wins; otherwise the category's
-    # first workflow in saved drag order is the fallback, so a freshly imported
-    # set of templates already behaves as if every category had a default.
+    if os.path.isdir(BUILTIN_WORKFLOW_DIR):
+        for filename in sorted(os.listdir(BUILTIN_WORKFLOW_DIR)):
+            if not filename.endswith(".json") or filename.endswith(".fields.json"):
+                continue
+            name = filename[:-5]
+            if (name in user_names or not WF_NAME_RE.fullmatch(name)
+                    or name in (".", "..") or ".." in name):
+                continue
+            path = os.path.join(BUILTIN_WORKFLOW_DIR, filename)
+            data = _read_json_object(path)
+            if data is None:
+                continue
+            raw = _load_builtin_raw_fields(name)
+            workflows.append({
+                "id": name,
+                "filename": name,
+                "kind": data.get("kind") or data.get("_kind") or name,
+                "name": data.get("name") or data.get("_name") or name,
+                "requires_config": bool(data.get("_requires_config")),
+                "hint": data.get("hint", ""),
+                "nodes": len(_api_nodes(data)),
+                "updated": int(os.path.getmtime(path)),
+                "category": _category_of(raw),
+                "builtin": True,
+                "builtin_default": raw.get("is_default") is True,
+            })
+    # User files first; bundled read-only templates follow. Saved drag order
+    # still wins inside each side of that split.
+    workflows.sort(key=lambda item: (
+        ranked.get(item["id"], len(ranked)), 1 if item["builtin"] else 0, item["id"],
+    ))
+    # One default per category. User pins from api_settings.json win; then a
+    # bundled template that declares is_default; then the category's first
+    # workflow in saved drag order. Built-ins only supply an initial default.
     pinned = _load_api_settings().get("category_defaults")
     pinned = pinned if isinstance(pinned, dict) else {}
     # category_defaults was keyed by the old names; normalise so pins survive
     # the rename without touching the user's settings file.
     pinned = {_normalize_category(key): value for key, value in pinned.items()}
     first_of: dict[str, str] = {}
+    builtin_default_of: dict[str, str] = {}
     for item in workflows:
         category = item.get("category") or ""
-        if category and category not in first_of:
+        if not category:
+            continue
+        if category not in first_of:
             first_of[category] = item["id"]
+        if item.get("builtin") and item.get("builtin_default") and category not in builtin_default_of:
+            builtin_default_of[category] = item["id"]
     effective: dict[str, str] = {}
     for category, fallback in first_of.items():
-        chosen = pinned.get(category)
-        effective[category] = chosen if chosen in {
+        pool = {
             entry["id"] for entry in workflows if (entry.get("category") or "") == category
-        } else fallback
+        }
+        chosen = pinned.get(category)
+        if chosen not in pool:
+            chosen = builtin_default_of.get(category) or fallback
+        effective[category] = chosen
     for item in workflows:
         category = item.get("category") or ""
         item["is_default"] = bool(category) and effective.get(category) == item["id"]
@@ -1193,11 +1297,9 @@ async def list_workflows(request: web.Request) -> web.Response:
 
 async def get_workflow(request: web.Request) -> web.Response:
     name = _safe_name(request.query.get("name", ""))
-    path = os.path.join(_workflow_dir(), name + ".json")
-    if not os.path.isfile(path):
+    data = _read_effective_workflow(name)
+    if data is None:
         raise web.HTTPNotFound(reason="Workflow template not found")
-    with open(path, "r", encoding="utf-8") as handle:
-        data = json.load(handle)
     return web.json_response(data)
 
 

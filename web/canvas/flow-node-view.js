@@ -85,6 +85,9 @@ const IcNode = {
   props: { id: { type: String, required: true }, data: { type: Object, required: true }, selected: Boolean },
   setup(props) {
     const data = props.data;
+    /* Shared backend workflow list. Declared here (before the category tabs)
+       so tab visibility can react to the live list, including bundled defaults. */
+    const wfList = SHARED_WF_LIST;
     /* computed: clicking "upload" on an empty node can turn it into a video
        or audio node, so the rendered branch must follow data.kind live. */
     const kind = computed(() => data.kind || "image");
@@ -628,24 +631,44 @@ const IcNode = {
 
     /* ---- top-level group tabs (2026-11-22) ----
        Each generator shows only its own groups: image=图像/图像工具, video=视频/视频工具,
-       audio=音乐/音频, text=LLM (one group, row not rendered). topTab picks which group
-       the second row shows; clicking a top group sets mode to that group's first mode,
-       avoiding "show group A, run workflow B". Write it even if the mode is unavailable
-       (tab is is-on + is-disabled, hinting what to wire) — never call setXxxMode, which
-       the availability check rejects and leaves mode on the old group. When mode migrates
-       automatically after a wire change, the watch syncs the highlight back. A group with
-       no available mode greys out its top tab (see topGroupReason), e.g. 视频工具 goes
-       unavailable once both a video and an image are wired in. */
+       audio=音乐/音频, text=LLM (one group, row not rendered). A group or mode with
+       NO workflow in the live backend list is hidden outright (not greyed): an
+       empty category cannot lead to a runnable prompt. Wire-based availability
+       still greys out tabs/modes that DO have a workflow but do not fit the
+       current assets. Clicking a top group sets mode to that group's first
+       workflow-backed mode, avoiding "show group A, run workflow B". */
+    const workflowCategories = computed(() => new Set(
+      wfList.value.map((item) => item && item.category).filter(Boolean)
+    ));
+    const hasWorkflowCategory = (cat) => !!cat && workflowCategories.value.has(cat);
     const topGroups = computed(() => MODE_TOP_GROUPS[kind.value] || []);
+    const modesWithWorkflow = (group) =>
+      (TOP_GROUP_MODES[group] || []).filter(hasWorkflowCategory);
+    const visibleTopGroups = computed(() => topGroups.value.filter(
+      (group) => modesWithWorkflow(group).length > 0
+    ));
     const activeMode = computed(() => kind.value === "video" ? videoMode.value
       : kind.value === "audio" ? audioMode.value
         : kind.value === "text" ? textMode.value : imageMode.value);
-    const topTab = ref(topGroups.value[0] || "");
+    const modeField = computed(() => kind.value === "video" ? "videoMode"
+      : kind.value === "audio" ? "audioMode"
+        : kind.value === "text" ? "textMode" : "imageMode");
+    const topTab = ref(visibleTopGroups.value[0] || topGroups.value[0] || "");
     watch(activeMode, (m) => {
       const g = TOP_OF_MODE[m];
-      if (g && topGroups.value.indexOf(g) >= 0 && g !== topTab.value) topTab.value = g;
+      if (g && visibleTopGroups.value.indexOf(g) >= 0 && g !== topTab.value) topTab.value = g;
     }, { immediate: true });
-    const topModes = computed(() => TOP_GROUP_MODES[topTab.value] || []);
+    const topModes = computed(() => modesWithWorkflow(topTab.value));
+    /* Workflows arrive asynchronously. Once the list lands (or changes), move
+       off a hidden group/mode silently so the visible tabs always own the run. */
+    watch(visibleTopGroups, (groups) => {
+      if (groups.length && groups.indexOf(topTab.value) < 0) topTab.value = groups[0];
+    }, { immediate: true });
+    watch(topModes, (modes) => {
+      if (modes.length && modes.indexOf(activeMode.value) < 0) {
+        patch({ [modeField.value]: modes[0] }, { silent: true });
+      }
+    }, { immediate: true });
     /* A top group is available if any second-level mode in it is available — never by
        the group name alone. Typical: a video node with 1 video + 1 image wired; 参考生视频
        still accepts both, but 视频工具's 插帧/编辑/放大 each take exactly 1 video and no
@@ -658,7 +681,7 @@ const IcNode = {
         : kind.value === "audio" ? audioModeReason(mode)
           : textModeReason(mode);
     const topGroupReason = (group) => {
-      const modes = TOP_GROUP_MODES[group] || [];
+      const modes = modesWithWorkflow(group);
       if (!modes.length) return t("wire.currentAssetsDoNotFit");
       const reasons = modes.map(modeReasonOf).filter(Boolean);
       if (reasons.length < modes.length) return "";
@@ -666,20 +689,16 @@ const IcNode = {
     };
     const topGroupAvailable = (group) => !topGroupReason(group);
     const setTopTab = (group) => {
-      if (topGroups.value.indexOf(group) < 0 || group === topTab.value) return;
+      if (visibleTopGroups.value.indexOf(group) < 0 || group === topTab.value) return;
       const blocked = topGroupReason(group);
       if (blocked) {
         NS.api?.toast?.("warning", t("wire.groupUnavailable"), blocked);
         return;
       }
       topTab.value = group;
-      const list = TOP_GROUP_MODES[group] || [];
-      const target = list[0];
+      const target = modesWithWorkflow(group)[0];
       if (!target || target === activeMode.value) return;
-      const field = kind.value === "video" ? "videoMode"
-        : kind.value === "audio" ? "audioMode"
-          : kind.value === "text" ? "textMode" : "imageMode";
-      patch({ [field]: target });
+      patch({ [modeField.value]: target });
     };
     /* ---- exposed API fields (the workflow's own parameters) ---- */
     const BAR_FIELD_TYPES = { number: 1, slider: 1, random: 1, select: 1, switch: 1, text: 1, textarea: 1 };
@@ -1096,9 +1115,8 @@ const IcNode = {
       setOpen.value = false;
       closeModes();
     });
-    /* Backend workflow list for the bottom-left selector: shared module-level
-       ref so the API 配置 dialog can refresh it via the changed event. */
-    const wfList = SHARED_WF_LIST;
+    /* Keep the shared list loaded for the bottom-left selector; the API 配置
+       dialog refreshes it through the same workflows-changed event. */
     loadWorkflows();
     /* ---- Nodes 2.0 select (ComfyUI src/components/ui/select) -----------
        A native <select> popup is painted by the OS and cannot be themed, so
@@ -1715,7 +1733,7 @@ const IcNode = {
       isGenVideo, videoModes, videoMode, setVideoMode, modeAvailable, modeReason, incomingAssets, assetSlots,
       isGenAudio, audioModes, audioMode, setAudioMode, audioSlots, audioFamily,
       isGenText, textModes, textMode, setTextMode, textModeReason, textModeAvailable,
-      topGroups, topTab, topModes, setTopTab, topGroupReason, topGroupAvailable,
+      visibleTopGroups, topTab, topModes, setTopTab, topGroupReason, topGroupAvailable,
       audioModeReason, audioModeAvailable, wiredAudio, wiredTextNodes, wiredText,
       textWires, boxCount, noTextWorkflow, boxWiredAt, boxDisabledAt, wiredTextAt,
       apiFields, promptTextFields, hasPromptArea, textAreaValue, setTextArea, textAreaLabel,

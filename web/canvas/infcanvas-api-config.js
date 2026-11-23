@@ -232,6 +232,13 @@ import {
   /* This project's list returns `name` as a display label and `filename`/`id`
      as the actual file stem; every REST path must use the stem. */
   const wfKey = (item) => item.filename || item.id || item.name;
+  /* Bundled templates are read-only: they can be selected and pinned as a
+     category default, but never renamed, deleted, re-categorised or edited.
+     A user file with the same stem wins and is fully editable. */
+  const currentWorkflowItem = () => S.workflows.find(
+    (item) => wfKey(item) === S.currentName
+  ) || null;
+  const currentIsBuiltin = () => !!currentWorkflowItem()?.builtin;
 
   /* --------------------- node-first parameter detection ---------------------
 
@@ -788,13 +795,19 @@ import {
           + "outline-none select-none transition-colors hover:bg-accent");
         button.classList.add("pl-4");
         button.setAttribute("role", "button");
-        button.draggable = true;
+        button.draggable = !item.builtin;
         button.dataset.index = String(index);
         /* Name + optional 默认 tag. The tag is per-row state from the list
            endpoint: `is_default` is true for the pinned workflow, or for the
            first workflow of the category while nothing is pinned. */
         const label = el("div", "flex min-w-0 flex-1 items-center gap-1.5");
         label.appendChild(el("span", "min-w-0 truncate", item.name || wfKey(item)));
+        if (item.builtin) {
+          const tag = el("span", "shrink-0 leading-none rounded-full bg-muted text-2xs text-muted-foreground",
+            t("api.builtinWorkflow"));
+          tag.style.padding = "2px 6px";
+          label.appendChild(tag);
+        }
         button.appendChild(label);
         /* The tag sits at the row's trailing edge, not next to the name: the
            label above is flex-1, so a sibling appended after it is pushed to the
@@ -1072,11 +1085,12 @@ import {
       ? t("api.nodesFieldsExposed", { n: nodeCount(), f: S.fields.length })
         + (S.autoAdded ? t("api.autoDetected", { n: S.autoAdded }) : "")
       : "";
+    const builtin = currentIsBuiltin();
     D.favorite.hidden = !S.currentName;
-    D.rename.hidden = !S.currentName;
-    D.danger.hidden = !S.currentName;
+    D.rename.hidden = !S.currentName || builtin;
+    D.danger.hidden = !S.currentName || builtin;
     if (D.catBtn) {
-      D.catBtn.disabled = !S.currentName;
+      D.catBtn.disabled = !S.currentName || builtin;
       D.catLabel.textContent = cat(S.category);
       if (D.catMenu && !D.catMenu.hidden) openCatMenu();
     }
@@ -1849,12 +1863,13 @@ import {
   function syncParamActions() {
     if (!D.paramsSave || !D.paramsRevert) return;
     const editing = S.orderEditing;
+    const builtin = currentIsBuiltin();
     const changed = paramsChanged() && !!S.fields.length;
     D.paramsRevert.hidden = editing || !changed;
     D.paramsSave.hidden = editing;
-    D.paramsSave.disabled = !changed;
+    D.paramsSave.disabled = !changed || builtin;
     D.paramsEdit.hidden = editing || !S.fields.length;
-    D.paramsEdit.disabled = !S.fields.length;
+    D.paramsEdit.disabled = !S.fields.length || builtin;
     D.paramsConfirm.hidden = !editing;
     D.paramsCancel.hidden = !editing;
   }

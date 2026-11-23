@@ -239,8 +239,8 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
            the compact panel below. Lives outside .icn__body so it isn't clipped. -->
       <div v-if="isGenVideo" class="icn__genpanel icn__gpv nodrag nopan" @pointerdown.stop @mousedown.stop @dblclick.stop @wheel.stop>
         <!-- 一级分类（视频 / 视频工具）：只在本节点有多于一组时显示。 -->
-        <div v-if="topGroups.length > 1" class="icn__gpv-tops">
-          <button v-for="g in topGroups" :key="g" class="icn__gpv-top"
+        <div v-if="visibleTopGroups.length > 1" class="icn__gpv-tops">
+          <button v-for="g in visibleTopGroups" :key="g" class="icn__gpv-top"
                   :class="{ 'is-on': topTab === g, 'is-disabled': !topGroupAvailable(g) }"
                   v-tip="topGroupReason(g) || ($t('core.switch') + $t(g))" type="button"
                   @click.stop="setTopTab(g)">{{ $t(g) }}</button>
@@ -329,8 +329,8 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
       <div v-else-if="isGenAudio || isGenText" class="icn__genpanel icn__gpa nodrag nopan"
            @pointerdown.stop @mousedown.stop @dblclick.stop @wheel.stop>
         <!-- 一级分类：音频节点有 音乐/音频 两组；文本节点只有 LLM 一组，不渲染。 -->
-        <div v-if="topGroups.length > 1" class="icn__gpv-tops">
-          <button v-for="g in topGroups" :key="g" class="icn__gpv-top"
+        <div v-if="visibleTopGroups.length > 1" class="icn__gpv-tops">
+          <button v-for="g in visibleTopGroups" :key="g" class="icn__gpv-top"
                   :class="{ 'is-on': topTab === g, 'is-disabled': !topGroupAvailable(g) }"
                   v-tip="topGroupReason(g) || ($t('core.switch') + $t(g))" type="button"
                   @click.stop="setTopTab(g)">{{ $t(g) }}</button>
@@ -395,8 +395,8 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
 
       <div v-else-if="isGen" class="icn__genpanel nodrag nopan" @pointerdown.stop @mousedown.stop @dblclick.stop @wheel.stop>
         <!-- 图片生成器一级分类：图像 / 图像工具。 -->
-        <div v-if="topGroups.length > 1" class="icn__gpv-tops">
-          <button v-for="g in topGroups" :key="g" class="icn__gpv-top"
+        <div v-if="visibleTopGroups.length > 1" class="icn__gpv-tops">
+          <button v-for="g in visibleTopGroups" :key="g" class="icn__gpv-top"
                   :class="{ 'is-on': topTab === g, 'is-disabled': !topGroupAvailable(g) }"
                   v-tip="topGroupReason(g) || ($t('core.switch') + $t(g))" type="button"
                   @click.stop="setTopTab(g)">{{ $t(g) }}</button>
