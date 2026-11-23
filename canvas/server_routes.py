@@ -704,13 +704,17 @@ def _builtin_models(data: dict, fields: dict | None = None) -> list[dict]:
         folder = (MODEL_FOLDER_BY_NODE.get(class_type)
                   or MODEL_FOLDER_BY_KEY.get(key, "other"))
         installed_path = _model_install_path(folder, value)
+        # ComfyUI models may live in a subfolder (e.g. "MiniMax-H3\xxx.safetensors").
+        # Install probing keeps the full relative path; the link manifest is keyed
+        # by bare filename, so fall back to the basename when resolving a URL.
+        url = links.get(value) or links.get(os.path.basename(value.replace("\\", "/")), "")
         found.append({
             "name": value,
             "key": key,
             "folder": folder,
             "installed": bool(installed_path),
             "path": installed_path,
-            "url": links.get(value, ""),
+            "url": url,
         })
 
     for node in nodes.values():
