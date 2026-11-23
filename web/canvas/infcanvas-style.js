@@ -1534,10 +1534,10 @@ var infcanvas_vueflow_default = `\r
    keeps a constant SCREEN size at any canvas zoom. Anchor is the top-centre\r
    (top:calc(100% + 20px)), so scale about that edge to keep it pinned under\r
    the node. Chrome matches .ic-menu / .icn__tools \u2014 one floating-panel look. */\r
-/* 2026-11-24 \u7528\u6237\u5B9A\u7A3F\uFF1A\u6240\u6709\u8282\u70B9\u7684\u53C2\u6570\u9762\u677F\u56FA\u5B9A 480px\uFF0C\u5C4F\u5E55\u5C3A\u5BF8\u6052\u5B9A\uFF0C\r
+/* 2026-11-24 \u7528\u6237\u5B9A\u7A3F\uFF1A\u6240\u6709\u8282\u70B9\u7684\u53C2\u6570\u9762\u677F\u56FA\u5B9A 840px\uFF0C\u5C4F\u5E55\u5C3A\u5BF8\u6052\u5B9A\uFF0C\r
    \u4E0D\u518D\u8DDF\u8282\u70B9\u5BBD\u5EA6\u6216\u8282\u70B9\u7C7B\u578B\u8D70\uFF08\u539F\u5148 420/600 \u4E24\u79CD\u8D77\u70B9\u5BFC\u81F4\u5BBD\u5EA6\u4E0D\u4E00\uFF09\u3002 */\r
 .icn__genpanel { position:absolute; left:50%; top:calc(100% + 20px); z-index:32;\r
-  box-sizing:border-box; width:480px;\r
+  box-sizing:border-box; width:840px;\r
   display:flex; flex-direction:column; gap:0;\r
   padding:8px; border-radius:8px; border:1px solid var(--border, #494a50);\r
   background:var(--background, #171718); box-shadow:0 2px 16px 0 var(--shadow-color, rgba(0,0,0,.4)); color:var(--foreground, #ffffff);\r
@@ -1663,7 +1663,7 @@ var infcanvas_vueflow_default = `\r
 .icn__gp-cancel:hover { background:var(--icnw-hover, #3c3d42); }\r
 \r
 /* ---- VIDEO generator panel (reference layout) ---- */\r
-.icn__genpanel.icn__gpv, .icn__genpanel:not(.icn__gpv):not(.icn__gpa) { width:480px; padding:10px; }\r
+.icn__genpanel.icn__gpv, .icn__genpanel:not(.icn__gpv):not(.icn__gpa) { width:840px; padding:10px; }\r
 /* \u4E00\u7EA7\u5206\u7C7B tab\uFF08\u56FE\u50CF/\u56FE\u50CF\u5DE5\u5177 \xB7 \u89C6\u9891/\u89C6\u9891\u5DE5\u5177 \xB7 \u97F3\u4E50/\u97F3\u9891\uFF09\uFF1A\u590D\u7528\u4E0E\u4E8C\u7EA7\r
    WidgetToggleSwitch \u76F8\u540C\u7684\u539F\u751F\u89C2\u611F\uFF08bg-input / rounded-md / p-1 / gap-1\uFF09\uFF0C\r
    \u4F46\u53EA\u5360\u5185\u5BB9\u5BBD\u5EA6\u4E14\u4E0D flex:1\uFF0C\u907F\u514D\u4E24\u9879\u88AB\u62C9\u6EE1\u6574\u884C\uFF1B\u9009\u4E2D\u6001\u540C secondary\u3002 */\r
@@ -1847,7 +1847,7 @@ var infcanvas_vueflow_default = `\r
    30px bottom bar). The two prompt areas are labelled boxes so the meaning of\r
    each one is explicit (\u63D0\u793A\u8BCD/\u6B4C\u8BCD vs \u8BED\u6C14/\u6717\u8BFB\u6587\u672C); the workflow's exposed\r
    API parameters live behind the gear button on the left of the API picker. */\r
-.icn__genpanel.icn__gpa { width:480px; padding:10px; }\r
+.icn__genpanel.icn__gpa { width:840px; padding:10px; }\r
 .icn__gpa-inputs { display:flex; flex-direction:column; gap:8px; margin-bottom:9px; }\r
 .icn__gpa-box { display:flex; flex-direction:column; gap:4px; min-width:0; }\r
 .icn__gpa-label { font-size:var(--text-xs, 12px); line-height:1.4; color:var(--ic-soft, #8a8a8a); }\r
