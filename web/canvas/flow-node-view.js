@@ -650,7 +650,8 @@ const IcNode = {
     const activeMode = computed(() => kind.value === "video" ? videoMode.value
       : kind.value === "audio" ? audioMode.value
         : kind.value === "text" ? textMode.value : imageMode.value);
-    const modeField = computed(() => kind.value === "video" ? "videoMode"
+    /* Distinct name: `modeField` below is the field-card mode chooser ref. */
+    const topModeField = computed(() => kind.value === "video" ? "videoMode"
       : kind.value === "audio" ? "audioMode"
         : kind.value === "text" ? "textMode" : "imageMode");
     const topTab = ref(visibleTopGroups.value[0] || topGroups.value[0] || "");
@@ -666,7 +667,7 @@ const IcNode = {
     }, { immediate: true });
     watch(topModes, (modes) => {
       if (modes.length && modes.indexOf(activeMode.value) < 0) {
-        patch({ [modeField.value]: modes[0] }, { silent: true });
+        patch({ [topModeField.value]: modes[0] }, { silent: true });
       }
     }, { immediate: true });
     /* A top group is available if any second-level mode in it is available — never by
@@ -698,7 +699,7 @@ const IcNode = {
       topTab.value = group;
       const target = modesWithWorkflow(group)[0];
       if (!target || target === activeMode.value) return;
-      patch({ [modeField.value]: target });
+      patch({ [topModeField.value]: target });
     };
     /* ---- exposed API fields (the workflow's own parameters) ---- */
     const BAR_FIELD_TYPES = { number: 1, slider: 1, random: 1, select: 1, switch: 1, text: 1, textarea: 1 };
