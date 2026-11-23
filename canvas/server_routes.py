@@ -644,6 +644,20 @@ def _model_install_path(folder: str, name: str) -> str:
     return ""
 
 
+def _model_download_links() -> dict[str, str]:
+    """Bundled manifest of model filename -> direct download URL.
+
+    Download links cannot be derived from a workflow JSON, so they ship as a
+    separate file next to the bundled workflows. A missing/invalid manifest
+    simply yields no links (never breaks the manager view).
+    """
+    data = _read_json_object(os.path.join(BUILTIN_WORKFLOW_DIR, "model_links.json"))
+    if not data:
+        return {}
+    return {str(k): str(v) for k, v in data.items()
+            if k != "_comment" and isinstance(v, str) and v}
+
+
 def _hidden_builtins() -> set[str]:
     """Stems of bundled workflows the user hid, from per-user api_settings."""
     raw = _load_api_settings().get(VISIBILITY_KEY)
@@ -665,12 +679,13 @@ def _builtin_models(data: dict) -> list[dict]:
     """Model files referenced by a bundled workflow.
 
     Each entry carries the canonical ComfyUI folder (derived from the loader
-    node's class), whether the file actually exists on this machine, and its
-    resolved absolute path when installed. Download URLs are unknown to the
-    bundle and left empty for the user to fill in later.
+    node's class), whether the file actually exists on this machine, its
+    resolved absolute path when installed, and a direct download URL from the
+    bundled model_links.json manifest (empty when no link is shipped).
     """
     found: list[dict] = []
     seen: set[tuple[str, str]] = set()
+    links = _model_download_links()
     for node in _api_nodes(data).values():
         inputs = node.get("inputs")
         if not isinstance(inputs, dict):
@@ -691,7 +706,7 @@ def _builtin_models(data: dict) -> list[dict]:
                 "folder": folder,
                 "installed": bool(installed_path),
                 "path": installed_path,
-                "url": "",
+                "url": links.get(value, ""),
             })
     return found
 

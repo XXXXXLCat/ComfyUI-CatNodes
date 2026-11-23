@@ -1,0 +1,18 @@
+{
+  "_comment": "ModelScope download links for models referenced by bundled workflows. Key = model filename, value = direct file URL. Download links are NOT discoverable from the workflow JSON, so they are shipped as a separate manifest. Empty string means no link available.",
+  "birefnet.safetensors": "https://modelscope.cn/models/Comfy-Org/BiRefNet/resolve/master/background_removal/birefnet.safetensors",
+  "moss_image_sft_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/moss-image/resolve/master/diffusion_models/moss_image_sft_int8_convrot.safetensors",
+  "flux2-vae_small.safetensors": "https://modelscope.cn/models/Comfy-Org/moss-image/resolve/master/vae/flux2-vae_small.safetensors",
+  "qwen_image_2.1_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/Qwen-Image-2.1/resolve/master/diffusion_models/qwen_image_2.1_int8_convrot.safetensors",
+  "qwen_image_2.1_vae_bf16.safetensors": "https://modelscope.cn/models/Comfy-Org/Qwen-Image-2.1/resolve/master/vae/qwen_image_2.1_vae_bf16.safetensors",
+  "qwen3.5_9b_qwen_image_2.1_pe_i2i.int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/Qwen-Image-2.1/resolve/master/text_encoders/qwen3.5_9b_qwen_image_2.1_pe_i2i.int8_convrot.safetensors",
+  "qwen3vl_8b_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/Qwen3-VL/resolve/master/text_encoders/qwen3vl_8b_int8_convrot.safetensors",
+  "qwen3.5_9b_w4a8_gptq.safetensors": "https://modelscope.cn/models/Comfy-Org/Qwen3.5/resolve/master/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors",
+  "qwen3.5_2b_bf16.safetensors": "https://modelscope.cn/models/Comfy-Org/Qwen3.5/resolve/master/text_encoders/qwen3.5_2b_bf16.safetensors",
+  "seedvr2_7b_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/SeedVR2/resolve/master/diffusion_models/seedvr2_7b_int8_convrot.safetensors",
+  "seedvr2_ema_vae_fp16.safetensors": "https://modelscope.cn/models/Comfy-Org/SeedVR2/resolve/master/vae/seedvr2_ema_vae_fp16.safetensors",
+  "stable_audio_3_medium.safetensors": "https://modelscope.cn/models/Comfy-Org/stable-audio-3/resolve/master/checkpoints/stable_audio_3_medium.safetensors",
+  "t5gemma_b_b_ul2.safetensors": "https://modelscope.cn/models/Comfy-Org/stable-audio-3/resolve/master/text_encoders/t5gemma_b_b_ul2.safetensors",
+  "yue2_3b_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/YuE2/resolve/master/checkpoints/yue2_3b_int8_convrot.safetensors",
+  "sheetsage2_bf16.safetensors": "https://modelscope.cn/models/Comfy-Org/YuE2/resolve/master/audio_encoders/sheetsage2_bf16.safetensors"
+}
