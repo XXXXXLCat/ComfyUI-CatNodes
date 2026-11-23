@@ -79,5 +79,5 @@
     "video": null,
     "audio": null
   },
-  "_name": "birefnet_remove_background_catnodes"
+  "_name": "BiRefNet Remove Background"
 }
