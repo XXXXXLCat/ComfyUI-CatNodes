@@ -183,6 +183,14 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
                   @pointerdown.stop @mousedown.stop @dblclick.stop @click.stop="copyText">
             <IcIcon name="copy" :size="14" />
           </button>
+          <button v-if="!editing && hasDisplayText" type="button"
+                  class="icn__text-copy icn__text-translate nodrag nopan"
+                  :class="{ 'is-active': !!translated, 'is-busy': translating }"
+                  v-tip="translated ? $t('trans.showOriginal') : $t('trans.toLanguage', { lang: $t('trans.targetLang') })"
+                  :aria-label="translated ? $t('trans.showOriginal') : $t('trans.toLanguage')"
+                  @pointerdown.stop @mousedown.stop @dblclick.stop @click.stop="toggleTranslate">
+            <IcIcon name="translate" :size="14" />
+          </button>
           <div v-if="!editing && !hasDisplayText" class="icn__gen-empty icn__gen-empty--ghost">
             <IcIcon :name="emptyIcon" :size="emptyIconSize" />
           </div>

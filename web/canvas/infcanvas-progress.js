@@ -895,6 +895,58 @@ NS.generate = {
   },
 };
 
+/* ------------------------------------------------------------------ *
+ * Text-node translation (local LLM, via ComfyUI's own generation queue).
+ *
+ * No new backend endpoint: build a one-shot prompt with the same node trio the
+ * built-in "Qwen3.8 LLM Chat" workflow uses (CLIPLoader -> TextGenerateV2 ->
+ * PreviewAny), submit it through the native api.queuePrompt, and poll /history
+ * for the generated text. This is the same submit+poll path NS.generate.run
+ * already uses, so it inherits the host's queue, cancellation and error handling.
+ *
+ * The model is a localStorage-overridable constant (the smallest local LLM that
+ * can chat). Sampling is off/deterministic: translation must be reproducible.
+ * ------------------------------------------------------------------ */
+const TRANSLATE_MODEL_KEY = "InfCanvas.TranslateModel";
+const TRANSLATE_MODEL_DEFAULT = "qwen3.5_2b_bf16.safetensors";
+
+function translateModel() {
+  try { return localStorage.getItem(TRANSLATE_MODEL_KEY) || TRANSLATE_MODEL_DEFAULT; }
+  catch (error) { return TRANSLATE_MODEL_DEFAULT; }
+}
+
+async function translateText(text, targetLang) {
+  const source = String(text ?? "").trim();
+  if (!source) return "";
+  const langName = String(targetLang || "en").toLowerCase().startsWith("zh")
+    ? "Simplified Chinese" : "English";
+  const instruction =
+    "You are a professional translator. Translate the text between the markers into " + langName + ".\n" +
+    "Preserve line breaks and markdown. Output ONLY the translation - no explanation, no quotes, no notes.\n\n" +
+    "<<<\n" + source + "\n>>>";
+  const maxLength = Math.min(4096, Math.max(512, Math.ceil(source.length * 3)));
+  const output = {
+    "1": { inputs: { clip_name: translateModel(), type: "stable_diffusion", device: "default" }, class_type: "CLIPLoader" },
+    "7": {
+      inputs: {
+        prompt: instruction, max_length: maxLength, sampling_mode: "off",
+        thinking: false, use_default_template: true, mtp: "auto", clip: ["1", 0],
+      },
+      class_type: "TextGenerateV2",
+    },
+    "4": { inputs: { source: ["7", 0] }, class_type: "PreviewAny" },
+  };
+  const queued = await API().queuePrompt(0, { output, workflow: {} });
+  const promptId = queued?.prompt_id;
+  if (!promptId) throw new Error(window.InfCanvas.i18n.t("core.submitFailedNoPromptId"));
+  const outputs = await pollHistory(promptId);
+  const hit = (outputs || []).find((a) => a && a.kind === "text" && String(a.text || "").trim());
+  if (!hit) throw new Error(window.InfCanvas.i18n.t("trans.translateEmpty"));
+  return String(hit.text).trim();
+}
+
+NS.translate = { text: translateText, model: translateModel };
+
   return {
     extractOutputs,
     CANCEL_SENTINEL,

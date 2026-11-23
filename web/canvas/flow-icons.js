@@ -171,6 +171,12 @@ import { Vue as VueNS } from "./vendor/vueflow.bundle.mjs";
        host prebuilt sheet, so draw locally like the other non-host glyphs. */
     copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2" stroke="currentColor" stroke-width="1.8" fill="none"/>'
       + '<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    /* lucide languages — text-result translate button. Drawn locally like copy
+       (not in the host prebuilt sheet). */
+    translate: '<path d="m5 8 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+      + '<path d="M4 14c7.5 0 12-4 14-11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+      + '<path d="M2 5h10M7 2v3c0 5-3 8.5-5 10" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+      + '<path d="m14 14 2.5 2.5L20 22M20 14l-6 8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
     /* lucide bookmark — glyph for the 添加到收藏 toolbar action. */
     bookmark: '<path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
     /* lucide grid-3x3-off — 解组, the crossed-out counterpart of 打组's

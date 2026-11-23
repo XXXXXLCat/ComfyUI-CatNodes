@@ -1273,6 +1273,12 @@ var infcanvas_vueflow_default = `\r
   background:var(--ic-node-bg, #262729); opacity:.72; transition:opacity .12s, color .12s, background .12s; }\r
 .icn__text-copy:hover { opacity:1; color:var(--foreground, #fff); background:var(--icnw-hover, #3c3d42); }\r
 .icn__text-copy svg { display:block; }\r
+/* Translate button sits directly right of copy; both share the copy button's\r
+   visual (only the anchor differs). Active = showing a translation; busy =\r
+   generation in flight (dimmed, non-clickable via the handler guard). */\r
+.icn__text-translate { left:32px; }\r
+.icn__text-translate.is-active { opacity:1; color:var(--ic-brand, #0b8ce9); }\r
+.icn__text-translate.is-busy { opacity:.4; }\r
 .icn__text p { margin:0 0 6px; } .icn__text h1, .icn__text h2, .icn__text h3 { margin:4px 0 6px; font-size:var(--text-sm, 14px); }\r
 .icn__text ul, .icn__text ol { margin:4px 0; padding-left:18px; }\r
 .icn__text code { padding:0 3px; border-radius:3px; background:var(--ic-hover, #313235); }\r

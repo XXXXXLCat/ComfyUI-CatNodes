@@ -1454,13 +1454,20 @@ const IcNode = {
     const draft = ref("");
     const editor = ref(null);
     const setEditor = (element) => { editor.value = element; };
-    const textHtml = computed(() => NS.tools?.renderText?.(
-      data.text || data.asset?.text || data.result?.text || data.asset?.name || "") || "");
-    /* Plain-text source behind textHtml — what the corner copy button writes
-       to the clipboard. Same precedence as the rendered text, but WITHOUT
-       Markdown conversion: the user gets the original text, not HTML tags. */
-    const textPlain = computed(() =>
+    /* Source text is the single origin (never mutated). Translation keeps a
+       separate `translated` overlay, so toggling zh<->en never writes the
+       node's real content: generation/editing always read the original. */
+    const sourceText = computed(() =>
       String(data.text || data.asset?.text || data.result?.text || data.asset?.name || ""));
+    const translated = ref("");
+    const translating = ref(false);
+    /* What the node SHOWS: the translated overlay while active, else the source.
+       Both the rendered HTML and the copy button read this, so "copy what you
+       see" holds in either state (translated text copied while translated,
+       original text copied while not). */
+    const displayText = computed(() => translated.value || sourceText.value);
+    const textHtml = computed(() => NS.tools?.renderText?.(displayText.value) || "");
+    const textPlain = displayText;
     const copyText = async () => {
       const value = textPlain.value;
       if (!value) return;
@@ -1471,6 +1478,29 @@ const IcNode = {
         NS.api?.toast?.("error", t("media.couldNotCopyText"), String(error?.message || error));
       }
     };
+    /* Toggle translation in the language ComfyUI is currently using. First
+       click translates the source, next click restores the original, and so
+       on. An in-flight request is a no-op (no duplicate queue jobs). Changing
+       the source text invalidates the overlay so a stale translation is never
+       shown against new content. */
+    const toggleTranslate = async () => {
+      if (translating.value) return;
+      if (translated.value) { translated.value = ""; return; }
+      const source = sourceText.value;
+      if (!source.trim()) return;
+      translating.value = true;
+      try {
+        const lang = NS.i18n?.current?.() || "en";
+        const result = await NS.translate?.text?.(source, lang);
+        if (!result) throw new Error(t("trans.translateEmpty"));
+        translated.value = result;
+      } catch (error) {
+        NS.api?.toast?.("error", t("trans.failed"), String(error?.message || error));
+      } finally {
+        translating.value = false;
+      }
+    };
+    watch(sourceText, () => { translated.value = ""; });
     /* Reference xcat-text-edit.js: double click anywhere on the node enters
        the inline textarea, caret goes to the end (not select-all); Esc /
        clicking outside / losing focus exits editing and keeps the text. */
@@ -1769,6 +1799,7 @@ const IcNode = {
       setFileInput, pickFile, onPicked, acceptAttr, emptyHint, onImageLoad, onVideoMeta, onGenPreviewLoad, isVideoMime,
       emptyIcon, emptyIconSize, canUpload, hasIncoming,
       actions, onAction, editing, draft, setEditor, textHtml, textPlain, copyText, startEdit, commitEdit, onEditKey,
+      translated, translating, toggleTranslate,
       renaming, setNameBox, startRename, commitRename, cancelRename, onNameKey, onNamePaste, displayTitle,
       hasText, hasDisplayText, showTextBody, isCleanup, isMerge, isPill, isGenOmni,
       NODE_TAGS, tagOpen, tagInfo, toggleTag, pickTag, openNodeMenu,
