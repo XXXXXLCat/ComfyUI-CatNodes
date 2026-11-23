@@ -836,7 +836,14 @@ async function buildPrompt(kind, template, data, inputs, loras = []) {
     if (!entry.asset || !(entry.kind in mediaIn)) continue;
     mediaIn[entry.kind].push(assetPath(await ensureInputAsset(entry.asset, entry.kind)));
   }
-  if (mediaIn.image.length || mediaIn.video.length || mediaIn.audio.length) {
+  /* A template declaring `_mediaAutoDetach` (LLM chat with a bank of optional
+     image/video/audio slots) must shed its bundled EXAMPLE media when nothing
+     is wired — otherwise a plain text chat silently feeds 20 demo images +
+     5 videos + 5 audios to the model. injectMediaSlots already detaches every
+     group it doesn't fill, so calling it with empty inputs does exactly that.
+     Templates without the flag keep the legacy behaviour (demo media stays). */
+  if (mediaIn.image.length || mediaIn.video.length || mediaIn.audio.length
+      || template?._mediaAutoDetach) {
     injectMediaSlots(prompt, mediaIn, template?._mediaCaps);
   }
   /* Bare-Loader fallback: stock / imported workflows hard-code an example
