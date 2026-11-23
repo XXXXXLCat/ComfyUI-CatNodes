@@ -49,6 +49,15 @@ function extractOutputs(outputs) {
       }
       for (const item of items) {
         if (!item?.filename) continue;
+        /* Load* nodes replay their SOURCE into results (ComfyUI's
+           has_intermediate_output): a LoadVideo fed an input video echoes it
+           as {images:[{filename: <mp4>, type:"input"}]}. That echo is the asset
+           we FED the workflow — not something it generated — and the source is
+           already shown on its own upstream node. Crucially, treating it as
+           generated media makes `hasMedia` true below, which strips the REAL
+           text answer off LLM / image-to-prompt nodes ("有反应但没输出").
+           Generated media is always type "output"/"temp", so skip input echoes. */
+        if (item.type === "input") continue;
         const kind = key === "gifs" || key === "videos" ? "video" : key === "audio" ? "audio" : "image";
         const asset = {
           kind, name: item.filename, filename: item.filename,
