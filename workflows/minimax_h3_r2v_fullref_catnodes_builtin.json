@@ -1,0 +1,847 @@
+{
+  "228": {
+    "inputs": {
+      "video": [
+        "229:91",
+        0
+      ],
+      "filename_prefix": "MiniMax/MiniMax_H3",
+      "format": "auto",
+      "codec": "auto",
+      "format.codec": "auto"
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "SaveVideo"
+    }
+  },
+  "232": {
+    "inputs": {
+      "model": [
+        "229:6",
+        0
+      ],
+      "preview_frames": [
+        "229:107",
+        1
+      ],
+      "max_resolution": 480,
+      "jpeg_quality": 80,
+      "suppress_default_preview": true,
+      "name": 1,
+      "preview_fps": 6,
+      "tiny_vae": "taeh3.safetensors",
+      "vae_options": ""
+    },
+    "class_type": "ModelPreviewOverrideKJ",
+    "_meta": {
+      "title": "ModelPreviewOverrideKJ"
+    }
+  },
+  "235": {
+    "inputs": {
+      "file": "MiniMax_H3_00089_.mp4"
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "LoadVideo"
+    }
+  },
+  "236": {
+    "inputs": {
+      "video": [
+        "235",
+        0
+      ]
+    },
+    "class_type": "GetVideoComponents",
+    "_meta": {
+      "title": "GetVideoComponents"
+    }
+  },
+  "237": {
+    "inputs": {
+      "image": "Qwen_image_2.1_00014.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图像1"
+    }
+  },
+  "238": {
+    "inputs": {
+      "image": "Qwen_image_2.1_00015.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图像2"
+    }
+  },
+  "239": {
+    "inputs": {
+      "image": "Qwen_image_2.1_00015.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图像3"
+    }
+  },
+  "242": {
+    "inputs": {
+      "image": "阳光下的温馨厨房一角.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图像4"
+    }
+  },
+  "243": {
+    "inputs": {
+      "audio": "1. 悬念破局与高能引语：年轻人没钱了，猫却吃得更好了？.flac"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "参考音频1"
+    }
+  },
+  "247": {
+    "inputs": {
+      "image": [
+        "236",
+        0
+      ],
+      "upscale_method": "nearest-exact",
+      "megapixels": 0.98,
+      "crop": 32
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "ImageScaleToTotalPixels"
+    }
+  },
+  "251": {
+    "inputs": {
+      "aspect_ratio": "3:4 (Portrait Standard)",
+      "megapixels": 1,
+      "multiple": 8
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "ResolutionSelector"
+    }
+  },
+  "229:24": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "VAELoader"
+    }
+  },
+  "229:23": {
+    "inputs": {
+      "samples": [
+        "229:14",
+        0
+      ],
+      "vae": [
+        "229:144",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAEDecodeAudio"
+    }
+  },
+  "229:10": {
+    "inputs": {
+      "samples": [
+        "229:14",
+        0
+      ],
+      "vae": [
+        "229:144",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAEDecode"
+    }
+  },
+  "229:17": {
+    "inputs": {
+      "sampler_name": "er_sde"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "229:14": {
+    "inputs": {
+      "noise": [
+        "229:15",
+        0
+      ],
+      "guider": [
+        "229:16",
+        0
+      ],
+      "sampler": [
+        "229:17",
+        0
+      ],
+      "sigmas": [
+        "229:223",
+        0
+      ],
+      "latent_image": [
+        "229:166",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
+  },
+  "229:16": {
+    "inputs": {
+      "model": [
+        "229:148",
+        0
+      ],
+      "conditioning": [
+        "229:253",
+        1
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "BasicGuider"
+    }
+  },
+  "229:6": {
+    "inputs": {
+      "unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNETLoader"
+    }
+  },
+  "229:13": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "CLIPLoader"
+    }
+  },
+  "229:15": {
+    "inputs": {
+      "noise_seed": 923164148155072
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "229:91": {
+    "inputs": {
+      "images": [
+        "229:10",
+        0
+      ],
+      "audio": [
+        "229:23",
+        0
+      ],
+      "fps": 24,
+      "bit_depth": 8,
+      "color_space": "sRGB",
+      "chroma_subsampling": "none",
+      "codec": "none"
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "CreateVideo"
+    }
+  },
+  "229:107": {
+    "inputs": {
+      "values.a": [
+        "229:111",
+        0
+      ],
+      "values.b": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "ComfyMathExpression"
+    }
+  },
+  "229:111": {
+    "inputs": {
+      "value": 5
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (duration)"
+    }
+  },
+  "229:124": {
+    "inputs": {
+      "value": 20
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "PrimitiveInt"
+    }
+  },
+  "229:129": {
+    "inputs": {
+      "clip_name": "qwen3.8_27b_w4a8.safetensors"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "CLIPLoader"
+    }
+  },
+  "229:130": {
+    "inputs": {
+      "clip": [
+        "229:129",
+        0
+      ],
+      "images.image1": [
+        "237",
+        0
+      ],
+      "system_prompt": [
+        "229:225",
+        0
+      ],
+      "prompt": [
+        "229:255",
+        0
+      ],
+      "max_length": 4096,
+      "thinking": true,
+      "sampling_mode": "on",
+      "sampling_mode.temperature": 0.7,
+      "sampling_mode.top_k": 64,
+      "sampling_mode.top_p": 0.95,
+      "sampling_mode.min_p": 0.05,
+      "sampling_mode.repetition_penalty": 1.05,
+      "sampling_mode.presence_penalty": 0,
+      "sampling_mode.seed": 0,
+      "use_default_template": true,
+      "mtp": "auto",
+      "images.image2": [
+        "238",
+        0
+      ],
+      "images.image3": [
+        "239",
+        0
+      ],
+      "images.image4": [
+        "242",
+        0
+      ],
+      "images.image5": [
+        "900",
+        0
+      ],
+      "images.image6": [
+        "901",
+        0
+      ],
+      "images.image7": [
+        "902",
+        0
+      ],
+      "images.image8": [
+        "903",
+        0
+      ],
+      "images.image9": [
+        "904",
+        0
+      ]
+    },
+    "class_type": "TextGenerateV2",
+    "_meta": {
+      "title": "Generate Text"
+    }
+  },
+  "229:131": {
+    "inputs": {
+      "value": "# Full-Reference Mode Rewrite Output Format Guide\n\n## 1. Task Overview\n\nThis guide defines the output format for full-reference video rewriting.\n\nFull-reference mode describes a target video while explicitly tracking referenced visual and audio content through stable reference labels. The output records how referenced people, objects, environments, images, videos, and audio assets are preserved, transferred, or referenced throughout the target video.\n\nA complete full-reference rewrite consists of six sections in the following order:\n\n```text\nsubject_definitions\nsummary\nretention_analysis\ndetailed_description\noverall_soundscape\nnon_diegetic_music\n```\n\nThe basic shot, camera movement, speaker, dialogue, singing, on-screen text, and sound formats follow the rules defined in this guide.\n\n---\n\n# 2. Overall Output Structure\n\nA complete full-reference rewrite uses the following structure:\n\n```text\nsubject_definitions:\n...\n\nsummary:\n...\n\nretention_analysis:\n...\n\ndetailed_description:\n...\n\noverall_soundscape:\n...\n\nnon_diegetic_music:\n...\n```\n\nThe six sections have the following purposes:\n\n| Section                | Purpose                                                                  |\n| ---------------------- | ------------------------------------------------------------------------ |\n| `subject_definitions`  | Defines referenced content and assigns stable reference labels           |\n| `summary`              | Summarizes the task type, target video, and main reference relationships |\n| `retention_analysis`   | Describes how referenced content is preserved, transferred, or reused    |\n| `detailed_description` | Describes visuals, actions, shots, sound, and dialogue in playback order |\n| `overall_soundscape`   | Summarizes ambience and physical sounds across the full video            |\n| `non_diegetic_music`   | Describes audience-only background music                                 |\n\nWrite all six sections in English.\n\nPreserve the original language only for dialogue and lyrics inside `<d>`, and for text visibly present in the scene.\n\n---\n\n# 3. Reference Labels and Definitions\n\nFull-reference rewrites use four types of labels:\n\n| Label         | Meaning                                                                                                           |\n| ------------- | ----------------------------------------------------------------------------------------------------------------- |\n| `<Subject N>` | Visible content abstracted from reference assets that can be reused or modified in the target video               |\n| `<Picture N>` | A reference image used as a concrete target frame or shot-planning anchor                                         |\n| `<Video N>`   | A reference video that provides an editing source, continuation starting point, or whole-video temporal structure |\n| `<Audio N>`   | An audio signal that is copied or referenced                                                                      |\n\nOnce a reference label is assigned to a piece of content, it keeps the same meaning across:\n\n```text\nsubject_definitions\nsummary\nretention_analysis\ndetailed_description\noverall_soundscape\nnon_diegetic_music\n```\n\nDo not assign a new label to the same referenced content later.\n\n---\n\n## 3.1 `<Subject N>`\n\n`<Subject N>` represents reusable visible content that will actually be used in the target video.\n\nIt can represent:\n\n* People\n* Animals\n* Objects\n* Scenes\n* Backgrounds\n* Environments\n* Clothing\n* Props\n* Interfaces\n* Visual effects\n* Styles\n* Actions\n* Expressions\n* Poses\n\nA subject represents the content unit used in the target video rather than the source file itself.\n\nOne subject may be defined by multiple reference assets.\n\nOne reference asset may provide multiple subjects.\n\nExample:\n\n```text\n<Subject 1> is the young woman in <Picture 1>, with long dark hair, a blue cardigan, and a thin silver necklace.\n```\n\nWhen the same subject comes from multiple assets, combine the sources and state what each asset provides:\n\n```text\n<Subject 1> is the woman whose appearance comes from <Picture 1> and whose walking motion comes from <Video 1>.\n```\n\n---\n\n## 3.2 `<Picture N>`\n\nUse a standalone `<Picture N>` when the reference image itself serves as:\n\n* A target frame\n* A first frame\n* A keyframe\n* A last frame\n* An edited keyframe\n* A composition anchor\n* A storyboard or shot-planning reference\n\nExample:\n\n```text\n<Picture 2> is the first frame of [Shot 1], showing a woman seated beside a café window.\n```\n\nIf an image only defines a character, scene, costume, style, or other reusable content, cite the image source inside the corresponding `<Subject N>` definition instead of creating a standalone picture entry.\n\nWhen an image acts as a storyboard or shot-planning reference, state which shots it maps to and what planning information it provides:\n\n```text\n<Picture 3> is a storyboard reference for [Shot 1] and [Shot 2], defining their viewpoint, subject placement, and shot order.\n```\n\n---\n\n## 3.3 `<Video N>`\n\n`<Video N>` is reserved for whole-video relationships, including:\n\n* Editing an original video\n* Continuing from the end of an original video\n* Referencing the original video's camera movement\n* Referencing cuts\n* Referencing rhythm\n* Referencing temporal structure\n\nExample:\n\n```text\n<Video 1> is the source video for the target video edit.\n```\n\nIf a person, object, scene, action, or effect from a reference video is reused as visible content, define that content under `<Subject N>`.\n\n`<Video N>` identifies the source asset or structural source and does not replace subject labels.\n\n---\n\n## 3.4 `<Audio N>`\n\n`<Audio N>` represents a standalone audio asset or an enabled synchronized audio track from a reference video.\n\nCommon uses include:\n\n* Copying all or part of an audio signal\n* Referencing a background-music style\n* Referencing a speaker's voice timbre and delivery\n* Using dialogue, lyrics, or sound effects from the original audio\n* Referencing beat, rhythm, or audio continuity\n\nWhen an `<Audio N>` explicitly corresponds to a target speaker, reuse that speaker's global ID in the definition:\n\n```text\n<Subject N> (Sx)\n```\n\nor use a stable voice description followed by `(Sx)` when the speaker does not correspond to a separately defined subject.\n\nExample:\n\n```text\n<Audio 1> is the voice-timbre reference for <Subject 1> (S1).\n```\n\nWhen one audio asset serves multiple roles, describe those roles in one natural sentence rather than creating additional subsections.\n\n---\n\n## 3.5 Visual and Audio Tracks from the Same Reference Video\n\n`<Video N>` and `<Audio N>` are numbered independently.\n\nEach index indicates only the label's order within its own category. The indices do not encode a pairing between the two categories.\n\nThe same reference video may therefore correspond to:\n\n```text\n<Video 1>\n<Audio 2>\n```\n\nDifferent indices do not prevent them from coming from the same source asset.\n\nAn ordinary reference video does not create `<Audio N>` merely because the file contains sound.\n\nAn `<Audio N>` definition primarily states the audio's role.\n\nState the shared source only when needed to remove provenance ambiguity:\n\n```text\n<Video 1> is the source video for the target video edit.\n<Audio 2> is the synchronized audio track of <Video 1> and is reused in the target video.\n```\n\n---\n\n# 4. `summary`\n\n`summary` uses one short English paragraph to summarize the target video and its reference relationships.\n\nIt begins with a square-bracketed task-type prefix.\n\nSupported task types are:\n\n```text\n[reference generation]\n[video editing]\n[video continuation]\n[audio reuse]\n[audio reference]\n[keyframe completion]\n```\n\nWhen a task satisfies multiple relationships, combine the task types with `+` and do not repeat a type.\n\nExamples:\n\n```text\n[reference generation] ...\n```\n\n```text\n[video editing + audio reuse] ...\n```\n\n```text\n[video continuation + keyframe completion] ...\n```\n\n```text\n[reference generation + audio reference] ...\n```\n\nChoose task types according to the actual role each reference asset plays in the target video.\n\nThe mere presence of a video or audio asset does not automatically create a corresponding task type.\n\nIf a reference video provides camera movement, cuts, or rhythm as generation guidance, use:\n\n```text\nreference generation\n```\n\nWhen an existing source video is directly modified, use:\n\n```text\nvideo editing\n```\n\nWhen new content continues, extends, resumes, or transitions from an existing source video, use:\n\n```text\nvideo continuation\n```\n\nWhen the same audio signal is reused in full or in part, use:\n\n```text\naudio reuse\n```\n\nWhen the audio signal is used only as a reference for timbre, rhythm, music style, dialogue, lyrics, sound-effect texture, or continuity, use:\n\n```text\naudio reference\n```\n\nWhen an image serves as a concrete target frame, keyframe, or other frame anchor, use:\n\n```text\nkeyframe completion\n```\n\nDo not introduce new reference labels in `summary`.\n\nUse only the labels already defined in `subject_definitions`.\n\nFor video-editing tasks, the summary begins after the task-type prefix with:\n\n```text\nThe target video is an edited version of <Video 1>.\n```\n\n---\n\n# 5. `retention_analysis`\n\n`retention_analysis` describes how each referenced item is preserved, transferred, copied, or referenced in the target video.\n\nUse one line for each reference label.\n\nPreserve the meaning established in `subject_definitions`.\n\n---\n\n## 5.1 Visible Content\n\n`<Subject N>`, `<Picture N>`, and `<Video N>` use the following relationship markers:\n\n| Relationship marker   | Meaning                                                                                                       |\n| --------------------- | ------------------------------------------------------------------------------------------------------------- |\n| `fully_preserved`     | The defined role of the referenced content is fully preserved                                                 |\n| `partially_preserved` | The referenced content is still used, but some defined characteristics are changed or only partially retained |\n| `attribute_transfer`  | Referenced characteristics are transferred to a different identifiable target subject                         |\n| `weak_reference`      | Only broad similarity in style, category, composition, or atmosphere is retained                              |\n\nSubject entry:\n\n```text\n<Subject 1> (appears in [Shot 1], [Shot 3]): fully_preserved - ...\n```\n\nPicture entry:\n\n```text\n<Picture 2> ([Shot 1] first frame): fully_preserved - ...\n```\n\nVideo-structure entry:\n\n```text\n<Video 1> (cut and pacing structure): weak_reference - ...\n```\n\nChoose the relationship marker according to the reference role established in `subject_definitions`.\n\nDo not treat newly added actions, backgrounds, or plot events in the target video as losses of reference fidelity.\n\n---\n\n## 5.2 Audio\n\n`<Audio N>` uses the following relationship markers:\n\n| Relationship marker | Meaning                                                                                                                      |\n| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |\n| `fully_copy`        | The complete source audio serves as the target video's complete final audio track                                            |\n| `partially_copy`    | Only part of the timeline or selected audio layers are copied, or other sounds are added, removed, or replaced after copying |\n| `reference`         | The signal is not copied directly; only timbre, rhythm, music style, dialogue content, or sound texture is referenced        |\n| `weak_reference`    | Only broad similarity in category or atmosphere is retained                                                                  |\n\nExample:\n\n```text\n<Audio 1>: fully_copy - <Audio 1> is reused 1:1 as the target video's complete final audio track.\n```\n\nExample:\n\n```text\n<Audio 2>: reference - the target speaker follows <Audio 2>'s voice timbre and measured delivery without copying the original signal.\n```\n\nDo not write `(Sx)` in `retention_analysis`.\n\n---\n\n# 6. `detailed_description`\n\n`detailed_description` is the main body of the full-reference rewrite.\n\nIt describes:\n\n* Visual style\n* Composition\n* Subject appearance\n* Subject position\n* Environment\n* Lighting\n* Props\n* Actions\n* State changes\n* Camera movement\n* Shot changes\n* Dialogue\n* Singing\n* Diegetic audio\n* Reference relationships\n\nWrite the description in target-video playback order.\n\nInsert reference labels where they apply.\n\nEvery detail should correspond to something visible or audible in the target video or to a defined reference relationship.\n\n---\n\n## 6.1 Basic Format\n\nThe body is written in English.\n\nPreserve the original language of dialogue, lyrics, and visible text.\n\n`[Shot 1]` marks the opening shot and has no timestamp.\n\nLater shots use:\n\n```text\n[Shot N] At MM:SS.mmm, ...\n```\n\nCut times must be strictly increasing and fall within the video duration.\n\nWrite camera movement as natural English within the current shot.\n\nGive vocal sources stable IDs such as `(S1)`, `(S2)`, and subsequent IDs.\n\nWrite dialogue and lyrics as:\n\n```text\n<d>[Language] ...</d>\n```\n\nUse `<scenetrans>` for dialogue or lyrics crossing a cut.\n\nUse `<cutoff>` when speech or lyrics are truncated by the end of the video.\n\n---\n\n## 6.2 Style and Opening Composition\n\nAt the beginning of `[Shot 1]`, establish the overall style and initial composition.\n\nCommon style expressions include:\n\n```text\nCinematic\nlive-action\n2D-animated\n3D CG\nclaymation\nwatercolor\nvintage film\n```\n\nIn Full-Reference Mode, derive the visual style and initial composition from the referenced material when applicable.\n\nExample:\n\n```text\nThe target video uses a realistic cinematic live-action style with soft lighting and a slightly desaturated color palette.\n\n[Shot 1] A medium-wide shot establishes <Subject 1>, the coffee-shop environment with its exposed brick wall, orange tufted sofa, patterned pillows, neon sign, and wooden coffee table.\n```\n\n---\n\n## 6.3 Shots and Cuts\n\nDo not add a timestamp to the first shot.\n\nUse sequential shot numbers for later shots.\n\nExample:\n\n```text\n[Shot 2] At 00:03.500, the shot cuts to...\n```\n\nFor ordinary cuts, use natural expressions such as:\n\n```text\nthe camera cuts to\nthe shot cuts to\nthe shot transitions to\nthe shot changes to\nthe shot switches to\n```\n\nCross-dissolve, fade, or wipe may be used when explicitly requested.\n\nA cut should introduce new information about the subject, space, state, viewpoint, or time.\n\nWhen only the distance or a slight angle needs to change, use camera motion.\n\n---\n\n## 6.4 Camera Motion\n\nA complete camera-motion expression has three dimensions:\n\n1. Motion type\n2. Amplitude\n3. Speed\n\nAdd amplitude and speed when they are meaningful.\n\nMedium amplitude and normal speed are usually omitted.\n\n### Motion Type\n\n| Expression                               | Description                                                        |\n| ---------------------------------------- | ------------------------------------------------------------------ |\n| `Zoom In / Zoom Out`                     | The focal length changes while the camera body remains stationary  |\n| `Push In / Pull Out`                     | The camera moves forward / backward                                |\n| `Pan Left / Pan Right`                   | The camera remains in place while the lens pivots horizontally     |\n| `Truck Left / Truck Right`               | The camera translates horizontally                                 |\n| `Tilt Up / Tilt Down`                    | The camera remains in place while the lens pivots vertically       |\n| `Pedestal Up / Pedestal Down`            | The entire camera moves upward / downward                          |\n| `Arc Shot`                               | The camera moves in an arc around the subject                      |\n| `Tracking Shot`                          | The camera follows a moving subject                                |\n| `Static Shot`                            | The camera position and lens remain still                          |\n| `Shake Slightly / Shake Strongly`        | Slight / strong camera shake                                       |\n| `POV`                                    | The subject's point of view                                        |\n| `Roll Clockwise / Roll Counterclockwise` | The camera rolls clockwise / counterclockwise around the lens axis |\n\n### Amplitude\n\n```text\nwith small amplitude\nwith large amplitude\n```\n\n### Speed\n\n```text\nat slow speed\nat fast speed\n```\n\nWrite camera movement as a natural action within the shot.\n\nExample:\n\n```text\nThe camera pushes in with small amplitude at slow speed toward the folded letter in her hands.\n```\n\n```text\nThe camera pans right with large amplitude at fast speed, revealing the open doorway.\n```\n\n```text\nThe camera holds a static shot as the runner exits the frame.\n```\n\n---\n\n## 6.5 Using Reference Labels in Shots\n\nAt the first clear appearance of an important `<Subject N>`, describe:\n\n* Its referenced characteristics\n* Its position in the frame\n* Its current action\n* The visible environment or interaction relevant to the shot\n\nContinue using the same label in later shots without redefining what the label represents.\n\nFor concrete frame anchors, use natural phrasing such as:\n\n```text\nthe shot begins from <Picture 1>\n```\n\n```text\nthe shot's keyframe corresponds to <Picture 2>\n```\n\n```text\nthe shot ends on <Picture 3>\n```\n\nWhen editing or continuing an original video, cite `<Video N>` naturally where its source state, structure, or continuation relationship applies.\n\nCite `<Audio N>` in the shot or semantic phase where the audio relationship is active.\n\n---\n\n## 6.6 Speakers, Audio Sources, Dialogue, and Singing\n\nSubjects who speak, sing, or produce an off-screen human voice use stable IDs:\n\n```text\n(S1)\n(S2)\n(S3)\n```\n\nWhen multiple already-numbered speakers speak or sing together, use a compound ID:\n\n```text\n(S1,S2)\n```\n\nA speaker keeps the same ID across shots.\n\nCharacters who never vocalize receive no speaker ID.\n\nWhen a speaker first appears, provide enough information from the visual and audio context to establish a stable identity, such as:\n\n* Character type\n* Age\n* Gender\n* On-screen or off-screen status\n* Pitch\n* Timbre\n* Speaking rate\n* Accent\n\nPlace the speaker's identifying phrase, ID, action, and delivery outside `<d>`.\n\nInside `<d>`, include only:\n\n1. The language tag\n2. The actual spoken content\n\nPreserve the original spoken words and punctuation as provided.\n\nExample:\n\n```text\n<Subject 2> (S1) turns toward the woman and says, <d>[English] Last summer, I went to my grandfather's house. He talked about you.</d>\n```\n\nWhen a referenced subject physically speaks, retain both the visual reference label and speaker ID:\n\n```text\n<Subject 2> (S1)\n```\n\nIf the same subject speaks off-screen, retain the same form and mark it as `off-screen`.\n\nWhen the speaker does not correspond to a defined subject, use a stable voice description followed by `(Sx)`.\n\nExample:\n\n```text\nA calm male voice with a low pitch (S2) speaks off-screen.\n```\n\n---\n\n## 6.7 Voiceover\n\nFor voiceover, use the exact phrase:\n\n```text\nsays in an off-screen voiceover\n```\n\nImmediately after every voiceover `<d>` block, state that the corresponding on-screen character's lips remain closed.\n\nExample:\n\n```text\nThe man (S1) says in an off-screen voiceover: <d>[English] I still remember that road.</d> while his lips remain completely closed.\n```\n\n---\n\n## 6.8 Dialogue and Lyrics Across Cuts\n\nWhen the same line of dialogue or lyrics crosses a cut, use `<scenetrans>` at the connecting points in both parts.\n\nExplicitly state that the audio continues across the cut.\n\nContinuity may be expressed with:\n\n```text\ncontinues seamlessly across the cut\ncontinues uninterrupted into the next shot\ncarries over from the previous shot\nremains audible across the transition\n```\n\nUse `<cutoff>` when speech or lyrics are truncated by the end of the video.\n\n---\n\n## 6.9 Reference Audio and Speakers\n\n`<Subject N>` identifies the referenced subject.\n\n`(Sx)` identifies the actual speaker.\n\nWhen the subject speaks, use:\n\n```text\n<Subject N> (Sx)\n```\n\nWhen an `<Audio N>` provides only a voice-timbre reference, the target speaker retains the corresponding `(Sx)`.\n\nExample:\n\n```text\n<Subject 3> (S1) speaks with the clear youthful voice timbre referenced from <Audio 1>.\n```\n\nWhen verbal content exists only as a cue within directly reused BGM or a complete soundtrack, use `<Audio N>` as the audible source and do not create an additional `(Sx)`.\n\nWhen a concrete person, character, narrator, or other independent vocal source produces the voice, assign and reuse `(Sx)` for that source.\n\nWhen dialogue, narration, or lyrics from reference audio are directly reused, or when the task explicitly requests their reperformance, preserve the exact source words and original language inside `<d>`.\n\nWrite:\n\n```text\n[unclear]\n```\n\nfor unintelligible spans instead of guessing or paraphrasing them.\n\nStandardize punctuation to the basic written marks needed to express the sentence, such as:\n\n```text\n,\n.\n?\n!\n```\n\nEnd complete statements, questions, and exclamations with `.`, `?`, or `!` respectively before `</d>`.\n\nWhen only timbre, rhythm, emotion, or delivery is referenced, do not carry the original dialogue from the reference audio into the target video.\n\nAssign `(Sx)` once according to the order of actual vocal events in the target video.\n\nReuse the corresponding ID at every actual vocal event in `detailed_description`.\n\nAn `<Audio N>` definition bound to a target speaker in `subject_definitions` reuses the same `(Sx)` and does not assign a new speaker ID independently.\n\n---\n\n## 6.10 On-Screen Text\n\nPlace any banner, sign, label, subtitle, or neon text that is actually visible on screen in English double quotation marks.\n\nPreserve the original text and punctuation verbatim.\n\nDo not translate visible text.\n\nExample:\n\n```text\nA red neon sign reading \"营业中\" glows above the doorway.\n```\n\n---\n\n## 6.11 Description Detail\n\n`detailed_description` should be detailed and explicit.\n\nFor each shot, establish:\n\n* Current composition\n* Subject appearance\n* Subject position\n* Environment\n* Lighting\n* Actions\n* State changes\n* Camera movement\n* Current sound\n* Dialogue\n* Points where referenced content actually appears\n* Points where referenced content takes effect\n\nAvoid reducing the description to a plot summary or a list of reference relationships.\n\nFor generation tasks, `detailed_description` is normally 350–500 English words.\n\nDialogue-dense content prioritizes fitting the complete spoken timeline rather than mechanically reaching a word count.\n\nVideo-editing descriptions scale with the complexity of the source video and do not have to follow the generation-task range.\n\nA single shot does not automatically justify a shorter description. Distribute detail across multiple shots according to their information load.\n\n---\n\n# 7. `overall_soundscape`\n\n`overall_soundscape` summarizes ambience and physical sounds across the full video.\n\nUse 1–4 English sentences in one continuous paragraph.\n\nInclude sounds such as:\n\n* Wind\n* Rain\n* Traffic\n* Footsteps\n* Fabric movement\n* Impacts\n* Breathing\n* Laughter\n* Panting\n* Other physical action sounds\n* Non-verbal human sounds\n\nDialogue, singing, and diegetic music already belong in `detailed_description` and should not be repeated here.\n\nWhen reference audio is used, state its copy or reference relationship in the appropriate audio section.\n\nExample:\n\n```text\noverall_soundscape: Quiet indoor room tone and a low ventilation hum continue throughout the video.\n```\n\nWhen copied ambience or sound effects form part of the target soundscape:\n\n```text\noverall_soundscape: The copied ambience layer from <Audio 1> continues throughout the target video.\n```\n\nUse:\n\n```text\nN/A\n```\n\nonly when the user explicitly requests complete silence throughout the video.\n\n---\n\n# 8. `non_diegetic_music`\n\n`non_diegetic_music` describes background music that the characters cannot hear and that is audible only to the audience.\n\nUse 1–3 English sentences.\n\nDescribe:\n\n* Instrumentation\n* Tempo\n* Rhythm\n* Dynamic changes\n* Volume development\n\nDo not use abstract mood words or explain the emotional function of the score.\n\nSinging, instruments, radio, television, or phone music audible to the characters are diegetic events and belong in `detailed_description`.\n\nExample:\n\n```text\nnon_diegetic_music: Sparse piano notes at a slow tempo, joined by sustained low strings that gradually increase in volume before fading out.\n```\n\nUse:\n\n```text\nN/A\n```\n\nwhen there is no non-diegetic music.\n\nWhen reference audio provides audience-only score:\n\n```text\nnon_diegetic_music: <Audio 2> is directly reused as the complete audience-only score.\n```\n\nWhen the same reference audio provides both ambience and audience-only music, describe the corresponding relationship in each appropriate section.\n\n---\n\n# 9. Complete Full-Reference Example\n\n```text\nsubject_definitions:\n<Subject 1> is the coffee-shop environment in <Picture 1>, featuring an exposed brick wall, an orange tufted sofa with patterned pillows, a neon sign, and a wooden coffee table.\n<Subject 2> is the fluffy white Samoyed in <Picture 2>, <Picture 3>, and <Picture 4>, with thick white fur, pointed ears, a dark nose, and a curved tail.\n<Subject 3> is the young blonde woman in <Video 1>, with long blonde hair and a light-pink button-down shirt with rolled-up sleeves.\n<Subject 4> is the young man in <Video 2>, with short wavy brown hair and a dark-grey hoodie with drawstrings.\n<Audio 1> is the voice-timbre reference for <Subject 3> (S1), containing a spoken English vocal layer.\n\nsummary:\n[reference generation + audio reference] The target video shows <Subject 3> eating a cookie in <Subject 1>. <Subject 4> enters with <Subject 2>, which lunges toward the cookie. The three-shot exchange uses <Audio 1> as the voice-timbre reference for <Subject 3> and ends with a canned audience laugh.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the exposed brick wall, orange tufted sofa, patterned pillows, neon sign, and wooden coffee table are retained.\n<Subject 2> (appears in [Shot 1], [Shot 2]): fully_preserved - the Samoyed's thick white fur, pointed ears, dark nose, and curved tail are retained.\n<Subject 3> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the blonde woman's identity, long hair, and light-pink shirt are retained.\n<Subject 4> (appears in [Shot 1], [Shot 2]): fully_preserved - the young man's short wavy brown hair and dark-grey hoodie are retained.\n<Audio 1>: reference - its vocal timbre guides the dialogue delivery of <Subject 3> without copying the original signal.\n\ndetailed_description:\nThe target video uses a realistic multi-camera sitcom style with warm indoor lighting.\n\n[Shot 1] A medium shot establishes <Subject 1>, the coffee shop with its exposed brick wall, orange tufted sofa, patterned pillows, neon sign, and wooden coffee table. <Subject 3> (S1), the young woman with long blonde hair and a light-pink button-down shirt with rolled-up sleeves, sits on the sofa holding a chocolate-chip cookie. From the left, <Subject 4>, the young man with short wavy brown hair and a dark-grey hoodie with drawstrings, enters holding the leash of <Subject 2>, the thick-furred white Samoyed with pointed ears, a dark nose, and a curved tail. The dog lunges toward the cookie and pulls the leash taut. <Subject 3> (S1) jerks her hand back and, using the clear youthful voice timbre referenced from <Audio 1>, exclaims with light annoyance, <d>[English] Hey! Watch your dog!</d> She closes her lips and guards the cookie while <Subject 4> pulls the dog back.\n\n[Shot 2] At 00:03.000, the shot cuts to a close-up of <Subject 4> (S2), the young man in the dark-grey hoodie from Shot 1, sitting beside <Subject 3> on the sofa and holding <Subject 2> securely in his arms. <Subject 4> (S2) says in a casual young male voice with a playful tone and an easy conversational pace, <d>[English] He just likes cookies more than me.</d> He closes his mouth into an apologetic smile and strokes the dog's thick white fur.\n\n[Shot 3] At 00:05.000, the shot cuts to a close-up of <Subject 3> (S1), the blonde woman in the light-pink shirt from Shot 1. Her annoyance softens as she looks toward the Samoyed. <Subject 3> (S1) replies in the same clear youthful voice referenced from <Audio 1> with an amused cadence, <d>[English] Well, he has good taste at least.</d> She smiles and raises the cookie in a small toast-like gesture. A classic canned audience laugh begins immediately after the line and continues through the final frame.\n\noverall_soundscape:\nSoft indoor coffee-shop room tone continues throughout the scene.\n\nnon_diegetic_music:\nN/A\n```\n"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "PrimitiveStringMultiline"
+    }
+  },
+  "229:132": {
+    "inputs": {
+      "on_false": [
+        "229:255",
+        0
+      ],
+      "on_true": [
+        "229:130",
+        0
+      ],
+      "switch": false
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch (llm)"
+    }
+  },
+  "229:144": {
+    "inputs": {
+      "vae_name": "minimax_h3_sol_vae_int8_convrot.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "VAELoader"
+    }
+  },
+  "229:146": {
+    "inputs": {
+      "value": "subject_definitions:\n<Subject 1> is the white long-haired cat in <Picture 1>, with thick snow-white fur, striking bright blue eyes, a small pink nose, a round plump body, and a fluffy plume tail; it is rendered with full photographic realism, and the anthropomorphism is expressed solely through the upward curl of the corner of its mouth into a faint smirk, with no change to its eyes.\n<Subject 2> is the black long-haired Maine Coon in <Picture 2>, with thick jet-black fur, vivid golden-yellow eyes, tall pointed ear tufts, a sturdy build, and a large bushy tail; it is rendered with full photographic realism.\n<Subject 3> is a cozy living-room interior, blending the light-beige short-pile carpet, wooden cat tree, warm-toned wooden cabinet, and soft afternoon natural light filtering through sheer curtains seen across both reference images.\n\nsummary:\n[reference generation] A fixed-camera close-up realistic short in which <Subject 1>, with the corner of its mouth curled into a faint smirk, lifts a paw and swats <Subject 2> hard on top of the head, inside <Subject 3>.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the white long fur, blue eyes, pink nose, round plump body, and fluffy tail from <Picture 1> are retained in full photographic realism; only the corner of the mouth curls upward into a faint smirk, with the eyes remaining in their natural state and no cartoon styling or deformation.\n<Subject 2> (appears in [Shot 1]): fully_preserved - the black long fur, golden-yellow eyes, pointed ear tufts, sturdy build, and bushy tail from <Picture 2> are retained in full photographic realism.\n<Subject 3> (appears in [Shot 1]): partially_preserved - the cozy living-room atmosphere, soft afternoon lighting, carpet, and wooden cat-tree background are retained while furniture details are blended between the two reference images.\n\ndetailed_description:\nThe target video is in a realistic, natural pet-photography style: the two cats look exactly like real, living long-haired cats photographed in a real living room, with soft warm afternoon window light, shallow depth of field, and individual fur strands visible. No cartoon styling, no exaggerated deformation, no 3D-animation look.\n[Shot 1] A fixed close-up camera frames the upper bodies of two cats sitting side by side on a light-beige short-pile rug inside <Subject 3>; a wooden cat tree and warm-toned cabinet behind them are softly out of focus. On the left sits <Subject 1>, the plump white long-haired cat, facing mostly forward. The corner of its mouth slowly curls upward into a faint, knowing smirk — only the mouth line changes, its bright blue eyes remaining in their natural, open state, unchanged. It holds this smirk for a beat. On the right sits <Subject 2>, the sturdy black Maine Coon, facing forward, its ear tufts pricked, completely unaware. <Subject 1> then lifts one fluffy white front paw and brings it down in one firm, exaggerated motion, whacking <Subject 2> hard on top of the head with a soft, muffled thud of fur against fur. Under the blow, <Subject 2>'s head dips forward, its ear tufts folding flat. <Subject 1> retracts its paw and keeps the corner of its mouth curled in the same smirk.\n\noverall_soundscape:\nQuiet living-room room tone with a faint ambient hum continues throughout. A soft, dry thud of fur landing on fur accompanies the swat.\n\nnon_diegetic_music:\nN/A\n"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "PrimitiveStringMultiline"
+    }
+  },
+  "229:147": {
+    "inputs": {
+      "model": [
+        "229:253",
+        0
+      ],
+      "attention": "comfy kitchen attention"
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "ModelAttentionBackend"
+    }
+  },
+  "229:148": {
+    "inputs": {
+      "model": [
+        "229:147",
+        0
+      ],
+      "selection": "sol-attn",
+      "selection.tau": 1.3,
+      "start_percent": 0.3,
+      "end_percent": 0.9
+    },
+    "class_type": "BlockSparseAttention",
+    "_meta": {
+      "title": "BlockSparseAttention"
+    }
+  },
+  "229:161": {
+    "inputs": {
+      "on_false": [
+        "232",
+        0
+      ],
+      "on_true": [
+        "229:162",
+        0
+      ],
+      "switch": true
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch (Model)"
+    }
+  },
+  "229:162": {
+    "inputs": {
+      "model": [
+        "232",
+        0
+      ],
+      "lora_name": "MiniMax-H3\\minimax_h3_ref2v_turbo_4step_v1.0_768p_comfyui_bf16.safetensors",
+      "strength_model": 0.75
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
+    }
+  },
+  "229:166": {
+    "inputs": {
+      "clip": [
+        "229:13",
+        0
+      ],
+      "vae": [
+        "229:144",
+        0
+      ],
+      "audio_vae": [
+        "229:24",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "237",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "238",
+        0
+      ],
+      "ref_images.ref_image_2": [
+        "239",
+        0
+      ],
+      "ref_images.ref_image_3": [
+        "242",
+        0
+      ],
+      "ref_videos.ref_video_0": [
+        "247",
+        0
+      ],
+      "ref_video_audios.ref_video_audio_0": [
+        "236",
+        1
+      ],
+      "ref_audios.ref_audio_0": [
+        "243",
+        0
+      ],
+      "prompt": [
+        "229:132",
+        0
+      ],
+      "width": [
+        "251",
+        0
+      ],
+      "height": [
+        "251",
+        1
+      ],
+      "length": [
+        "229:107",
+        1
+      ],
+      "ref_image_size": "match",
+      "ref_images.ref_image_4": [
+        "900",
+        0
+      ],
+      "ref_images.ref_image_5": [
+        "901",
+        0
+      ],
+      "ref_images.ref_image_6": [
+        "902",
+        0
+      ],
+      "ref_images.ref_image_7": [
+        "903",
+        0
+      ],
+      "ref_images.ref_image_8": [
+        "904",
+        0
+      ],
+      "ref_videos.ref_video_1": [
+        "914",
+        0
+      ],
+      "ref_video_audios.ref_video_audio_1": [
+        "912",
+        1
+      ],
+      "ref_videos.ref_video_2": [
+        "915",
+        0
+      ],
+      "ref_video_audios.ref_video_audio_2": [
+        "913",
+        1
+      ],
+      "ref_audios.ref_audio_1": [
+        "920",
+        0
+      ],
+      "ref_audios.ref_audio_2": [
+        "921",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMaxH3ReferenceToVideo"
+    }
+  },
+  "229:220": {
+    "inputs": {
+      "sigmas": "1, .9882, .973, .9524, .9231, .878, .8, .6316, .4737, .1579, 0 "
+    },
+    "class_type": "ManualSigmas",
+    "_meta": {
+      "title": "ManualSigmas"
+    }
+  },
+  "229:222": {
+    "inputs": {
+      "model": [
+        "229:148",
+        0
+      ],
+      "scheduler": "beta",
+      "steps": [
+        "229:124",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "BasicScheduler"
+    }
+  },
+  "229:223": {
+    "inputs": {
+      "on_false": [
+        "229:222",
+        0
+      ],
+      "on_true": [
+        "229:220",
+        0
+      ],
+      "switch": true
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch (Steps)"
+    }
+  },
+  "229:224": {
+    "inputs": {
+      "value": "# 全参考模式改写输出格式指南\n\n本指南规定 MiniMax H3 全参考模式下，改写结果的组织方式、参考素材标记规则，以及各输出区块的内容要求。\n\n## 最高优先级规则：使用简体中文输出\n\n除固定字段名、协议标记、任务类型标记、关系标记、必要的技术术语、画面中实际出现的文字，以及按任务要求保留的原始对白或歌词外，**所有说明性正文均使用简体中文**。\n\n六个输出区块中的说明性内容都必须使用中文，包括 `subject_definitions`、`summary`、`retention_analysis`、`detailed_description`、`overall_soundscape` 和 `non_diegetic_music`。\n\n角色外观、场景环境、服装道具、动作、表情、身体姿态、镜头构图、摄影机运动、光线、声音、情绪和节奏等，均使用自然、准确、具体的中文描述。不得因为改用中文而删减镜头信息、缩短描述、改变参考素材关系或省略关键动作。\n\n以下内容必须保留原样，不得翻译或改名：\n\n- 六个区块名称：`subject_definitions`、`summary`、`retention_analysis`、`detailed_description`、`overall_soundscape`、`non_diegetic_music`\n- 参考标签：`<Subject N>`、`<Picture N>`、`<Video N>`、`<Audio N>`\n- 镜头标记及时间戳格式：`[Shot N]`、`MM:SS.mmm`\n- 说话者标识：`(S1)`、`(S2)` 等\n- 对白标签：`<d>`、`</d>`\n- 连续性标记：`<scenetrans>`、`<cutoff>`\n- 任务类型前缀和关系标记，例如 `reference generation`、`video editing`、`fully_preserved`、`partially_preserved`、`attribute_transfer`、`weak_reference`、`fully_copy`、`partially_copy` 和 `reference`\n\n任务类型前缀仍写在方括号中，例如 `[reference generation + audio reference]`，只将前缀之后的说明性正文写成中文。\n\n对白规则：直接复用参考素材中的对白、旁白或歌词时，保留原始语言和原文；如果要求重新演绎，也应按任务要求保留指定文本。新创作的对白使用用户指定的语言；用户未指定时，默认使用简体中文。画面中可见的文字保留画面原有语言。\n\n**描述细节要求：** `detailed_description` 必须尽可能详细、明确。每个镜头都应清楚交代当前构图、主体外观和位置、环境与光线、动作及状态变化、摄影机运动、当前声音，以及参考内容实际出现或开始生效的位置。避免把镜头描述压缩成剧情梗概或单纯的参考关系清单。\n\n本指南将镜头、运镜、说话者、对白、画面文字及普通声音的必要格式规则直接纳入第 5 节，确保本指南可以独立使用；全参考模式的参考标签、分析区块和参考关系仍按本指南专属规则处理。\n\n## 1. 总体结构\n\n完整的改写输出必须按以下顺序包含六个区块：\n\n| 区块 | 用途 |\n| --- | --- |\n| `subject_definitions` | 定义参考内容及其参考标签 |\n| `summary` | 概括任务类型、目标视频和主要参考关系 |\n| `retention_analysis` | 说明参考内容在目标视频中如何保留、迁移或复用 |\n| `detailed_description` | 按播放顺序描述画面、动作、镜头、声音和对白 |\n| `overall_soundscape` | 概括环境声和物理音效 |\n| `non_diegetic_music` | 描述仅供观众听到的背景音乐 |\n\n## 2. 参考标签与定义（`subject_definitions`）\n\n全参考模式使用四类标签来识别参考内容的来源及其用途：\n\n| 标签 | 含义 |\n| --- | --- |\n| `<Subject N>` | 从参考素材中提取、可在目标视频中复用或修改的可见内容 |\n| `<Picture N>` | 作为目标视频具体画面、关键帧或镜头规划依据的参考图片 |\n| `<Video N>` | 用作剪辑源、续写起点或整体时间结构参考的参考视频 |\n| `<Audio N>` | 被复制或用作参考的音频信号 |\n\n一旦为某项内容分配参考标签，该标签在 `subject_definitions`、`summary`、`retention_analysis`、`detailed_description` 和声音相关区块中必须始终指向同一内容。\n\n`subject_definitions` 用于逐项定义后续需要单独追踪的参考内容，例如人物、环境、源视频结构或音轨。每项内容单独占一行，说明标签所指内容、参考用途以及需要保持的主要特征；当需要明确素材来源时，注明对应的源素材。如果 `<Picture N>` 或 `<Video N>` 仅用于说明另一项参考内容的来源，后续不会单独分析或使用它，则只需在该项定义中引用，不必额外创建一行。`retention_analysis` 则记录每项参考内容出现的位置，以及它是被完整保留、部分保留、迁移还是复用。\n\n### 2.1 `<Subject N>`\n\n`<Subject N>` 用于表示可以在目标视频中复用的可见内容，包括：\n\n- 人物、动物或物体\n- 场景、背景或环境\n- 服装、道具、界面或视觉特效\n- 风格、动作、表情或姿势\n\n它代表最终会在目标视频中实际使用的内容单元，而不是源文件本身。一项 Subject 可以由多个参考素材共同定义；一份参考素材也可以提供多个不同的 Subject。\n\n示例：\n\n```text\n<Subject 1> 是 <Picture 1> 中的年轻女性，她留着深色长发，穿蓝色开衫，佩戴一条纤细的银色项链。\n```\n\n当同一个主体由多个素材共同定义时，应合并来源，并说明每份素材分别提供哪些信息：\n\n```text\n<Subject 1> 是一名女性，她的外观参考 <Picture 1>，行走动作参考 <Video 1>。\n```\n\n### 2.2 `<Picture N>`\n\n当参考图片本身充当某个镜头的首帧、关键帧、尾帧、编辑后的关键帧或构图锚点时，才单独建立 `<Picture N>` 定义。\n\n示例：\n\n```text\n<Picture 2> 是 [Shot 1] 的首帧，画面中一名女性坐在咖啡馆窗边。\n```\n\n如果图片只用于定义角色、场景、服装或风格，不要单独创建 Picture 条目，而应在相应的 `<Subject N>` 定义中引用该图片。\n\n当图片充当分镜或镜头规划参考时，应说明它对应哪些镜头，以及它提供了哪些规划信息：\n\n```text\n<Picture 3> 是 [Shot 1] 和 [Shot 2] 的分镜参考，用于确定视角、主体在画面中的位置和镜头顺序。\n```\n\n### 2.3 `<Video N>`\n\n`<Video N>` 专门用于描述整段视频层面的关系，例如：\n\n- 对原视频进行剪辑\n- 从原视频结尾继续生成\n- 参考原视频的摄影机运动、剪辑点、节奏或时间结构\n\n示例：\n\n```text\n<Video 1> 是目标视频剪辑任务的源视频。\n```\n\n如果目标视频复用了参考视频中的人物、物体、场景、动作或特效等可见内容，这些内容仍应定义为 `<Subject N>`。`<Video N>` 用于标识素材来源或结构来源，不能取代 Subject 标签。\n\n### 2.4 `<Audio N>`\n\n`<Audio N>` 表示独立的音频素材，或从参考视频中启用并同步使用的音轨。常见用途包括：\n\n- 复制全部或部分音频信号\n- 参考背景音乐风格\n- 参考说话者的音色和表达方式\n- 使用原音频中的对白、歌词或音效\n- 参考节拍、节奏或音频连续性\n\n当某个 `<Audio N>` 明确对应目标视频中的一位说话者时，定义中必须复用该说话者的全局 ID。如果说话者对应某个已定义的主体，写成 `<Subject N> (Sx)`；如果说话者没有对应的已定义主体，则使用稳定的声音描述，并在后面加上 `(Sx)`。说话者 ID 按目标视频中实际发声事件的全局顺序分配，不得在音频定义中单独重新编号。具体编号规则见第 5.4 节。\n\n示例：\n\n```text\n<Audio 1> 是 <Subject 1> (S1) 的音色参考，包含一段英语人声。\n```\n\n如果同一音频素材承担多个用途，应在一个自然句子中说明这些用途，不必额外创建多个小节。\n\n### 2.5 同一参考视频中的画面轨道与音频轨道\n\n`<Video N>` 和 `<Audio N>` 分别独立编号。每个编号只表示该类别内部的标签顺序，并不代表两类标签之间的配对关系。因此，同一份参考视频可以对应 `<Video 1>` 和 `<Audio 2>`；编号不同并不意味着它们来自不同素材。\n\n普通参考视频即使包含声音，也不会因此自动生成 `<Audio N>` 定义。\n\n`<Audio N>` 的定义主要说明音频的用途，不一定要注明它来自哪个 `<Video N>`。只有在需要消除素材来源歧义时，才明确写出共同来源，例如：\n\n```text\n<Video 1> 是目标视频剪辑任务的源视频。\n<Audio 2> 是 <Video 1> 中与画面同步的音轨，并将在目标视频中复用。\n```\n\n## 3. `summary`\n\n本区块使用一个简短的中文段落概括目标视频及其参考关系。段落开头必须先写方括号包围的任务类型前缀：\n\n```text\n[reference generation] ...\n[video editing + reference generation + audio reuse] ...\n```\n\n根据每项参考素材在目标视频中的实际用途选择任务类型：\n\n| 任务类型 | 使用条件 |\n| --- | --- |\n| `keyframe completion` | 图片作为目标视频的首帧、关键帧、尾帧、编辑后的关键帧或其他具体画面锚点 |\n| `reference generation` | 图片、视频或音频为角色、场景、风格、动作、运镜、分镜等生成内容提供参考，但素材本身不充当具体目标帧，也不是被直接剪辑或续写的源视频 |\n| `video editing` | 直接修改已有源视频；单独编辑图片或在静态关键帧之间生成内容不属于此类型 |\n| `video continuation` | 从已有源视频继续、扩展、恢复或衔接生成新内容 |\n| `audio reuse` | 全部或部分复用同一段音频信号 |\n| `audio reference` | 不直接复制音频信号，只参考其音乐风格、音色、对白或歌词内容、音效质感、节拍或连续性 |\n\n当一个任务同时符合多个关系时，将对应任务类型用 ` + ` 连接，且每种类型只写一次。例如，从源视频继续生成，同时使用一张图片作为尾帧，应写为 `[video continuation + keyframe completion]`。剪辑源视频并保留其原始音频，可以写为 `[video editing + audio reuse]`。\n\n参考素材中出现视频或音频，并不自动意味着需要加入对应任务类型。如果参考视频仅提供摄影机运动、剪辑点或节奏，通常应归类为 `reference generation`。只有直接剪辑该视频或从该视频继续生成时，才使用 `video editing` 或 `video continuation`。\n\n剪辑源视频时，如果原始音频仍然可听，应同时加入 `audio reuse`。从源视频继续生成时，如果没有直接复制原音频信号，只是延续原音轨的听感特征，则应加入 `audio reference`。\n\n`summary` 使用前面定义的 `<Subject N>`、`<Picture N>`、`<Video N>` 和 `<Audio N>` 标签，说明主要主体、镜头流程及参考素材的作用。不得在本区块引入此前未定义的新参考标签。\n\n对于视频剪辑任务，在任务类型前缀之后，摘要必须以以下句式开头：\n\n```text\nThe target video is an edited version of <Video 1>.\n```\n\n此句是原指南规定的固定英文句式。为保持本中文版的语言一致性，正文可以使用中文表达，但如果你的实际工作流依赖原始固定句式，应保留原文。推荐中文写法为：\n\n```text\n[video editing] 目标视频是在 <Video 1> 的基础上剪辑得到的版本。\n```\n\n## 4. `retention_analysis`\n\n本区块说明各项参考内容在目标视频中如何被保留、迁移、复制或参考。每个参考标签单独占一行，并始终保持 `subject_definitions` 中为该标签定义的含义。\n\n### 4.1 可见内容\n\n`<Subject N>`、`<Picture N>` 和 `<Video N>` 使用以下关系标记。它们是固定英文值，必须原样保留：\n\n| 关系标记 | 含义 |\n| --- | --- |\n| `fully_preserved` | 参考内容所定义的特征或用途被完整保留 |\n| `partially_preserved` | 参考内容仍被使用，但部分已定义特征发生改变或只得到部分保留 |\n| `attribute_transfer` | 将参考内容的特征迁移到另一个可识别的目标主体上 |\n| `weak_reference` | 只保留风格、类别、构图或氛围层面的总体相似性 |\n\nSubject 条目示例：\n\n```text\n<Subject 1>（出现在 [Shot 1]、[Shot 3]）：fully_preserved - 保留原有的角色外观、服装和主要视觉特征。\n```\n\nPicture 条目示例：\n\n```text\n<Picture 2>（[Shot 1] 首帧）：fully_preserved - 保留参考图中的人物位置、镜头角度和主要构图。\n```\n\nVideo 结构条目示例：\n\n```text\n<Video 1>（剪辑与节奏结构）：weak_reference - 仅参考原视频的剪辑节奏和整体结构。\n```\n\n### 4.2 音频\n\n`<Audio N>` 使用以下关系标记：\n\n| 关系标记 | 含义 |\n| --- | --- |\n| `fully_copy` | 完整源音频作为目标视频完整的最终音轨 |\n| `partially_copy` | 只复制部分时间段或指定音频层，或者复制后又增加、删除或替换其他声音 |\n| `reference` | 不直接复制信号，只参考音色、节奏、音乐风格、对白内容或音效质感 |\n| `weak_reference` | 只保留类别或氛围层面的总体相似性 |\n\n示例：\n\n```text\n<Audio 1>: fully_copy - 将 <Audio 1> 原样复用为目标视频完整的最终音轨。\n```\n\n```text\n<Audio 2>: reference - 目标说话者参考 <Audio 2> 的音色和沉稳的表达节奏，但不直接复制原始音频信号。\n```\n\n每个关系标记都必须符合 `subject_definitions` 中为该标签定义的参考用途。目标视频新增的动作、背景或剧情事件，不应被视为参考保真度的损失。\n\n## 5. `detailed_description`\n\n这是全参考模式改写输出的主体部分。必须按目标视频的实际播放顺序，逐镜头描述画面、动作、声音和对白，并在适用的位置插入参考标签。\n\n### 5.1 镜头、运镜、说话者、对白与普通声音的通用格式\n\n本节将《Video Prompt Writing Guide（T2VA / I2VA / FL2VA / L2VA）》中的通用格式规则直接纳入本指南。全参考模式在遵循以下规则的同时，还必须按需插入 `<Subject N>`、`<Picture N>`、`<Video N>` 和 `<Audio N>`，并遵守本指南规定的六区块结构及参考关系规则。若其他文档更新了通用格式，应同步检查并更新本节。\n\n#### 5.1.1 镜头编号、切镜与时间戳\n\n- 第一个镜头使用 `[Shot 1]`，不添加时间戳。\n- 后续镜头按播放顺序连续编号，例如 `[Shot 2]`、`[Shot 3]`。\n- 后续镜头的切镜时间写在镜头标记之后，格式为 `[Shot N] At MM:SS.mmm，...`。`[Shot N]`、`At` 和时间戳格式均保持原样；时间戳采用分钟、秒和毫秒格式，例如 `At 00:03.500`。\n- 切镜时间必须位于目标视频时长范围内，并严格递增。不要为同一个切镜点指定互相冲突的时间。\n- 普通切镜可使用“画面切换至”“镜头切换至”“切换到……的特写”“镜头转至”等自然表达。只有用户明确要求时，才使用叠化、淡入淡出、划像等特殊转场。\n- 每次切镜都应带来新的主体信息、空间信息、状态变化、视角或时间信息。如果只是改变景别或轻微调整观察角度，优先通过摄影机运动完成，而不是无必要地增加镜头。\n\n示例：\n\n```text\n[Shot 1] 中景镜头展现……\n[Shot 2] At 00:03.500，画面切换至主体手部的特写……\n```\n\n#### 5.1.2 摄影机运动：类型、幅度与速度\n\n摄影机运动应以自然、明确的中文描述写入镜头正文。需要时说明三个维度：**运动类型**（摄影机如何移动）、**幅度**（构图变化范围）和**速度**（运动节奏）。只有在幅度或速度会影响画面表达时才补充；常规幅度和正常速度可以省略。不要把一串运动术语堆成独立标签。\n\n| 运动类型 | 含义 |\n|---|---|\n| `Zoom In / Zoom Out` | 摄影机机位保持不动，通过改变焦距使画面放大或缩小 |\n| `Push In / Pull Out` | 摄影机向前推进或向后拉远 |\n| `Pan Left / Pan Right` | 摄影机位置不变，镜头水平向左或向右转动 |\n| `Truck Left / Truck Right` | 摄影机整体向左或向右平移 |\n| `Tilt Up / Tilt Down` | 摄影机位置不变，镜头垂直向上或向下转动 |\n| `Pedestal Up / Pedestal Down` | 摄影机整体升高或降低 |\n| `Arc Shot` | 摄影机围绕主体沿弧线移动 |\n| `Tracking Shot` | 摄影机跟随移动中的主体 |\n| `Static Shot` | 摄影机位置和镜头均保持稳定 |\n| `Shake Slightly / Shake Strongly` | 摄影机轻微或明显晃动 |\n| `POV` | 主体的主观视角 |\n| `Roll Clockwise / Roll Counterclockwise` | 摄影机围绕镜头轴顺时针或逆时针旋转 |\n\n幅度和速度可分别描述为“小幅度 / 大幅度”以及“缓慢 / 快速”。例如：\n\n```text\n摄影机以小幅度、缓慢推进的方式靠近她手中的折叠信件。\n摄影机以大幅度、快速向右摇摄的方式展现敞开的门口。\n跑步者离开画面时，摄影机保持固定机位。\n```\n\n#### 5.1.3 说话者 ID 与声音身份\n\n- 说话、歌唱或发出画外人声的主体使用稳定 ID，例如 `(S1)`、`(S2)`。\n- 同一说话者在不同镜头中必须沿用相同 ID，不得因为切镜、改变景别或改变情绪而重新编号。\n- 多个已编号的说话者同时说话或歌唱时，可使用组合 ID，例如 `(S1,S2)`。\n- 不发声的角色不分配说话者 ID。\n- 说话者首次出现时，应根据视觉和音频上下文提供足够信息，以建立稳定身份。可描述角色类型、年龄、性别、是否在画面内，以及声音的音高、音色、语速或口音。只写参考素材或任务明确支持的信息，不要自行补造身份特征。\n- 如果发声者对应一个已定义的参考主体，使用 `<Subject N> (Sx)`；如果没有对应的已定义主体，则用稳定的声音描述并接上 `(Sx)`。\n- 当某个 `<Audio N>` 已绑定目标说话者时，必须沿用同一个 `(Sx)`。说话者 ID 按目标视频中实际发声事件的全局顺序分配，不能在音频定义中另行编号。\n\n#### 5.1.4 对白、歌唱与画外旁白\n\n- 对白和歌词放在 `<d>` 与 `</d>` 之间，并在开头写明语言标签，例如 `<d>[Chinese] ……</d>` 或 `<d>[English] ……</d>`。\n- `<d>` 内只放实际说出的对白或唱出的歌词，不放角色外观、说话方式、动作说明或镜头描述；这些信息写在标签之外。\n- 直接复用参考素材中的对白、旁白或歌词时，保留原始语言和准确措辞，不得翻译或改写。若输入要求重新演绎指定文本，也必须按任务要求保留指定内容。新创作对白使用用户指定的语言；用户未指定时，默认使用简体中文。\n- 对无法听清的语音片段使用 `[unclear]`，不要猜测或自行补写。\n- 标点应服务于原句表达，使用必要的逗号、句号、问号或感叹号；删除重复波浪号、表情符号、项目符号和装饰性标点。\n- 说话者身份、音色、语气、情绪、音量和动作写在 `<d>` 之外。\n- 画外旁白使用固定短语 `says in an off-screen voiceover`，并在对应的 `<d>` 区块之后立即说明对应的画面内角色嘴唇始终闭合。\n- 如果同一句对白或歌词跨越切镜，应在衔接处使用 `<scenetrans>`，并说明声音跨越切镜持续播放。如果视频结束时发言被截断，使用 `<cutoff>`。\n- 同一声音跨镜头连续时，可使用“声音无缝跨越切镜继续”“声音不间断地延续到下一镜头”“声音从上一镜头延续过来”等描述。\n\n示例：\n\n```text\n<Subject 2> (S1) 转向那名女性并说道：<d>[Chinese] 去年夏天，我去了爷爷家。他还提起过你。</d>\n一位声音轻柔、略带气声的年轻女性（S2）说道：<d>[English] I get off at the next station.</d>\n男人（S3）以 says in an off-screen voiceover 的方式说道：<d>[English] I still remember that road.</d>，同时他的嘴唇始终完全闭合。\n```\n\n#### 5.1.5 画面中可见的文字\n\n画面中实际可见的横幅、标牌、标签、字幕、屏幕文字或霓虹文字，均使用英文双引号括起来，并保留其原始文字和标点，不进行翻译。不要把提示词中对画面内容的说明误当成画面里实际出现的文字。\n\n```text\n门上方亮着一块红色霓虹招牌，写着 \"营业中\"。\n```\n\n#### 5.1.6 普通声音与镜头同步\n\n- 与具体镜头同步的环境声、物理动作音效、角色呼吸、笑声、喘气声及其他非语言人声，应在 `detailed_description` 对应的镜头或动作位置中描述。\n- 描述声音时尽可能明确声音来源、发生时机、持续时间或与动作的关系，例如“杯子落地时发出清脆的破裂声”“脚步声随着人物走近逐渐变响”。\n- 对白、歌唱及具体声音事件应保留在其发生的镜头中；`overall_soundscape` 只作整段视频的声音概括，不应代替镜头内的声音时间线。\n- 参考音频在目标视频中开始生效时，应在对应镜头或声音阶段引用 `<Audio N>`，并明确说明是直接复制音频信号，还是只参考其音色、节奏或音效质感。\n\n### 5.2 全参考模式的差异\n\n| 维度 | T2VA | 全参考模式 |\n| --- | --- | --- |\n| 主体描述字段 | `integrated_multimodal_description` | `detailed_description` |\n| 风格开场 | 写在 `[Shot 1]` 之后 | 在 `[Shot 1]` 之前用一到两句建立整体风格 |\n| 参考信息 | 不使用全参考标签 | 在 `<Subject N>`、`<Picture N>`、`<Video N>` 和 `<Audio N>` 首次出现及其作用生效的位置插入对应标签 |\n| 音频关系 | 描述目标视频自身的声音 | 在对应镜头或声音阶段引用 `<Audio N>`，并说明音频是被复制还是仅作为参考 |\n\n风格开场示例：\n\n```text\n目标视频采用电影感、文学化的音乐短片风格，光线柔和，整体色彩略微低饱和。\n[Shot 1] 镜头从一条拥挤的城市街道开始……\n[Shot 2] At 00:09.000，画面切换为一个极近距离特写……\n```\n\n对于生成任务，`detailed_description` 通常相当于 350–500 个英文单词的描述量。中文版不应机械地按中文词数对应换算，而应完整保留相当的信息密度和细节。对白密集的内容应优先保证完整的发声时间线，而不是为了达到字数机械扩写。视频剪辑任务的描述长度应根据源视频的复杂程度调整，不必遵守生成任务的长度范围。单个镜头也不意味着可以自动缩短描述；应根据各镜头的信息量分配细节。\n\n### 5.3 在镜头中使用参考标签\n\n重要的 `<Subject N>` 首次清晰出现时，应描述其参考特征、在画面中的位置，以及该镜头实际可见的当前动作。后续镜头继续使用同一标签，不要重新定义该标签所代表的内容。\n\n对于具体画面锚点，使用自然、明确的表达：\n\n```text\n镜头从 <Picture 1> 对应的画面开始。\n镜头的关键帧对应 <Picture 2>。\n镜头结束时停留在 <Picture 3> 对应的画面。\n```\n\n剪辑或续写原视频时，应在源视频状态、结构或续写关系实际适用的位置自然引用 `<Video N>`。当 `<Audio N>` 对应的音频关系开始生效时，应在相应镜头或语义阶段引用它。\n\n### 5.4 说话者、音频来源与对白\n\n说话者 ID 和 `<d>` 的基本格式遵循 T2VA。当某个参考主体实际开口说话时，必须同时保留视觉参考标签和说话者 ID：\n\n```text\n<Subject 2> (S1) 转向那名女性并说道：<d>[Chinese] 去年夏天，我去了爷爷家。他还提起过你。</d>\n```\n\n`<Subject N>` 用于标识参考主体，`(Sx)` 用于标识实际发声者。当该主体开口说话时，写作 `<Subject N> (Sx)`。如果同一主体在画外说话，仍使用相同格式，并标注 `off-screen`。如果说话者没有对应的已定义主体，则使用稳定的声音描述，后接 `(Sx)`。\n\n当语言内容只是直接复用的背景音乐或完整配乐中的一部分提示，而且没有人物、角色、旁白者或其他独立的发声来源实际说出这些内容时，应将 `<Audio N>` 作为可听见内容的来源，不要额外创建 `(Sx)`。如果声音确实由具体人物、角色、旁白者或其他独立发声来源产生，则为其分配并持续复用 `(Sx)`。\n\n示例：\n\n```text\n当 <Audio 1> 播放到短语 <d>[English] I'm lonely lonely lonely lonely lonely I'm lonely</d> 时，<Subject 1> 做出与该短语对应的手势；这段声音仍属于 <Audio 1>，不单独创建新的说话者。\n```\n\n当直接复用参考音频中的对白、旁白或歌词，或输入要求重新演绎这些内容时，必须在 `<d>` 内保留源文本的准确措辞和原始语言。对于无法听清的部分，使用 `[unclear]`，不要猜测或自行改写。标点应统一为表达句意所需的基本标点，例如逗号、句号、问号和感叹号；删除重复波浪号、表情符号、项目符号及装饰性标点。完整陈述句、疑问句和感叹句分别在 `</d>` 前使用适当的句号、问号或感叹号。\n\n如果只参考音色、节奏、情绪或表达方式，则不要将参考音频中的原对白带入目标视频。\n\n按照目标视频中实际发声事件的先后顺序分配 `(Sx)`，并在 `detailed_description` 的每个实际发声位置复用对应 ID。若 `subject_definitions` 中的 `<Audio N>` 已绑定某个目标说话者，也必须复用相同的 `(Sx)`，不得在音频定义中重新分配编号。`retention_analysis` 中不得写入 `(Sx)`。仅存在于直接复用的背景音乐或完整配乐中的语言提示使用 `<Audio N>`；由具体人物、角色、旁白者或其他独立来源实际发出的声音使用 `(Sx)`。\n\n## 6. `overall_soundscape` 与 `non_diegetic_music`\n\n这两个声音区块分别概括整段视频中的环境声与物理音效，以及仅供观众听到的背景音乐。它们不能取代 `detailed_description` 中按镜头展开的声音时间线。\n\n`overall_soundscape` 使用 1–4 个中文句子组成一个连续段落，概括整段视频中的环境声、物理动作音效和非语言人声，例如风声、雨声、交通声、脚步声、衣物摩擦声、撞击声、呼吸声、笑声或喘气声。已经在 `detailed_description` 中出现的对白、歌唱和场景内音乐，不应在此重复。只有用户明确要求整段视频完全静音时，才使用 `N/A`。\n\n示例：\n\n```text\noverall_soundscape: 整段视频持续存在安静的室内环境底噪，以及低沉、稳定的通风设备嗡鸣声。\n```\n\n`non_diegetic_music` 使用 1–3 个中文句子描述角色在场景中听不到、仅供观众听到的背景音乐。重点描述乐器配置、速度、节奏和动态变化；避免只用抽象情绪词，也不要解释配乐的情绪作用。角色能听见的歌唱、乐器、收音机、电视或手机音乐属于场景内声音，应写在 `detailed_description` 中。没有非场景内背景音乐时，使用 `N/A`。\n\n示例：\n\n```text\nnon_diegetic_music: 以缓慢速度演奏的克制型钢琴独奏，下方持续铺有低音大提琴，没有明显的渐强或情绪高潮。\n```\n\n使用参考音频时，只在与可听音层对应的区块中说明复制或参考关系：环境声和音效归入 `overall_soundscape`，仅供观众听到的配乐归入 `non_diegetic_music`。如果同一段音频同时提供这两类内容，应分别在对应区块说明其关系。\n\n示例：\n\n```text\noverall_soundscape: 从 <Audio 1> 复制的环境声层贯穿整个目标视频。\nnon_diegetic_music: 将 <Audio 2> 原样复用为完整的、仅供观众听到的背景配乐。\n```\n\n完整对白和歌词只应写在 `detailed_description` 的 `<d>` 标签内，不要在这两个声音区块中重复。\n\n## 7. 完整示例\n\n以下示例展示六个区块的完整结构。所有说明性正文使用中文，固定标签、任务类型前缀、关系标记和协议格式保留原样。\n\n```text\nsubject_definitions:\n<Subject 1> 是 <Picture 1> 中的咖啡馆环境，包含裸露砖墙、橙色绒面沙发、带图案的靠垫、霓虹灯招牌和木质茶几。\n<Subject 2> 是 <Picture 2>、<Picture 3> 和 <Picture 4> 中的白色萨摩耶犬，拥有浓密的白色长毛、竖起的耳朵、深色鼻子和向上弯曲的尾巴。\n<Subject 3> 是 <Video 1> 中的年轻金发女性，留着金色长发，穿着浅粉色纽扣衬衫，袖口卷起。\n<Subject 4> 是 <Video 2> 中的年轻男性，留着棕色短卷发，穿深灰色连帽衫，带有抽绳。\n<Audio 1> 是 <Subject 3> (S1) 的音色参考，包含英语人声。\n\nsummary:\n[reference generation + audio reference] 目标视频发生在 <Subject 1> 所示的咖啡馆内。<Subject 3> 正在吃饼干，<Subject 4> 带着 <Subject 2> 进入画面，萨摩耶突然扑向饼干，引发一连串滑稽反应。整段视频由三个镜头组成，<Audio 1> 用作 <Subject 3> 的音色参考，最后以罐头观众笑声结束。\n\nretention_analysis:\n<Subject 1>（出现在 [Shot 1]、[Shot 2]、[Shot 3]）：fully_preserved - 保留裸露砖墙、橙色绒面沙发、带图案的靠垫、霓虹灯招牌和木质茶几。\n<Subject 2>（出现在 [Shot 1]、[Shot 2]）：fully_preserved - 保留萨摩耶浓密的白色长毛、竖起的耳朵、深色鼻子和向上弯曲的尾巴。\n<Subject 3>（出现在 [Shot 1]、[Shot 2]、[Shot 3]）：fully_preserved - 保留金发女性的身份特征、长发和浅粉色衬衫。\n<Subject 4>（出现在 [Shot 1]、[Shot 2]）：fully_preserved - 保留年轻男性的棕色短卷发和深灰色连帽衫。\n<Audio 1>: reference - 目标视频中的 <Subject 3> 参考该音频的音色进行对白演绎，但不直接复制原始音频信号。\n\ndetailed_description:\n目标视频采用写实的多机位情景喜剧风格，室内光线温暖柔和。\n\n[Shot 1] 中景镜头展示 <Subject 1> 所示的咖啡馆环境，包括裸露砖墙、橙色绒面沙发、带图案的靠垫、霓虹灯招牌和木质茶几。<Subject 3> (S1) 是一名留着金色长发、穿浅粉色纽扣衬衫且袖口卷起的年轻女性，她坐在沙发上，手里拿着一块巧克力豆曲奇。<Subject 4> 是一名留着棕色短卷发、穿深灰色连帽衫的年轻男性，他从画面左侧进入，牵着 <Subject 2>。<Subject 2> 是一只长着浓密白色长毛、竖耳、深色鼻子的萨摩耶犬。狗突然扑向曲奇，牵引绳瞬间绷紧。<Subject 3> (S1) 迅速将手缩回，略带恼火地用清亮、年轻的声音喊道，音色参考 <Audio 1>：<d>[English] Hey! Watch your dog!</d> 她抿紧嘴唇，将曲奇护在身前；<Subject 4> 则赶紧把狗拉回来。\n\n[Shot 2] At 00:03.000，画面切换为 <Subject 4> (S2) 的近景。他仍穿着上一镜头中的深灰色连帽衫，坐在 <Subject 3> 旁边，并将 <Subject 2> 稳稳抱在怀里。<Subject 4> (S2) 用轻松、带有玩笑意味的年轻男性声音说道：<d>[English] He just likes cookies more than me.</d> 他说完后露出略带歉意的笑容，同时抚摸萨摩耶浓密的白色毛发。\n\n[Shot 3] At 00:05.000，画面切换为 <Subject 3> (S1) 的近景。她看向萨摩耶，原本恼火的神情逐渐缓和。她以与 <Audio 1> 参考音色一致的清亮年轻女声、带着 amused 的语气回应：<d>[English] Well, he has good taste at least.</d> 她微笑着举起曲奇，做出轻轻碰杯般的动作。台下罐头观众笑声紧接着对白响起，并持续到最后一帧。\n\noverall_soundscape:\n整个场景持续存在轻微的咖啡馆室内环境底噪。\n\nnon_diegetic_music:\nN/A\n```\n\n## 8. 输出前检查清单\n\n生成最终提示词前，逐项检查：\n\n1. 六个区块是否齐全，顺序是否正确。\n2. 所有说明性正文是否均为简体中文。\n3. 所有参考标签是否在全文中保持含义一致，且没有重复定义或错用。\n4. `summary` 是否使用正确的任务类型前缀，且未引入新标签。\n5. `retention_analysis` 是否为每项参考内容选择了符合其用途的关系标记。\n6. `detailed_description` 是否按播放顺序逐镜头描述，并清楚交代构图、主体位置、环境、光线、动作、状态变化、运镜和声音。\n7. 镜头编号和切镜时间戳是否连续、递增且在视频时长范围内；摄影机运动是否用自然中文描述，并在必要时说明类型、幅度和速度。\n8. 说话者 ID 是否按发声事件全局分配并保持稳定；对白和歌词是否正确放入 `<d>`，画外旁白、跨镜头延续和结尾截断是否遵守 `says in an off-screen voiceover`、`<scenetrans>` 和 `<cutoff>` 规则。\n9. 直接复用的对白或歌词是否保留原文；新创作对白是否使用用户指定的语言，画面可见文字是否使用英文双引号并保留原文。\n10. 环境声和物理音效是否归入 `overall_soundscape`，仅供观众听到的背景音乐是否归入 `non_diegetic_music`，且没有重复对白或歌唱。\n11. 固定字段名、协议标记、任务类型前缀和关系标记是否保持原样。\n12. 是否保留了参考素材的关键特征与必要细节，避免将详细描述压缩成剧情摘要。\n13. 是否存在没有依据的动作、声音、角色特征或参考关系；如有，应删除或改为有依据的描述。"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "PrimitiveStringMultiline"
+    }
+  },
+  "229:225": {
+    "inputs": {
+      "on_false": [
+        "229:131",
+        0
+      ],
+      "on_true": [
+        "229:224",
+        0
+      ],
+      "switch": true
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch (llm)"
+    }
+  },
+  "229:253": {
+    "inputs": {
+      "model": [
+        "229:161",
+        0
+      ],
+      "positive": [
+        "229:166",
+        0
+      ]
+    },
+    "class_type": "SparkVPack",
+    "_meta": {
+      "title": "SparkVPack"
+    }
+  },
+  "229:254": {
+    "inputs": {
+      "value": ""
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "PrimitiveStringMultiline"
+    }
+  },
+  "229:255": {
+    "inputs": {
+      "string_a": [
+        "229:146",
+        0
+      ],
+      "string_b": [
+        "229:254",
+        0
+      ]
+    },
+    "class_type": "StringConcatenate",
+    "_meta": {
+      "title": "StringConcatenate"
+    }
+  },
+  "_mediaCaps": {
+    "image": 9,
+    "video": 3,
+    "audio": 3
+  },
+  "_name": "MiniMax H3 Full Reference Video",
+  "900": {
+    "inputs": {
+      "image": "Qwen_image_2.1_00014.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "LoadImage"
+    }
+  },
+  "901": {
+    "inputs": {
+      "image": "Qwen_image_2.1_00014.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "LoadImage"
+    }
+  },
+  "902": {
+    "inputs": {
+      "image": "Qwen_image_2.1_00014.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "LoadImage"
+    }
+  },
+  "903": {
+    "inputs": {
+      "image": "Qwen_image_2.1_00014.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "LoadImage"
+    }
+  },
+  "904": {
+    "inputs": {
+      "image": "Qwen_image_2.1_00014.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "LoadImage"
+    }
+  },
+  "910": {
+    "inputs": {
+      "file": "MiniMax_H3_00089_.mp4"
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "LoadVideo"
+    }
+  },
+  "912": {
+    "inputs": {
+      "video": [
+        "910",
+        0
+      ]
+    },
+    "class_type": "GetVideoComponents",
+    "_meta": {
+      "title": "GetVideoComponents"
+    }
+  },
+  "914": {
+    "inputs": {
+      "image": [
+        "912",
+        0
+      ],
+      "upscale_method": "nearest-exact",
+      "megapixels": 0.98,
+      "crop": 32
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "ImageScaleToTotalPixels"
+    }
+  },
+  "911": {
+    "inputs": {
+      "file": "MiniMax_H3_00089_.mp4"
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "LoadVideo"
+    }
+  },
+  "913": {
+    "inputs": {
+      "video": [
+        "911",
+        0
+      ]
+    },
+    "class_type": "GetVideoComponents",
+    "_meta": {
+      "title": "GetVideoComponents"
+    }
+  },
+  "915": {
+    "inputs": {
+      "image": [
+        "913",
+        0
+      ],
+      "upscale_method": "nearest-exact",
+      "megapixels": 0.98,
+      "crop": 32
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "ImageScaleToTotalPixels"
+    }
+  },
+  "920": {
+    "inputs": {
+      "audio": "ref.wav"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "LoadAudio"
+    }
+  },
+  "921": {
+    "inputs": {
+      "audio": "ref.wav"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "LoadAudio"
+    }
+  }
+}

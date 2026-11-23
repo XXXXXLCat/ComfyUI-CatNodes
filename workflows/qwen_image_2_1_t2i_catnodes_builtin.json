@@ -150,9 +150,9 @@
       "sampling_mode.seed": 447606998181262,
       "sampling_mode.presence_penalty": 1.5
     },
-    "class_type": "TextGenerate",
+    "class_type": "TextGenerateV2",
     "_meta": {
-      "title": "Generate Text (DEPRECATED)",
+      "title": "Generate Text",
       "sourceLabels": {
         "prompt": "positive_prompt",
         "thinking": "thinking_mode"

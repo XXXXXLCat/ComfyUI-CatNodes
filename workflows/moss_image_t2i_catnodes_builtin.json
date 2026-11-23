@@ -48,7 +48,7 @@
         "18:17",
         0
       ],
-      "image": [
+      "images.image1": [
         "27",
         0
       ],
@@ -64,9 +64,9 @@
       "sampling_mode.seed": 0,
       "sampling_mode.presence_penalty": 0
     },
-    "class_type": "TextGenerate",
+    "class_type": "TextGenerateV2",
     "_meta": {
-      "title": "Generate Text (DEPRECATED)",
+      "title": "Generate Text",
       "sourceLabels": {
         "sampling_mode.seed": "prompt_enhancer_seed"
       }

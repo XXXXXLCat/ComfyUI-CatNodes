@@ -159,9 +159,9 @@
       "sampling_mode.seed": 0,
       "sampling_mode.presence_penalty": 0
     },
-    "class_type": "TextGenerate",
+    "class_type": "TextGenerateV2",
     "_meta": {
-      "title": "Generate Text (DEPRECATED)",
+      "title": "Generate Text",
       "sourceLabels": {
         "thinking": "LLM_thinking_mode",
         "max_length": "LLM_max_token"

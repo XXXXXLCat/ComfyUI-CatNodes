@@ -218,22 +218,6 @@
       }
     }
   },
-  "459:485": {
-    "inputs": {
-      "images.image0": [
-        "470",
-        0
-      ],
-      "images.image1": [
-        "475",
-        0
-      ]
-    },
-    "class_type": "BatchImagesNode",
-    "_meta": {
-      "title": "Batch Images"
-    }
-  },
   "459:500": {
     "inputs": {
       "prompt": "",
@@ -246,10 +230,6 @@
         "459:477",
         0
       ],
-      "image": [
-        "459:485",
-        0
-      ],
       "system_prompt": [
         "459:479",
         0
@@ -260,11 +240,23 @@
       "sampling_mode.min_p": 0,
       "sampling_mode.repetition_penalty": 1,
       "sampling_mode.seed": 891836227295375,
-      "sampling_mode.presence_penalty": 0
+      "sampling_mode.presence_penalty": 0,
+      "images.image1": [
+        "470",
+        0
+      ],
+      "images.image2": [
+        "475",
+        0
+      ],
+      "images.image3": [
+        "900",
+        0
+      ]
     },
-    "class_type": "TextGenerate",
+    "class_type": "TextGenerateV2",
     "_meta": {
-      "title": "Generate Text (DEPRECATED)",
+      "title": "Generate Text",
       "sourceLabels": {
         "prompt": "positive_prompt"
       }
@@ -337,5 +329,14 @@
     "video": null,
     "audio": null
   },
-  "_name": "Qwen Image 2.1 Edit"
+  "_name": "Qwen Image 2.1 Edit",
+  "900": {
+    "inputs": {
+      "image": "portrait_model_denim.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "LoadImage"
+    }
+  }
 }
