@@ -1,10 +1,12 @@
-/* Built-in workflow manager dialog.
+/* Built-in workflow manager view, embedded in the canvas Settings dialog.
  *
- * Opened from the sidebar rail. Lists the shipped (read-only) workflows with
- * per-user visibility toggles, a per-category default radio and the model files
- * each workflow references (filename + expected ComfyUI folder + empty URL).
+ * Rendered as a dedicated navigation group inside infcanvas-settings.js — it is
+ * NOT a standalone dialog and has no sidebar button. Lists the shipped
+ * (read-only) workflows with per-user visibility toggles, a per-category default
+ * control and the model files each workflow references (filename + expected
+ * ComfyUI folder + empty URL).
  *
- * The dialog is intentionally self-drawn: ComfyUI's native settings panel only
+ * The list is intentionally self-drawn: ComfyUI's native settings panel only
  * renders single-value controls (switch/number/combo) and has no composite
  * grouped-list view. Every class below is a host utility class or official
  * token — no custom colours. All copy goes through NS.i18n; no inline language
@@ -31,7 +33,6 @@
     + "items-center justify-center gap-2 border-none font-inter font-medium "
     + "whitespace-nowrap transition-colors focus-visible:ring-1 focus-visible:ring-ring "
     + "focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50";
-  const BTN_CLOSE = BTN + " h-10 rounded-lg px-4 py-2 text-sm bg-secondary text-foreground hover:bg-accent w-10";
   /* Switch markup: verbatim from infcanvas-settings.js (ui/switch/Switch.vue). */
   const SWITCH_BTN = "group inline-flex h-6 w-10 shrink-0 cursor-pointer touch-manipulation "
     + "items-center justify-center rounded-full border-0 bg-transparent p-0 outline-none "
@@ -53,7 +54,7 @@
     body: JSON.stringify(body),
   });
 
-  let ui = null;
+  let mountHost = null;
   let items = [];
   let categories = [];
   let pending = false;
@@ -88,7 +89,7 @@
   }
 
   function renderList() {
-    const host = ui?.list;
+    const host = mountHost?.querySelector?.("[data-builtin-mgr-list]");
     if (!host) return;
     host.replaceChildren();
     const grouped = new Map();
@@ -103,7 +104,7 @@
     }
     for (const [category, group] of grouped) {
       const section = el("section", "mb-6");
-      const head = el("h3", "mb-2 text-base text-foreground",
+      const head = el("h4", "mb-2 text-sm font-bold text-foreground",
         category ? categoryLabel(category) : t("builtinMgr.uncategorized"));
       section.appendChild(head);
       for (const item of group) {
@@ -171,7 +172,7 @@
         if (pending) return;
         pending = true;
         try {
-          const data = await api("/workflows/" + encodeURIComponent(item.id) + "/default", {
+          await api("/workflows/" + encodeURIComponent(item.id) + "/default", {
             method: "POST", headers: { "Content-Type": "application/json" }, body: "{}",
           });
           /* The /default endpoint returns the workflow list, not manage data;
@@ -224,55 +225,33 @@
     applyData(await api("/builtins/manage"));
   }
 
-  function close() {
-    try { ui?.mask?.remove(); } catch (_) { /* no-op */ }
-    ui = null;
-  }
-
-  function open() {
-    close();
-    const host = document.getElementById("infcanvas-root") || document.body;
-    const mask = el("div", "fixed inset-0 flex items-center justify-center bg-black/70 p-6");
-    mask.style.zIndex = "9999";
-    const panel = el("div", "relative flex flex-col overflow-hidden rounded-2xl border bg-background shadow-lg "
-      + "h-[80vh] w-[90vw] max-w-[1100px]");
-    panel.style.fontFamily = "Inter, Arial, sans-serif";
-    panel.setAttribute("role", "dialog");
-    panel.setAttribute("data-testid", "builtin-manager-dialog");
-    panel.setAttribute("aria-label", t("builtinMgr.title"));
-    mask.appendChild(panel);
-
-    const head = el("header", "flex h-18 w-full shrink-0 items-center justify-between border-b px-6");
-    head.appendChild(el("h2", "text-base text-foreground", t("builtinMgr.title")));
-    const closeBtn = el("button", BTN_CLOSE);
-    closeBtn.type = "button";
-    closeBtn.innerHTML = '<i class="icon-[lucide--x]"></i>';
-    closeBtn.setAttribute("aria-label", t("builtinMgr.close"));
-    bindTip(closeBtn, () => t("builtinMgr.close"));
-    closeBtn.addEventListener("click", (event) => { event.stopPropagation(); close(); });
-    head.appendChild(closeBtn);
-    panel.appendChild(head);
-
-    const hint = el("p", "shrink-0 px-6 pt-4 text-xs text-muted-foreground", t("builtinMgr.hint"));
-    panel.appendChild(hint);
-
-    const list = el("div", "min-h-0 flex-1 overflow-y-auto px-6 pb-6");
-    panel.appendChild(list);
-
-    ui = { mask, panel, list };
-    mask.addEventListener("click", (event) => { if (event.target === mask) close(); });
-    host.appendChild(mask);
+  /* Called by the Settings dialog when its "built-in workflows" nav group is
+     shown. Builds the view inside the given host; no overlay, no own close. */
+  function mount(host) {
+    if (!host) return;
+    mountHost = host;
+    host.setAttribute("data-testid", "builtin-manager-view");
+    host.replaceChildren();
+    const title = el("h3", "text-base", t("builtinMgr.title"));
+    title.style.marginBottom = "calc(var(--spacing, 4px) * 2)";
+    const hint = el("p", "mb-6 text-xs text-muted-foreground", t("builtinMgr.hint"));
+    const list = el("div", "w-full");
+    list.setAttribute("data-builtin-mgr-list", "");
+    host.append(title, hint, list);
     reload().catch((error) => notifyError(error?.message || t("builtinMgr.loadFailed")));
   }
 
+  function unmount() {
+    mountHost = null;
+  }
+
   function repaintLocale() {
-    if (!ui) return;
-    ui.panel.setAttribute("aria-label", t("builtinMgr.title"));
-    renderList();
+    if (!mountHost) return;
+    mount(mountHost);
   }
 
   NS.builtinMgr = {
-    open, close, repaintLocale,
-    isOpen: () => !!ui?.mask?.isConnected,
+    mount, unmount, repaintLocale,
+    isMounted: () => !!mountHost,
   };
 })();

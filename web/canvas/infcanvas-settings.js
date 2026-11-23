@@ -164,6 +164,7 @@
       title: "sidebar.canvas",
       items: [
         { id: "canvas", label: "shortcuts.canvasSettings", icon: "icon-[lucide--settings]" },
+        { id: "builtinWorkflows", label: "builtinMgr.title", icon: "icon-[lucide--workflow]" },
       ],
     },
   ];
@@ -413,8 +414,15 @@
   /* SettingGroup.vue：<h3 class="text-base">标题 + 每个 setting 一个
      .setting-item.mb-3 行；分组之间 divider my-8 border-t。 */
   function renderGroups(host) {
-    const frag = document.createDocumentFragment();
     const query = searchQuery.trim().toLowerCase();
+    /* 内置工作流管理是复合视图，不是单值设置项：它有自己的导航分组，直接把
+       视图挂进右栏 content。搜索态下让普通设置项照常跨分类匹配，不显示本视图。 */
+    if (activeGroup === "builtinWorkflows" && !query) {
+      NS.builtinMgr?.mount?.(host);
+      return;
+    }
+    NS.builtinMgr?.unmount?.();
+    const frag = document.createDocumentFragment();
     /* 搜索态：跨分类显示所有匹配项（ComfyUI 的 searchResults）。 */
     const matched = SETTINGS.filter((s) => {
       if (query && !(t(s.label).toLowerCase().includes(query)
@@ -619,6 +627,7 @@
 
   function close() {
     closeSelectMenu();
+    NS.builtinMgr?.unmount?.();
     if (!ui) return;
     document.removeEventListener("keydown", ui.onKey, true);
     ui.mask.remove();
