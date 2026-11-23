@@ -209,7 +209,7 @@
     {
       id: TRANSLATE_MODEL_ID,
       type: "select",
-      group: "canvas",
+      group: "translation",
       label: "settings.translateModel",
       desc: "settings.translateModelDesc",
       hint: "settings.translateModelHint",
@@ -230,6 +230,7 @@
       items: [
         { id: "canvas", label: "shortcuts.canvasSettings", icon: "icon-[lucide--settings]" },
         { id: "builtinWorkflows", label: "builtinMgr.title", icon: "icon-[lucide--workflow]" },
+        { id: "translation", label: "settings.translationCategory", icon: "icon-[lucide--languages]" },
       ],
     },
   ];
