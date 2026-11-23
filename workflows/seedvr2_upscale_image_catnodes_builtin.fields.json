@@ -18,7 +18,8 @@
       "advanced": false,
       "min": 0,
       "max": 18446744073709552000,
-      "step": 1
+      "step": 1,
+      "default": 42
     },
     {
       "nodeId": "66:54",

@@ -1,0 +1,41 @@
+{
+  "fields": [
+    {
+      "nodeId": "7",
+      "key": "prompt",
+      "type": "textarea",
+      "label": "Prompt",
+      "advanced": false
+    },
+    {
+      "nodeId": "7",
+      "key": "max_length",
+      "type": "number",
+      "label": "Max Length",
+      "advanced": true,
+      "min": 1,
+      "max": 32768,
+      "step": 1
+    },
+    {
+      "nodeId": "7",
+      "key": "thinking",
+      "type": "switch",
+      "label": "Thinking",
+      "advanced": true
+    },
+    {
+      "nodeId": "7",
+      "key": "sampling_mode.seed",
+      "type": "random",
+      "label": "Seed",
+      "advanced": false,
+      "min": 0,
+      "max": 18446744073709552000,
+      "step": 1,
+      "default": 42
+    }
+  ],
+  "category": "cat.llmChat",
+  "is_default": false
+}

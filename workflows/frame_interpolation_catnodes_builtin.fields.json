@@ -1,0 +1,28 @@
+{
+  "fields": [
+    {
+      "nodeId": "16:1",
+      "key": "model_name",
+      "type": "select",
+      "label": "Model",
+      "advanced": false,
+      "options": [
+        "film_net_fp16.safetensors",
+        "rife_v4.25.safetensors",
+        "rife_v4.25_heavy.safetensors",
+        "rife_v4.25_lite.safetensors",
+        "rife_v4.26.safetensors",
+        "rife_v4.26_heavy.safetensors"
+      ]
+    },
+    {
+      "nodeId": "16:13",
+      "key": "value",
+      "type": "switch",
+      "label": "Apply multiplier to FPS",
+      "advanced": false
+    }
+  ],
+  "category": "cat.videoInterpolation",
+  "is_default": false
+}
