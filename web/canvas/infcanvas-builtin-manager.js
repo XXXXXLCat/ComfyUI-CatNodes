@@ -212,8 +212,8 @@
     if (defaultBar.childElementCount) row.appendChild(defaultBar);
 
     /* Model manifest, ONE line per model:
-       [folder=copy path] [download] filename ✓  models/<folder>/<file>
-       Icon buttons share the exact same class so their backgrounds match. */
+       [download] models/<folder>/<file> ✓
+       The path text itself is the copy target; no folder icon, no duplicate path. */
     if (item.models?.length) {
       const modelBox = el("div", "mt-3");
       modelBox.appendChild(el("div", "mb-1 text-sm font-bold text-muted-foreground", t("builtinMgr.models")));
@@ -222,18 +222,7 @@
         const installed = model.installed === true;
         const line = el("div", "flex flex-wrap items-center gap-x-2 gap-y-1 py-1 text-sm");
 
-        /* Folder icon: click to copy the model folder path. */
-        const copyBtn = el("button", ICON_BTN);
-        copyBtn.type = "button";
-        copyBtn.appendChild(el("i", "icon-[lucide--folder] size-3.5"));
-        bindTip(copyBtn, () => t("builtinMgr.copyFolder"), "top");
-        copyBtn.addEventListener("click", (event) => {
-          event.stopPropagation();
-          copyModelFolder(model);
-        });
-        line.appendChild(copyBtn);
-
-        /* Download icon: same class/colour; disabled state only fades opacity. */
+        /* Download icon; disabled state only fades opacity. */
         if (model.url) {
           const link = el("a", ICON_BTN + " text-primary");
           link.href = model.url;
@@ -251,19 +240,9 @@
           line.appendChild(dlOff);
         }
 
-        /* Filename + check, with a comfortable gap before the trailing path. */
-        line.appendChild(el("span", "font-mono text-foreground", model.name));
-        const mark = el("i", installed
-          ? "ml-1 icon-[lucide--circle-check] size-3.5 text-primary"
-          : "ml-1 icon-[lucide--circle-x] size-3.5 text-muted-foreground");
-        bindTip(mark, () => installed && model.path
-          ? t("builtinMgr.installed") + ": " + model.path
-          : t(installed ? "builtinMgr.installed" : "builtinMgr.missing"), "top");
-        line.appendChild(mark);
-
-        /* Canonical path right after the check, still clickable to copy. */
+        /* Path text (was the filename) — click to copy the real folder path. */
         const pathPart = el("span",
-          "cursor-pointer font-mono text-muted-foreground hover:text-foreground",
+          "cursor-pointer font-mono text-foreground hover:text-primary",
           "models/" + (model.folder || "other") + "/" + model.name);
         bindTip(pathPart, () => t("builtinMgr.copyFolder"), "top");
         pathPart.addEventListener("click", (event) => {
@@ -271,6 +250,15 @@
           copyModelFolder(model);
         });
         line.appendChild(pathPart);
+
+        /* Installed check/x right after the path. */
+        const mark = el("i", installed
+          ? "ml-1 icon-[lucide--circle-check] size-3.5 text-primary"
+          : "ml-1 icon-[lucide--circle-x] size-3.5 text-muted-foreground");
+        bindTip(mark, () => installed && model.path
+          ? t("builtinMgr.installed") + ": " + model.path
+          : t(installed ? "builtinMgr.installed" : "builtinMgr.missing"), "top");
+        line.appendChild(mark);
 
         modelBox.appendChild(line);
       }
