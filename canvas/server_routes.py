@@ -1344,24 +1344,23 @@ async def api_open_model_folder(request: web.Request) -> web.Response:
         search_paths = folder_paths.get_folder_paths(folder) or []
     except Exception:
         search_paths = []
-    # Prefer the directory where the file actually exists; otherwise fall back
-    # to the first configured folder so the user still sees where to place it.
+    # Always open the containing FOLDER (never select the file). Prefer the
+    # directory where the file actually exists; otherwise fall back to the
+    # first configured folder so the user still sees where to place it.
     target_dir = ""
-    target_file = ""
     for base in search_paths:
         candidate = os.path.join(base, name)
         if os.path.isfile(candidate):
             target_dir = os.path.dirname(candidate)
-            target_file = candidate
             break
     if not target_dir:
         existing = [p for p in search_paths if os.path.isdir(p)]
         target_dir = existing[0] if existing else ""
     if not target_dir:
         return web.json_response({"error": _err("未找到对应的模型目录", "Model folder not found")}, status=404)
-    if not _open_in_file_manager(target_file or target_dir):
+    if not _open_in_file_manager(target_dir):
         return web.json_response({"error": _err("无法打开文件夹", "Could not open folder")}, status=500)
-    return web.json_response({"opened": target_file or target_dir})
+    return web.json_response({"opened": target_dir})
 
 
 async def api_rename_workflow(request: web.Request) -> web.Response:

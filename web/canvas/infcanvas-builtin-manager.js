@@ -198,10 +198,10 @@
     }
     row.appendChild(defaultBar);
 
-    /* Model manifest: per model show the canonical ComfyUI folder (click to
-       open it in the OS file manager), an installed check mark, and a download
-       link with its own icon. Install status is probed by the backend via
-       folder_paths. No custom colours — only host utility classes. */
+    /* Model manifest, two lines per model:
+         line 1: filename + installed check/x (status probed by backend)
+         line 2: folder icon + canonical logical path, then the open-folder
+                 and download icon buttons on the SAME line (not below). */
     if (item.models?.length) {
       const modelBox = el("div", "mt-3 border-t pt-3");
       modelBox.appendChild(el("div", "mb-1 text-xs font-bold text-muted-foreground", t("builtinMgr.models")));
@@ -209,54 +209,59 @@
         const installed = model.installed === true;
         const block = el("div", "py-1 text-xs");
 
-        /* Line 1: filename. */
-        block.appendChild(el("div", "font-mono text-foreground", model.name));
-
-        /* Line 2: folder icon + canonical logical path, clickable to open the
-           real directory; trailing check (or x) shows the on-disk probe result. */
-        const pathLine = el("div",
-          "mt-0.5 flex cursor-pointer flex-wrap items-center gap-x-1.5 gap-y-1 "
-          + "font-mono text-muted-foreground hover:text-foreground");
-        pathLine.appendChild(el("i", "icon-[lucide--folder] size-3 shrink-0"));
-        pathLine.appendChild(el("span", "models/" + (model.folder || "other") + "/" + model.name));
+        /* Line 1: filename, with the check/x immediately after it. */
+        const nameLine = el("div", "flex flex-wrap items-center gap-x-1.5 gap-y-1");
+        nameLine.appendChild(el("span", "font-mono text-foreground", model.name));
         const mark = el("i", installed
           ? "icon-[lucide--circle-check] size-3 text-primary"
-          : "icon-[lucide--circle-x] size-3");
-        bindTip(mark, () => t(installed ? "builtinMgr.installed" : "builtinMgr.missing"), "top");
-        pathLine.appendChild(mark);
-        bindTip(pathLine, () => t("builtinMgr.openFolder"), "top");
-        pathLine.addEventListener("click", (event) => {
+          : "icon-[lucide--circle-x] size-3 text-muted-foreground");
+        bindTip(mark, () => installed && model.path
+          ? t("builtinMgr.installed") + ": " + model.path
+          : t(installed ? "builtinMgr.installed" : "builtinMgr.missing"), "top");
+        nameLine.appendChild(mark);
+        block.appendChild(nameLine);
+
+        /* Line 2: folder icon + logical path + [open folder] + [download],
+           all inline. Clicking the path or the folder button opens the folder. */
+        const pathLine = el("div", "mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground");
+        const pathPart = el("div",
+          "flex cursor-pointer items-center gap-1 font-mono hover:text-foreground");
+        pathPart.appendChild(el("i", "icon-[lucide--folder] size-3 shrink-0"));
+        pathPart.appendChild(el("span", "models/" + (model.folder || "other") + "/"));
+        bindTip(pathPart, () => t("builtinMgr.openFolder"), "top");
+        pathPart.addEventListener("click", (event) => {
           event.stopPropagation();
           openModelFolder(model);
         });
-        block.appendChild(pathLine);
+        pathLine.appendChild(pathPart);
 
-        /* Line 3: resolved absolute path when actually installed on this machine. */
-        if (installed && model.path) {
-          const real = el("div", "mt-0.5 truncate font-mono text-muted-foreground", model.path);
-          real.title = model.path;
-          block.appendChild(real);
-        }
+        /* Open-folder icon button (same line). */
+        const openBtn = el("button", BTN + " size-5 p-0 text-muted-foreground hover:text-foreground");
+        openBtn.type = "button";
+        openBtn.appendChild(el("i", "icon-[lucide--folder-open] size-3.5"));
+        bindTip(openBtn, () => t("builtinMgr.openFolder"), "top");
+        openBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openModelFolder(model);
+        });
+        pathLine.appendChild(openBtn);
 
-        /* Line 4: download link with icon; opens the URL in a new tab. */
-        const dlLine = el("div", "mt-1 flex items-center gap-1.5");
+        /* Download icon / link (same line). */
         if (model.url) {
-          const link = el("a", "inline-flex cursor-pointer items-center gap-1 text-primary underline");
+          const link = el("a", BTN + " size-5 p-0 text-primary");
           link.href = model.url;
           link.target = "_blank";
           link.rel = "noopener noreferrer";
-          link.append(
-            el("i", "icon-[lucide--download] size-3"),
-            el("span", t("builtinMgr.download")),
-          );
-          dlLine.appendChild(link);
+          link.appendChild(el("i", "icon-[lucide--download] size-3.5"));
+          bindTip(link, () => t("builtinMgr.download"), "top");
+          pathLine.appendChild(link);
         } else {
-          const ph = el("span", "inline-flex items-center gap-1 text-muted-foreground");
-          ph.appendChild(el("i", "icon-[lucide--download] size-3"));
-          ph.appendChild(el("span", t("builtinMgr.noUrl")));
-          dlLine.appendChild(ph);
+          const dlOff = el("span", "inline-flex size-5 items-center justify-center text-muted-foreground opacity-50");
+          dlOff.appendChild(el("i", "icon-[lucide--download] size-3.5"));
+          bindTip(dlOff, () => t("builtinMgr.noUrl"), "top");
+          pathLine.appendChild(dlOff);
         }
-        block.appendChild(dlLine);
+        block.appendChild(pathLine);
 
         modelBox.appendChild(block);
       }
