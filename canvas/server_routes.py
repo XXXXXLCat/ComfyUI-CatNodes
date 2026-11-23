@@ -10,6 +10,7 @@ import asyncio
 import json
 import logging
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -1298,6 +1299,71 @@ async def api_builtin_visibility(request: web.Request) -> web.Response:
     return await api_builtin_manage(request)
 
 
+# Folders the "open folder" endpoint is allowed to reveal. Derived from the two
+# model maps so it can never be tricked into opening an arbitrary path by a
+# crafted request: only a known ComfyUI model folder key is accepted.
+OPENABLE_MODEL_FOLDERS = frozenset(
+    set(MODEL_FOLDER_BY_NODE.values()) | set(MODEL_FOLDER_BY_KEY.values())
+) - {"other"}
+
+
+def _open_in_file_manager(path: str) -> bool:
+    """Reveal a file/folder in the OS file manager. Returns False if unsupported.
+    Never uses a shell; the path is passed as a single argument."""
+    try:
+        system = platform.system()
+        if system == "Windows":
+            subprocess.Popen(["explorer", path])
+        elif system == "Darwin":
+            subprocess.Popen(["open", "-R", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
+        return True
+    except Exception:
+        logging.exception("[infcanvas] failed to open path in file manager: %s", path)
+        return False
+
+
+async def api_open_model_folder(request: web.Request) -> web.Response:
+    """Open the folder containing a built-in workflow's model in the OS file
+    manager. Accepts only a whitelisted folder key + a bare filename; resolves
+    the real directory through folder_paths so extra_model_paths.yaml is honoured."""
+    try:
+        payload = await request.json()
+    except Exception:
+        return web.json_response({"error": _err("请求体不是合法 JSON", "Invalid JSON body")}, status=400)
+    folder = str(payload.get("folder", "") or "")
+    name = str(payload.get("name", "") or "")
+    if folder not in OPENABLE_MODEL_FOLDERS:
+        return web.json_response({"error": _err("模型目录不合法", "Invalid model folder")}, status=400)
+    # Reject path traversal and separators: name must be a bare filename.
+    if (not name or name in (".", "..") or "/" in name or "\\" in name
+            or os.path.basename(name) != name):
+        return web.json_response({"error": _err("模型文件名不合法", "Invalid model filename")}, status=400)
+    try:
+        search_paths = folder_paths.get_folder_paths(folder) or []
+    except Exception:
+        search_paths = []
+    # Prefer the directory where the file actually exists; otherwise fall back
+    # to the first configured folder so the user still sees where to place it.
+    target_dir = ""
+    target_file = ""
+    for base in search_paths:
+        candidate = os.path.join(base, name)
+        if os.path.isfile(candidate):
+            target_dir = os.path.dirname(candidate)
+            target_file = candidate
+            break
+    if not target_dir:
+        existing = [p for p in search_paths if os.path.isdir(p)]
+        target_dir = existing[0] if existing else ""
+    if not target_dir:
+        return web.json_response({"error": _err("未找到对应的模型目录", "Model folder not found")}, status=404)
+    if not _open_in_file_manager(target_file or target_dir):
+        return web.json_response({"error": _err("无法打开文件夹", "Could not open folder")}, status=500)
+    return web.json_response({"opened": target_file or target_dir})
+
+
 async def api_rename_workflow(request: web.Request) -> web.Response:
     """Rename a workflow: the title IS the file stem, so this moves
     <name>.json and <name>.fields.json and rewrites the saved drag order.
@@ -2472,6 +2538,7 @@ def register_routes() -> None:
         ("GET", "/api/infcanvas/settings", api_config_ready),
         # Built-in workflow management (visibility + model manifest).
         ("GET", "/api/infcanvas/builtins/manage", api_builtin_manage),
+        ("POST", "/api/infcanvas/builtins/open-folder", api_open_model_folder),
         ("POST", "/api/infcanvas/builtins/{name}/visibility", api_builtin_visibility),
         ("PUT", "/api/infcanvas/workflows/order", api_reorder_workflows),
         ("POST", "/api/infcanvas/workflows", api_save_workflow),
