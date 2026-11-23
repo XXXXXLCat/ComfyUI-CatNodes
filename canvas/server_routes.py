@@ -31,6 +31,9 @@ PLUGIN_ROOT = os.path.dirname(PACK_ROOT)
 # in <plugin root>/workflows/; a user file with the same stem always wins.
 PLUGIN_DATA_DIR = "Cat-Nodes"
 BUILTIN_WORKFLOW_DIR = os.path.join(PLUGIN_ROOT, "workflows")
+# Non-workflow JSON shipped next to the templates (model download-link
+# manifest). Never enumerate these as built-in workflows.
+BUILTIN_MANIFEST_FILES = frozenset({"model_links.json"})
 
 # Canvas names come from unconflictedName()/duplicateDoc() as e.g.
 # "Unsaved Canvas (3)" and "Foo (Copy)", and users may type Chinese names.
@@ -671,6 +674,7 @@ def _builtin_names() -> list[str]:
     return sorted(
         name[:-5] for name in os.listdir(BUILTIN_WORKFLOW_DIR)
         if name.endswith(".json") and not name.endswith(".fields.json")
+        and name not in BUILTIN_MANIFEST_FILES
         and WF_NAME_RE.fullmatch(name[:-5])
     )
 
@@ -1515,7 +1519,8 @@ async def list_workflows(request: web.Request) -> web.Response:
             })
     if os.path.isdir(BUILTIN_WORKFLOW_DIR):
         for filename in sorted(os.listdir(BUILTIN_WORKFLOW_DIR)):
-            if not filename.endswith(".json") or filename.endswith(".fields.json"):
+            if (not filename.endswith(".json") or filename.endswith(".fields.json")
+                    or filename in BUILTIN_MANIFEST_FILES):
                 continue
             name = filename[:-5]
             if (name in user_names or name in hidden or not WF_NAME_RE.fullmatch(name)
