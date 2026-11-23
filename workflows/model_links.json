@@ -21,6 +21,7 @@
   "minimax_h3_fl2va_pruned_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-H3/resolve/master/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors",
   "minimax_h3_ref2va_pruned_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-H3/resolve/master/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
   "minimax_h3_video_vae_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-H3/resolve/master/vae/minimax_h3_video_vae_int8_convrot.safetensors",
+  "minimax_h3_sol_vae_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-H3/resolve/master/vae/minimax_h3_sol_vae_int8_convrot.safetensors",
   "minimax_music3_dit_fp16.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-Music-3/resolve/master/diffusion_models/minimax_music3_dit_fp16.safetensors",
   "minimax_music3_text_encoder_pruned_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-Music-3/resolve/master/text_encoders/minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
   "qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/Qwen-Image-2.1/resolve/master/text_encoders/qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors",
