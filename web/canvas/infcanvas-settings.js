@@ -16,6 +16,9 @@
 (() => {
   const NS = (window.InfCanvas = window.InfCanvas || {});
   const t = (key, params) => (NS.i18n ? NS.i18n.t(key, params) : key);
+  /* Model names are literal file names, not i18n keys: route them through
+     optLabel() so the i18n layer never logs a "missing key" warning. */
+  const optLabel = (opt) => (opt && opt.labelKey ? t(opt.labelKey) : String(opt?.label ?? opt?.value ?? ""));
   /* Native ComfyUI tooltip (shared engine in native-tip.js). */
   const bindTip = (el, text, side) => {
     if (!el) return el;
@@ -110,8 +113,56 @@
   const readVal = (id, def) => (NS.prefs ? NS.prefs.get(id, def) : def);
   const writeVal = (id, value) => NS.prefs?.set(id, value);
 
+  /* 翻译模型下拉：选项来自 ComfyUI 自己的 text_encoders 目录（CLIPLoader 的
+     clip_name combo）。复用宿主 object_info 缓存，不加后端接口；模型名是文件
+     名不是 i18n key，故 options 用 label 原样承载。 */
+  const TRANSLATE_MODEL_ID = "InfCanvas.TranslateModel";
+  const translateDefault = () => (NS.translate?.defaultModel || "qwen3.5_2b_bf16.safetensors");
+  let translateOptionsReady = false;
+  let translateOptionsPromise = null;
+
+  async function loadTranslateOptions() {
+    const item = SETTINGS.find((s) => s.id === TRANSLATE_MODEL_ID);
+    if (!item) return;
+    let names = [];
+    try {
+      const api = window.comfyAPI?.api?.api;
+      let defs = null;
+      if (api?.getNodeDefs) defs = await api.getNodeDefs();
+      else if (api?.fetchApi) {
+        const response = await api.fetchApi("/object_info/CLIPLoader");
+        if (response.ok) defs = await response.json();
+      }
+      const raw = defs?.CLIPLoader?.input?.required?.clip_name;
+      if (Array.isArray(raw?.[0])) names = raw[0];
+      else if (Array.isArray(raw?.[1]?.options)) names = raw[1].options;
+    } catch (error) { /* object_info 不可用时保留当前值作为唯一选项 */ }
+    const unique = [...new Set(names.filter((n) => typeof n === "string" && n.trim()))];
+    unique.sort((a, b) => a.localeCompare(b));
+    const current = item.get();
+    if (typeof current === "string" && current && !unique.includes(current)) unique.unshift(current);
+    item.options = unique.map((name) => ({ value: name, label: name }));
+    translateOptionsReady = true;
+  }
+
+  function ensureTranslateOptions() {
+    if (!translateOptionsPromise) translateOptionsPromise = loadTranslateOptions();
+    return translateOptionsPromise;
+  }
+
+  /* prefs 是异步加载的：首次拉列表时它可能还没回来。打开面板时再确认一次
+     已保存的模型仍在选项里，避免下拉显示空白。 */
+  function syncCurrentTranslateOption() {
+    const item = SETTINGS.find((s) => s.id === TRANSLATE_MODEL_ID);
+    const current = item?.get();
+    if (!item || typeof current !== "string" || !current.trim()) return;
+    if (!(item.options || []).some((o) => String(o.value) === current)) {
+      item.options = [{ value: current, label: current }].concat(item.options || []);
+    }
+  }
+
   /* ---- 设置注册表：新增设置往这里加一项即可 ----
-     type 目前支持 "switch" / "number"；group 决定它落在左侧哪个分类。 */
+     type 支持 "switch" / "number" / "select"；group 决定它落在左侧哪个分类。 */
   const SETTINGS = [
     {
       id: "InfCanvas.ShowPreviewText",
@@ -155,7 +206,21 @@
       get: () => readVal("InfCanvas.Setting.AutoSaveDelay", 3),
       set: (value) => writeVal("InfCanvas.Setting.AutoSaveDelay", value),
     },
+    {
+      id: TRANSLATE_MODEL_ID,
+      type: "select",
+      group: "canvas",
+      label: "settings.translateModel",
+      desc: "settings.translateModelDesc",
+      hint: "settings.translateModelHint",
+      def: translateDefault(),
+      options: [{ value: translateDefault(), label: translateDefault() }],
+      get: () => readVal(TRANSLATE_MODEL_ID, translateDefault()),
+      set: (value) => writeVal(TRANSLATE_MODEL_ID, value),
+    },
   ];
+  /* 提前拉取模型列表；面板打开时若还没回来，open() 会等它并补一次重绘。 */
+  void ensureTranslateOptions();
 
   /* 左侧导航分组（useSettingUI.ts navGroups 的简化版）。每一项 id 对应一个
      分类；点击后右侧只渲染 group===id 的设置。 */
@@ -292,7 +357,7 @@
       const checked = String(opt.value) === String(current);
       row.setAttribute("role", "option");
       row.setAttribute("data-state", checked ? "checked" : "unchecked");
-      row.appendChild(el("span", "truncate", t(opt.label)));
+      row.appendChild(el("span", "truncate", optLabel(opt)));
       if (checked) {
         const indicator = el("div", SELECT_ITEM_CHECK);
         indicator.appendChild(el("i", "icon-[lucide--check] text-foreground"));
@@ -351,7 +416,7 @@
     trigger.tabIndex = 0;
     let selectedLabel = "";
     for (const opt of item.options || []) {
-      if (String(opt.value) === String(item.get())) selectedLabel = t(opt.label);
+      if (String(opt.value) === String(item.get())) selectedLabel = optLabel(opt);
     }
     const valueBox = el("div", "flex flex-1 items-center gap-2 overflow-hidden py-2 pl-2 text-sm");
     valueBox.appendChild(el("span", "truncate", selectedLabel));
@@ -405,8 +470,11 @@
       label.appendChild(info);
     }
     labelBox.appendChild(label);
-    const controlBox = el("div", "flex justify-end");
+    const controlBox = el("div", "flex flex-col items-end gap-1");
     controlBox.appendChild(makeControl(item));
+    /* 可选的行内提醒：用宿主 utility class，不引入自绘样式。翻译模型行用它
+       常驻提示「模型越大越慢」，不必悬停 info 图标才看得到。 */
+    if (item.hint) controlBox.appendChild(el("span", "text-xs text-muted-foreground text-right", t(item.hint)));
     row.append(labelBox, controlBox);
     return row;
   }
@@ -609,7 +677,12 @@
     host.appendChild(mask);
 
     ui = { mask, nav, content, searchInput, clearBtn, searchIcon, syncClear };
+    syncCurrentTranslateOption();
     repaint();
+    /* 首开时 object_info 可能还没回来；回来后重绘一次让下拉拿到完整列表。 */
+    if (!translateOptionsReady) {
+      void ensureTranslateOptions().then(() => { if (ui) repaint(); });
+    }
 
     const onKey = (event) => {
       if (event.key !== "Escape") return;

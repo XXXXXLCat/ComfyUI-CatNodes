@@ -957,6 +957,9 @@ function translateLangName(locale) {
 }
 
 function translateModel() {
+  /* 设置面板把选择写进 per-user prefs；localStorage 仅作为迁移前旧值的兜底。 */
+  const saved = NS.prefs?.get?.(TRANSLATE_MODEL_KEY, null);
+  if (typeof saved === "string" && saved.trim()) return saved.trim();
   try { return localStorage.getItem(TRANSLATE_MODEL_KEY) || TRANSLATE_MODEL_DEFAULT; }
   catch (error) { return TRANSLATE_MODEL_DEFAULT; }
 }
@@ -990,7 +993,10 @@ async function translateText(text, targetLang) {
   return String(hit.text).trim();
 }
 
-NS.translate = { text: translateText, model: translateModel, langName: translateLangName };
+NS.translate = {
+  text: translateText, model: translateModel, langName: translateLangName,
+  defaultModel: TRANSLATE_MODEL_DEFAULT,
+};
 
   return {
     extractOutputs,
