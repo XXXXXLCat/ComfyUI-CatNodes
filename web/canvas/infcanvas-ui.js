@@ -555,6 +555,20 @@
     });
     langGroup.appendChild(settingsButton);
 
+    /* Built-in workflow manager: standalone dialog (infcanvas-builtin-manager.js).
+       Same pattern as Settings — its own dialog, so built separately but still
+       via makeSideButton so repaintLocale keeps label/tooltip in sync. */
+    const builtinMgrItem = {
+      key: "builtinMgr", icon: "icon-[lucide--workflow]",
+      label: "builtinMgr.title", tip: () => t("builtinMgr.title"),
+    };
+    const builtinMgrButton = makeSideButton(builtinMgrItem);
+    builtinMgrButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      NS.builtinMgr?.open?.();
+    });
+    langGroup.appendChild(builtinMgrButton);
+
     /* LiteGraphCanvasSplitterOverlay.vue + SidebarTabTemplate.vue +
        SidebarTabCloseButton.vue: the panel appears instantly (no width tween;
        reka-ui splitter sets flex:20.4 1 0). Only .sidebar-content-container
@@ -1131,6 +1145,7 @@
     try { NS.canvasMonitor?.repaintLocale?.(); } catch (error) { /* optional */ }
     try { NS.consolePanel?.repaintLocale?.(); } catch (error) { /* optional */ }
     try { NS.settings?.repaintLocale?.(); } catch (error) { /* optional */ }
+    try { NS.builtinMgr?.repaintLocale?.(); } catch (error) { /* optional */ }
     const shell = st().shell;
     if (!shell) return;
     for (const [key, ref] of shell.sideRefs) {

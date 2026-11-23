@@ -584,6 +584,97 @@ def _is_api_workflow(data: Any) -> bool:
     return bool(_api_nodes(data))
 
 
+# ---- Built-in workflow management (per-user visibility + models) -----------
+# Bundled templates are read-only, so a user's "hide this builtin" choice is
+# stored in api_settings.json as a list of stems (not in the shipped files).
+VISIBILITY_KEY = "hidden_builtins"
+
+# Node input key -> ComfyUI model folder. Used to display the expected storage
+# path next to each model file. Download URLs are unknown to the bundle and are
+# intentionally left empty for the user to fill in.
+MODEL_FOLDER_BY_KEY = {
+    "ckpt_name": "checkpoints",
+    "unet_name": "unet",
+    "clip_name": "clip",
+    "clip_name1": "clip",
+    "clip_name2": "clip",
+    "vae_name": "vae",
+    "lora_name": "loras",
+    "control_net_name": "controlnet",
+    "bg_removal_name": "birefnet",
+    "model_name": "unet",
+    "audio_encoder_name": "audio_encoders",
+}
+_MODEL_FILE_SUFFIXES = (".safetensors", ".gguf", ".bin", ".pt", ".onnx", ".ckpt")
+
+
+def _hidden_builtins() -> set[str]:
+    """Stems of bundled workflows the user hid, from per-user api_settings."""
+    raw = _load_api_settings().get(VISIBILITY_KEY)
+    return {str(x) for x in raw} if isinstance(raw, list) else set()
+
+
+def _builtin_names() -> list[str]:
+    """All bundled stems (user-shadowed ones included), sorted."""
+    if not os.path.isdir(BUILTIN_WORKFLOW_DIR):
+        return []
+    return sorted(
+        name[:-5] for name in os.listdir(BUILTIN_WORKFLOW_DIR)
+        if name.endswith(".json") and not name.endswith(".fields.json")
+        and WF_NAME_RE.fullmatch(name[:-5])
+    )
+
+
+def _builtin_models(data: dict) -> list[dict]:
+    """Model files referenced by a bundled workflow: filename + expected
+    ComfyUI folder + empty download URL (the bundle ships no URLs)."""
+    found: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for node in _api_nodes(data).values():
+        inputs = node.get("inputs")
+        if not isinstance(inputs, dict):
+            continue
+        for key, value in inputs.items():
+            if not isinstance(value, str) or not value.lower().endswith(_MODEL_FILE_SUFFIXES):
+                continue
+            if (key, value) in seen:
+                continue
+            seen.add((key, value))
+            found.append({
+                "name": value,
+                "key": key,
+                "folder": MODEL_FOLDER_BY_KEY.get(key, "other"),
+                "url": "",
+            })
+    return found
+
+
+def _category_available_count(category: str, hidden: set[str]) -> int:
+    """How many workflows of a category remain usable: user workflows (never
+    hidden) plus visible built-ins. Guards 'at least one per category'."""
+    count = 0
+    for name in _builtin_names():
+        if name in hidden:
+            continue
+        # A user file with the same stem shadows the builtin; count it once.
+        if os.path.isfile(_workflow_path(name)):
+            count += 1
+            continue
+        if _category_of(_load_builtin_raw_fields(name)) == category:
+            count += 1
+    # User-only workflows in this category (not backed by a builtin stem).
+    if os.path.isdir(_workflow_dir()):
+        for filename in os.listdir(_workflow_dir()):
+            if not filename.endswith(".json") or filename.endswith(".fields.json"):
+                continue
+            name = filename[:-5]
+            if not WF_NAME_RE.fullmatch(name) or name in _builtin_names():
+                continue
+            if _load_category(name) == category:
+                count += 1
+    return count
+
+
 # Media input-slot keys exposed by autogrow nodes (MiniMax H3 image editing /
 # reference-to-video). ORDER matters: video_audio must be checked before video
 # and audio, since its key contains both words. Mirrors the frontend regex in
@@ -1074,6 +1165,92 @@ async def api_set_default(request: web.Request) -> web.Response:
     return await list_workflows(request)
 
 
+async def api_builtin_manage(request: web.Request) -> web.Response:
+    """Management view of the shipped templates: display name, category,
+    per-user visibility, default pin and the model files each one references.
+
+    Read-only files are never modified here; visibility/default live in the
+    per-user api_settings.json. Hidden built-ins are still listed (marked
+    hidden) so the dialog can toggle them back on.
+    """
+    hidden = _hidden_builtins()
+    settings = _load_api_settings()
+    pinned = settings.get("category_defaults") or {}
+    pinned = pinned if isinstance(pinned, dict) else {}
+    pinned = {_normalize_category(key): value for key, value in pinned.items()}
+    # Resolve the effective default per category the same way list_workflows
+    # does: user pin > bundled is_default > first visible entry. Keeps this
+    # dialog's default state in sync with the generate-node selectors.
+    first_of: dict[str, str] = {}
+    sidecar_default: dict[str, str] = {}
+    for name in _builtin_names():
+        if name in hidden or os.path.isfile(_workflow_path(name)):
+            continue
+        raw = _load_builtin_raw_fields(name)
+        category = _category_of(raw)
+        if not category:
+            continue
+        first_of.setdefault(category, name)
+        if raw.get("is_default") is True:
+            sidecar_default.setdefault(category, name)
+    effective: dict[str, str] = {}
+    for category, fallback in first_of.items():
+        candidate = pinned.get(category)
+        if candidate not in first_of.values():
+            candidate = sidecar_default.get(category) or fallback
+        effective[category] = candidate
+    items: list[dict] = []
+    for name in _builtin_names():
+        path = _builtin_workflow_path(name)
+        # A user file with the same stem fully shadows this builtin.
+        shadowed = os.path.isfile(_workflow_path(name))
+        data = _read_json_object(path)
+        if data is None:
+            continue
+        raw = _load_builtin_raw_fields(name)
+        category = _category_of(raw)
+        items.append({
+            "id": name,
+            "name": data.get("name") or data.get("_name") or name,
+            "category": category,
+            "hidden": name in hidden,
+            "shadowed": shadowed,
+            "is_default": bool(category) and effective.get(category) == name,
+            "models": _builtin_models(data),
+        })
+    return web.json_response({
+        "workflows": items,
+        "categories": WORKFLOW_CATEGORIES,
+        "hidden": sorted(hidden),
+    })
+
+
+async def api_builtin_visibility(request: web.Request) -> web.Response:
+    """Show/hide a bundled workflow for this user. Hiding removes it from the
+    generate-node selectors. The last usable workflow of a category cannot be
+    hidden (409) so every category keeps at least one choice."""
+    name = _safe_workflow_name(request.match_info.get("name", ""))
+    if name not in _builtin_names():
+        return web.json_response({"error": _err("内置工作流不存在", "Built-in workflow not found")}, status=404)
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    hide = payload.get("hidden") is True
+    hidden = _hidden_builtins()
+    if hide:
+        category = _category_of(_load_builtin_raw_fields(name))
+        if category and _category_available_count(category, hidden | {name}) < 1:
+            return web.json_response({
+                "error": _err("该分类至少要保留一个可用工作流", "Each category must keep at least one workflow"),
+            }, status=409)
+        hidden.add(name)
+    else:
+        hidden.discard(name)
+    _save_api_settings(**{VISIBILITY_KEY: sorted(hidden)})
+    return await api_builtin_manage(request)
+
+
 async def api_rename_workflow(request: web.Request) -> web.Response:
     """Rename a workflow: the title IS the file stem, so this moves
     <name>.json and <name>.fields.json and rewrites the saved drag order.
@@ -1200,6 +1377,7 @@ async def list_workflows(request: web.Request) -> web.Response:
     ranked = {str(name): index for index, name in enumerate(order)}
     workflows = []
     wf_dir = _workflow_dir()
+    hidden = _hidden_builtins()
     user_names: set[str] = set()
     if os.path.isdir(wf_dir):
         for filename in sorted(os.listdir(wf_dir)):
@@ -1233,7 +1411,7 @@ async def list_workflows(request: web.Request) -> web.Response:
             if not filename.endswith(".json") or filename.endswith(".fields.json"):
                 continue
             name = filename[:-5]
-            if (name in user_names or not WF_NAME_RE.fullmatch(name)
+            if (name in user_names or name in hidden or not WF_NAME_RE.fullmatch(name)
                     or name in (".", "..") or ".." in name):
                 continue
             path = os.path.join(BUILTIN_WORKFLOW_DIR, filename)
@@ -2245,6 +2423,9 @@ def register_routes() -> None:
         ("GET", "/api/infcanvas/lora/meta", lora_meta),
         # API config dialog: register static /order and /fields before the dynamic /{name}.
         ("GET", "/api/infcanvas/settings", api_config_ready),
+        # Built-in workflow management (visibility + model manifest).
+        ("GET", "/api/infcanvas/builtins/manage", api_builtin_manage),
+        ("POST", "/api/infcanvas/builtins/{name}/visibility", api_builtin_visibility),
         ("PUT", "/api/infcanvas/workflows/order", api_reorder_workflows),
         ("POST", "/api/infcanvas/workflows", api_save_workflow),
         ("GET", "/api/infcanvas/workflows/{name}/fields", api_get_fields),
