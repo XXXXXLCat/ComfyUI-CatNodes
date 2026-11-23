@@ -34,5 +34,9 @@
   "minimax_music3_dav.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-Music-3/resolve/master/vae/minimax_music3_dav.safetensors",
   "qwen_3_4b.safetensors": "https://modelscope.cn/models/Comfy-Org/Z-Image/resolve/master/split_files/text_encoders/qwen_3_4b.safetensors",
   "qwen_image_vae.safetensors": "https://modelscope.cn/models/Comfy-Org/Qwen-Image/resolve/master/split_files/vae/qwen_image_vae.safetensors",
-  "z_image_turbo_bf16.safetensors": "https://modelscope.cn/models/Comfy-Org/Z-Image-Turbo/resolve/master/split_files/diffusion_models/z_image_turbo_bf16.safetensors"
+  "z_image_turbo_bf16.safetensors": "https://modelscope.cn/models/Comfy-Org/Z-Image-Turbo/resolve/master/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+  "krea2_turbo_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/Krea-2/resolve/master/diffusion_models/krea2_turbo_int8_convrot.safetensors",
+  "qwen3vl_4b_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/Krea-2/resolve/master/text_encoders/qwen3vl_4b_int8_convrot.safetensors",
+  "minimax_h3_image_pruned_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-H3-Image/resolve/master/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors",
+  "minimax_h3_image_vae_fp16.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-H3-Image/resolve/master/vae/minimax_h3_image_vae_fp16.safetensors"
 }
