@@ -138,10 +138,39 @@
     }
   }
 
+  /* "Set default" button, shown only on non-default usable rows. Lives in the
+     header right after the name (the default pill occupies the same slot). */
+  function makeDefaultButton(item) {
+    const btn = el("button", BTN
+      + " h-8 shrink-0 rounded-lg bg-primary px-3 py-1 text-sm text-primary-foreground hover:bg-primary/90",
+      t("builtinMgr.setDefault"));
+    btn.type = "button";
+    btn.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      if (pending) return;
+      pending = true;
+      try {
+        await api("/workflows/" + encodeURIComponent(item.id) + "/default", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: "{}",
+        });
+        /* The /default endpoint returns the workflow list, not manage data;
+           reload the manage view to refresh the default flags. */
+        await reload();
+        changed();
+      } catch (error) {
+        notifyError(error?.message || t("builtinMgr.saveFailed"));
+      } finally {
+        pending = false;
+      }
+    });
+    return btn;
+  }
+
   function renderRow(item) {
     const row = el("div", "mb-2 rounded-lg border bg-card p-4");
-    /* Header: display name + default pill + visibility switch. The pill is the
-       only default marker; the row below has no duplicate "current default". */
+    /* Header: display name + (default pill | set-default button) + visibility switch.
+       Both markers sit right after the name, in the same slot (mutually exclusive):
+       the current default shows a pill, every other usable row gets a button. */
     const head = el("div", "flex items-center gap-2");
     const name = el("span", "min-w-0 flex-1 truncate text-sm text-foreground", item.name);
     head.appendChild(name);
@@ -149,6 +178,8 @@
       const pill = el("span", "shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-sm font-bold text-foreground",
         t("builtinMgr.default"));
       head.appendChild(pill);
+    } else if (!item.hidden) {
+      head.appendChild(makeDefaultButton(item));
     }
     /* The last usable workflow of a category cannot be hidden. Compute the
        category's available count from the current list, mirroring the backend
@@ -181,35 +212,6 @@
     }
     head.appendChild(sw);
     row.appendChild(head);
-
-    /* Default control: only non-default items get a "set default" button;
-       the default item already shows a pill in the header, no duplicate row. */
-    const defaultBar = el("div", "mt-3 flex items-center gap-2");
-    if (!item.is_default && !item.hidden) {
-      const btn = el("button", BTN + " h-8 rounded-lg bg-secondary px-3 py-1 text-sm text-foreground hover:bg-accent",
-        t("builtinMgr.setDefault"));
-      btn.type = "button";
-      btn.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        if (pending) return;
-        pending = true;
-        try {
-          await api("/workflows/" + encodeURIComponent(item.id) + "/default", {
-            method: "POST", headers: { "Content-Type": "application/json" }, body: "{}",
-          });
-          /* The /default endpoint returns the workflow list, not manage data;
-             reload the manage view to refresh the default flags. */
-          await reload();
-          changed();
-        } catch (error) {
-          notifyError(error?.message || t("builtinMgr.saveFailed"));
-        } finally {
-          pending = false;
-        }
-      });
-      defaultBar.appendChild(btn);
-    }
-    if (defaultBar.childElementCount) row.appendChild(defaultBar);
 
     /* Model manifest, ONE line per model:
        [download] models/<folder>/<file> ✓
