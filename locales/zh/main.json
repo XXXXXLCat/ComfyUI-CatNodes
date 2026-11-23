@@ -1,0 +1,83 @@
+{
+  "catnodes": {
+    "monitor": {
+      "cleanup": "清理",
+      "importCanvas": "导入",
+      "canvas": "画布",
+      "canvasEntry": "无限画布",
+      "tip": {
+        "importCanvas": "把当前工作流保存到画布工作流库",
+        "cleanup": {
+          "vram": "清理显存：卸载已加载模型，运行垃圾回收并清空 ComfyUI 缓存。",
+          "ram": "回收内存：当前提示结束后清空 ComfyUI 的执行缓存。"
+        },
+        "status": {
+          "cpu": "CPU {value}% · 处理器占用",
+          "ram": "内存 {value}% · 已用 {detail}",
+          "gpu": "显卡 {value}% · {name}",
+          "vram": "显存 {value}% · 已用 {detail}",
+          "temp": "温度 {value}°C · {name}",
+          "noGpu": "未检测到 NVIDIA 显卡"
+        }
+      },
+      "toast": {
+        "vram": "显存清理已提交",
+        "ram": "内存清理已提交",
+        "error": "清理提交失败，请查看 ComfyUI 日志"
+      }
+    },
+    "control": {
+      "settings": "设置",
+      "closeMethod": "关闭方式",
+      "mode": "互斥模式",
+      "sort": "排序",
+      "reverse": "反向排序",
+      "off": "关",
+      "on": "开",
+      "clearColors": "清除颜色筛选",
+      "done": "完成",
+      "modes": {
+        "free": "自由",
+        "always_one": "恒定开启一个",
+        "at_most_one": "最多一个开启",
+        "at_least_one": "至少一个开启"
+      },
+      "sorts": {
+        "name": "按名称",
+        "position": "按位置",
+        "state": "按状态",
+        "color": "按颜色"
+      },
+      "closes": {
+        "bypass": "绕过",
+        "mute": "禁用"
+      }
+    },
+    "group": {
+      "settingsLabel": "🐈‍⬛ 组控制设置",
+      "settingsTitle": "组控制设置",
+      "untitled": "未命名组",
+      "emptyIdle": "画布上还没有组",
+      "emptyFiltered": "没有符合筛选条件的组",
+      "emptyNoKeyword": "输入名称关键词以列出组",
+      "unitHint": "显示 {shown} / {total} 个组",
+      "keywordLabel": "名称关键词（分号分隔，任一命中）",
+      "keywordPlaceholder": "用 ; 分隔多个名称，例如 角色; 背景; LORA",
+      "colorLabel": "颜色筛选（可多选）",
+      "paletteEmpty": "画布上没有任何组设置过颜色"
+    },
+    "node": {
+      "settingsLabel": "🐈‍⬛ 节点控制设置",
+      "settingsTitle": "节点控制设置",
+      "untitled": "未命名节点",
+      "emptyIdle": "画布上还没有可控节点",
+      "emptyFiltered": "没有符合筛选条件的节点",
+      "emptyNoKeyword": "输入名称关键词以列出节点",
+      "unitHint": "显示 {shown} / {total} 个节点",
+      "keywordLabel": "名称 / 类型关键词（分号分隔，任一命中）",
+      "keywordPlaceholder": "用 ; 分隔多个关键词，例如 KSampler; 采样; LORA",
+      "colorLabel": "颜色筛选（可多选；未上色的节点沿用所在组的颜色）",
+      "paletteEmpty": "画布上没有节点或组设置过颜色"
+    }
+  }
+}

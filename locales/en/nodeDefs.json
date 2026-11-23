@@ -1,0 +1,170 @@
+{
+  "🐈‍⬛CatVRAMSweep": {
+    "display_name": "Clear VRAM 🐈‍⬛",
+    "description": "Release VRAM through ComfyUI cleanup sequence: unload all loaded models, run garbage collection, then soft-empty the cache. The node re-runs on every queue, so the release is never skipped by result caching. An optional input is passed through unchanged, letting the node sit inside an execution chain; release details are written to the ComfyUI log.",
+    "inputs": {
+      "anything": {
+        "name": "anything",
+        "tooltip": "Optional pass-through. Any value wired here is returned unchanged, so the node can sit inside an execution chain."
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "anything",
+        "tooltip": "The pass-through value, returned unchanged."
+      }
+    }
+  },
+  "🐈‍⬛CatRAMReclaim": {
+    "display_name": "Reclaim RAM 🐈‍⬛",
+    "description": "By default, clear ComfyUI execution cache after the current prompt finishes, leaving models loaded. Enable Clean file cache to reset the Windows system file cache instead (single pass, system-wide; requires privileges and may silently do nothing without them). The node re-runs on every queue, so the cleanup is never skipped by result caching. An optional input is passed through unchanged; details are written to the ComfyUI log.",
+    "inputs": {
+      "clean_file_cache": {
+        "name": "Clean file cache",
+        "tooltip": "Off (default): clear ComfyUI execution cache. On: reset the Windows system file cache (system-wide; Windows only, requires privileges)."
+      },
+      "anything": {
+        "name": "anything",
+        "tooltip": "Optional pass-through. Any value wired here is returned unchanged, so the node can sit inside an execution chain."
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "anything",
+        "tooltip": "The pass-through value, returned unchanged."
+      }
+    }
+  },
+  "🐈‍⬛CatAnySwitch": {
+    "display_name": "Any Switch 🐈‍⬛",
+    "description": "Generic single-active-input switch for ANY data type. Wire several branch outputs in at once; at runtime forward the single one that carries data and raise an error if none or more than one is populated. The first connection decides the node's type: the front end then locks every port to that same type and labels every port as <type>_<index> and the output with the type name, so the node visibly shows what it switches. Ports grow automatically as you connect (two by default, one extra empty slot each time, up to nine). Flip the active branch upstream — no rewiring, no toggle.",
+    "inputs": {
+      "input_1": {
+        "name": "input 1",
+        "tooltip": "Candidate #1. The first connection decides the node type; every other port is then locked to that same type and each port (and the output) is labeled with that type name and slot index. Only the input that actually carries data is forwarded."
+      },
+      "input_2": {
+        "name": "input 2",
+        "tooltip": "Candidate #2. The first connection decides the node type; every other port is then locked to that same type and each port (and the output) is labeled with that type name and slot index. Only the input that actually carries data is forwarded."
+      },
+      "input_3": {
+        "name": "input 3",
+        "tooltip": "Candidate #3. The first connection decides the node type; every other port is then locked to that same type and each port (and the output) is labeled with that type name and slot index. Only the input that actually carries data is forwarded."
+      },
+      "input_4": {
+        "name": "input 4",
+        "tooltip": "Candidate #4. The first connection decides the node type; every other port is then locked to that same type and each port (and the output) is labeled with that type name and slot index. Only the input that actually carries data is forwarded."
+      },
+      "input_5": {
+        "name": "input 5",
+        "tooltip": "Candidate #5. The first connection decides the node type; every other port is then locked to that same type and each port (and the output) is labeled with that type name and slot index. Only the input that actually carries data is forwarded."
+      },
+      "input_6": {
+        "name": "input 6",
+        "tooltip": "Candidate #6. The first connection decides the node type; every other port is then locked to that same type and each port (and the output) is labeled with that type name and slot index. Only the input that actually carries data is forwarded."
+      },
+      "input_7": {
+        "name": "input 7",
+        "tooltip": "Candidate #7. The first connection decides the node type; every other port is then locked to that same type and each port (and the output) is labeled with that type name and slot index. Only the input that actually carries data is forwarded."
+      },
+      "input_8": {
+        "name": "input 8",
+        "tooltip": "Candidate #8. The first connection decides the node type; every other port is then locked to that same type and each port (and the output) is labeled with that type name and slot index. Only the input that actually carries data is forwarded."
+      },
+      "input_9": {
+        "name": "input 9",
+        "tooltip": "Candidate #9. The first connection decides the node type; every other port is then locked to that same type and each port (and the output) is labeled with that type name and slot index. Only the input that actually carries data is forwarded."
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "output",
+        "tooltip": "The single branch that actually carries data."
+      }
+    }
+  },
+  "🐈‍⬛CatGroupControl": {
+    "display_name": "Group Control 🐈‍⬛",
+    "description": "Open or close canvas groups from a single panel. Each group on the canvas (including subgraphs) becomes a row with its name and one toggle; the list can be filtered by group colour and name keyword and ordered by name or canvas position. A mode decides how toggles interact: free control, always exactly one open, or at most one open. Closing a group either bypasses or mutes every node inside it, which is chosen in the panel settings. The signal input is a pass-through so the node can live inside an execution chain without changing the data that flows through it; all group switching happens in the front end.",
+    "inputs": {
+      "signal": {
+        "name": "signal",
+        "tooltip": "Optional pass-through. Whatever is wired here is returned unchanged so the node can sit inside a chain; it is not involved in group switching."
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "signal",
+        "tooltip": "The pass-through signal, returned unchanged."
+      }
+    }
+  },
+  "🐈‍⬛CatNodeControl": {
+    "display_name": "Node Control 🐈‍⬛",
+    "description": "Open or close individual canvas nodes from a single panel. Each node on the canvas becomes a row with its title and one toggle; the list can be filtered by node colour (an uncoloured node inherits its group's colour) and by name / type keyword, and ordered by name or canvas position. A mode decides how toggles interact: free control, always exactly one open, or at most one open. Closing a node either bypasses or mutes it, which is chosen in the panel settings. Notes, reroutes, primitives and the control node itself are never listed. The signal input is a pass-through so the node can live inside an execution chain without changing the data that flows through it; all switching happens in the front end.",
+    "inputs": {
+      "signal": {
+        "name": "signal",
+        "tooltip": "Optional pass-through. Whatever is wired here is returned unchanged so the node can sit inside a chain; it is not involved in node switching."
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "signal",
+        "tooltip": "The pass-through signal, returned unchanged."
+      }
+    }
+  },
+  "🐈‍⬛CatFitImageToSize": {
+    "display_name": "Fit Image to Size 🐈‍⬛",
+    "description": "Work out a target size from aspect ratio + megapixels and scale the image onto it with one uniform factor, so nothing is stretched. 'Auto' takes the ratio from the image itself, and the result tracks it as closely as the multiple grid allows — 1365x768 becomes 1376x768 at a multiple of 32, 0.8% wide, exact if the multiple is set to 1. A target that already follows the image is centre-cropped by those few pixels; a target ratio further away is padded with black instead. Outputs the image, the width and height actually produced, and resolution — the equivalent square edge round(sqrt(width×height)), 1024 for a 1 MP square.",
+    "inputs": {
+      "image": {
+        "name": "Image",
+        "tooltip": "Image to fit."
+      },
+      "aspect_ratio": {
+        "name": "Aspect Ratio",
+        "tooltip": "Ratio used to derive the target size. 'Auto' uses the input image's own ratio."
+      },
+      "megapixels": {
+        "name": "Megapixels",
+        "tooltip": "Target total megapixels, 0.01 step. 1.0 MP gives 1024x1024 for a square ratio."
+      },
+      "preview": {
+        "name": "Preview",
+        "tooltip": "Live preview of the target size and megapixel count; shows a dash while nothing is connected."
+      },
+      "multiple": {
+        "name": "Multiple",
+        "tooltip": "Snap the computed size to this grid. Default 32 matches the grid Qwen-Image aligns to internally; 1 disables snapping."
+      },
+      "preview_ratio": {
+        "name": "Preview Ratio",
+        "tooltip": "Internal: the ratio the preview reads. Hidden, kept in step with the aspect ratio and the upstream image."
+      },
+      "preview_megapixels": {
+        "name": "Preview Megapixels",
+        "tooltip": "Internal: the megapixel value the preview reads. Hidden, kept in step by the node itself."
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Image",
+        "tooltip": "The image scaled onto the computed canvas."
+      },
+      "1": {
+        "name": "Width",
+        "tooltip": "Width actually produced, after rounding to the multiple."
+      },
+      "2": {
+        "name": "Height",
+        "tooltip": "Height actually produced, after rounding to the multiple."
+      },
+      "3": {
+        "name": "Resolution",
+        "tooltip": "Equivalent square edge of the result, round(sqrt(width*height)). 1024 for a 1 MP square."
+      }
+    }
+  }
+}

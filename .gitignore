@@ -1,0 +1,33 @@
+# Build dependencies (node_modules installed via pnpm, never committed)
+node_modules/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# WorkBuddy local data: tests, browser profiles, logs, memory notes
+.workbuddy/
+
+# Design notes and historical plans are kept local, not shipped with the node
+docs/
+
+# Internal collaboration rules, not for publication
+AGENTS.md
+
+# Development-only sources: only runtime files are published.
+# CSS sources are compiled into web/canvas/infcanvas-style.js (kept).
+web/canvas/css/
+web/canvas/types/
+tools/
+sync_to_lab.sh
+.gitattributes
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+

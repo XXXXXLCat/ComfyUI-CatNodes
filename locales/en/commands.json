@@ -1,0 +1,11 @@
+{
+  "catnodes.cleanup.vram": {
+    "label": "Clear VRAM"
+  },
+  "catnodes.cleanup.ram": {
+    "label": "Reclaim RAM"
+  },
+  "catnodes.import-canvas": {
+    "label": "Import to Canvas"
+  }
+}

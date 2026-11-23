@@ -1,0 +1,83 @@
+{
+  "catnodes": {
+    "monitor": {
+      "cleanup": "Cleanup",
+      "importCanvas": "Import",
+      "canvas": "Canvas",
+      "canvasEntry": "Infinite Canvas",
+      "tip": {
+        "importCanvas": "Save the current workflow to the canvas workflow library",
+        "cleanup": {
+          "vram": "Clear VRAM: unload models, run garbage collection and empty ComfyUI's cache.",
+          "ram": "Reclaim RAM: clear ComfyUI's execution cache after the current prompt."
+        },
+        "status": {
+          "cpu": "CPU {value}% · processor usage",
+          "ram": "RAM {value}% · {detail} used",
+          "gpu": "GPU {value}% · {name}",
+          "vram": "VRAM {value}% · {detail} used",
+          "temp": "Temperature {value}°C · {name}",
+          "noGpu": "No NVIDIA GPU detected"
+        }
+      },
+      "toast": {
+        "vram": "VRAM cleanup queued",
+        "ram": "RAM cleanup queued",
+        "error": "Cleanup could not be queued; see the ComfyUI log"
+      }
+    },
+    "control": {
+      "settings": "Settings",
+      "closeMethod": "Close method",
+      "mode": "Mode",
+      "sort": "Sort",
+      "reverse": "Reverse order",
+      "off": "Off",
+      "on": "On",
+      "clearColors": "Clear color filter",
+      "done": "Done",
+      "modes": {
+        "free": "Free",
+        "always_one": "Always one on",
+        "at_most_one": "At most one on",
+        "at_least_one": "At least one on"
+      },
+      "sorts": {
+        "name": "By name",
+        "position": "By position",
+        "state": "By state",
+        "color": "By color"
+      },
+      "closes": {
+        "bypass": "Bypass",
+        "mute": "Mute"
+      }
+    },
+    "group": {
+      "settingsLabel": "🐈‍⬛ Group Control Settings",
+      "settingsTitle": "Group Control Settings",
+      "untitled": "Untitled group",
+      "emptyIdle": "No groups on the canvas",
+      "emptyFiltered": "No matching groups",
+      "emptyNoKeyword": "Type a name keyword to list groups",
+      "unitHint": "Showing {shown} / {total} groups",
+      "keywordLabel": "Name keywords (semicolon-separated, any match)",
+      "keywordPlaceholder": "Separate names with ; e.g. character; background; LORA",
+      "colorLabel": "Color filter (multi-select)",
+      "paletteEmpty": "No groups on the canvas have a color set"
+    },
+    "node": {
+      "settingsLabel": "🐈‍⬛ Node Control Settings",
+      "settingsTitle": "Node Control Settings",
+      "untitled": "Untitled node",
+      "emptyIdle": "No controllable nodes on the canvas",
+      "emptyFiltered": "No matching nodes",
+      "emptyNoKeyword": "Type a name keyword to list nodes",
+      "unitHint": "Showing {shown} / {total} nodes",
+      "keywordLabel": "Name / type keywords (semicolon-separated, any match)",
+      "keywordPlaceholder": "Separate keywords with ; e.g. KSampler; sampling; LORA",
+      "colorLabel": "Color filter (multi-select; uncolored nodes inherit their group's color)",
+      "paletteEmpty": "No nodes or groups on the canvas have a color set"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "catnodes.cleanup.vram": {
+    "label": "清理显存"
+  },
+  "catnodes.cleanup.ram": {
+    "label": "回收内存"
+  },
+  "catnodes.import-canvas": {
+    "label": "导入到画布"
+  }
+}
