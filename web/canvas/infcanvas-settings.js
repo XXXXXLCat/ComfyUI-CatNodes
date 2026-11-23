@@ -209,7 +209,7 @@
     {
       id: TRANSLATE_MODEL_ID,
       type: "select",
-      group: "translation",
+      group: "canvas",
       label: "settings.translateModel",
       desc: "settings.translateModelDesc",
       hint: "settings.translateModelHint",
@@ -230,7 +230,6 @@
       items: [
         { id: "canvas", label: "shortcuts.canvasSettings", icon: "icon-[lucide--settings]" },
         { id: "builtinWorkflows", label: "builtinMgr.title", icon: "icon-[lucide--workflow]" },
-        { id: "translation", label: "settings.translationCategory", icon: "icon-[lucide--languages]" },
       ],
     },
   ];
@@ -444,44 +443,39 @@
     return makeSwitch(item);
   }
 
-  /* FormItem.vue：<div class="flex min-h-8 items-center gap-2"> + label
-     span(text-sm text-muted-foreground) + 右侧控件。原生的 tooltip 触发
-     `pi pi-info-circle` 在 label span **内部**、紧跟名字（模板换行 = 一个空格，
-     约 4px），继承 text-sm(14px)——不是 span 外的兄弟节点（那样会继承 16px
-     且多出 6px 间距）。 */
+  /* 2026-11-24 用户定稿：设置项改成 ComfyUI 设置页那种整行排版——
+     左侧「粗体标题 + 灰色说明」两行，右侧控件，行与行之间横线分隔。
+     全部用宿主 utility class，不引入自绘 CSS。 */
   function makeFormItem(item) {
-    const row = el("div", "flex min-h-8 items-center gap-2");
-    const labelBox = el("div", "flex grow items-center");
-    const label = el("span", "text-sm text-muted-foreground");
+    const row = el("div", "flex min-h-8 items-center justify-between gap-3 py-1");
+    const labelBox = el("div", "flex min-w-0 flex-col gap-1");
+    const titleLine = el("div", "flex items-center gap-1");
+    const label = el("span", "text-sm font-bold text-foreground");
     label.setAttribute("id", item.id + "-label");
-    /* 原生 name-prefix：Comfy.Locale 前置 language Tag，嵌在 label span 内、
-       文字前面（源码 id==='Comfy.Locale' 时塞 pi pi-language severity=primary）。 */
+    /* name-prefix：语言行在标题前塞 language Tag。 */
     if (item.icon) {
-      /* 2026-11-21 用户定稿：语言行这一块（图标+文字+info）上移 4px。
-         inline-flex 图标把 label 撑到 22px 高，视觉重心比右侧下拉框偏低。 */
-      label.style.transform = "translateY(-4px)";
       label.appendChild(el("i", SETTING_ICON + item.icon));
       label.appendChild(document.createTextNode(" "));
     }
     label.appendChild(document.createTextNode(t(item.label)));
+    titleLine.appendChild(label);
     if (item.desc) {
-      label.appendChild(document.createTextNode(" "));
       const info = el("i", "pi pi-info-circle");
       bindTip(info, () => t(item.desc));
-      label.appendChild(info);
+      titleLine.appendChild(info);
     }
-    labelBox.appendChild(label);
-    const controlBox = el("div", "flex flex-col items-end gap-1");
+    labelBox.appendChild(titleLine);
+    if (item.desc) labelBox.appendChild(el("span", "text-xs text-muted-foreground", t(item.desc)));
+    /* 常驻提醒（如「模型越大越慢」）跟说明一样作为灰色小字，不必悬停才看到。 */
+    if (item.hint) labelBox.appendChild(el("span", "text-xs text-muted-foreground", t(item.hint)));
+    const controlBox = el("div", "flex shrink-0 items-center");
     controlBox.appendChild(makeControl(item));
-    /* 可选的行内提醒：用宿主 utility class，不引入自绘样式。翻译模型行用它
-       常驻提示「模型越大越慢」，不必悬停 info 图标才看得到。 */
-    if (item.hint) controlBox.appendChild(el("span", "text-xs text-muted-foreground text-right", t(item.hint)));
     row.append(labelBox, controlBox);
     return row;
   }
 
-  /* SettingGroup.vue：<h3 class="text-base">标题 + 每个 setting 一个
-     .setting-item.mb-3 行；分组之间 divider my-8 border-t。 */
+  /* SettingGroup.vue：<h3 class="text-base">标题 + 每个 setting 一行，
+     行底 border-b border-border 横线分隔；分组之间 divider my-8 border-t。 */
   function renderGroups(host) {
     const query = searchQuery.trim().toLowerCase();
     /* 内置工作流管理是复合视图，不是单值设置项：它有自己的导航分组，直接把
@@ -527,7 +521,7 @@
     groupTitle.style.marginBottom = "calc(var(--spacing, 4px) * 5)";
     groupBox.appendChild(groupTitle);
     for (const item of matched) {
-      const rowWrap = el("div", "setting-item mb-3");
+      const rowWrap = el("div", "setting-item border-b border-border py-4 last:border-b-0");
       rowWrap.appendChild(makeFormItem(item));
       groupBox.appendChild(rowWrap);
     }
