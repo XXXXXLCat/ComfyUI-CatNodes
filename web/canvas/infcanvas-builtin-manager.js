@@ -240,10 +240,12 @@
           line.appendChild(dlOff);
         }
 
-        /* Path text (was the filename) — click to copy the real folder path. */
-        const pathPart = el("span",
-          "cursor-pointer font-mono text-foreground hover:text-primary",
-          "models/" + (model.folder || "other") + "/" + model.name);
+        /* Path text — folder prefix is muted, filename keeps normal colour;
+           the whole span stays the click target to copy the real folder path. */
+        const pathPart = el("span", "group cursor-pointer font-mono");
+        pathPart.appendChild(el("span", "text-muted-foreground group-hover:text-foreground",
+          "models/" + (model.folder || "other") + "/"));
+        pathPart.appendChild(el("span", "text-foreground group-hover:text-primary", model.name));
         bindTip(pathPart, () => t("builtinMgr.copyFolder"), "top");
         pathPart.addEventListener("click", (event) => {
           event.stopPropagation();
