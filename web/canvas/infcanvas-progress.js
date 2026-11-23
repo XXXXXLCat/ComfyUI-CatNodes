@@ -393,19 +393,21 @@ const genProgress = (() => {
       nodeId, node: null, listeners: [], previewUrl: null, lastTs: 0,
       nodeTitles, totalNodes: Object.keys(prompt || {}).length, executedSet: new Set(),
       startedAt: Date.now(),
+      /* True once this job's own execution_start/progress arrives — i.e. it is
+         SAMPLING, not merely queued. onPreview uses it so a waiting job never
+         renders a preview even if the cursor briefly points at it. */
+      started: false,
       /* Source canvas for the "current canvas" queue filter. */
       docId: activeDoc()?.id || "",
       endedAt: 0,
     };
     jobs.set(promptId, job);
-    /* Do NOT steal the active cursor at SUBMIT time. begin() runs for every
-       queued node, so the newest WAITING job would become active while an
-       older job is actually sampling; id-less previews (KJNodes / bare
-       b_preview) would then render on that waiting node and, never finished,
-       stay there. Only a job that really starts owns the cursor — set on the
-       first submission as a single-job fallback, then on execution_start /
-       progress (both carry prompt_id). */
-    if (!activePromptId) activePromptId = promptId;
+    /* Keep the cursor on the just-submitted job as the single-job fallback —
+       required so a plain image job renders its native b_preview even when
+       execution_start/progress race past our listeners. WAITING jobs are kept
+       from showing another job's preview by the job.started gate in
+       onPreview (not by withholding this cursor). */
+    activePromptId = promptId;
     writeNode(job, {
       genPhase: "queued", genPhaseText: phaseText("queued"), genProgress: 0,
       genTotalProgress: 0, genCurrentNodeProgress: 0, genCurrentNodeName: "",
@@ -424,6 +426,7 @@ const genProgress = (() => {
          progress_text fallbacks read this cursor — genPhase/genProgress and
          queue semantics are untouched. */
       activePromptId = promptId;
+      job.started = true;
       writeNode(job, { genPhase: "running", genPhaseText: phaseText("running") });
     });
     /* If execution_start arrived before we attached the listener above (the
@@ -431,6 +434,7 @@ const genProgress = (() => {
        a fast-starting job never stays stuck at "等待中". This mirrors exactly
        what the listener above would have written; nothing else is touched. */
     if (hasStarted(promptId)) {
+      job.started = true;
       writeNode(job, { genPhase: "running", genPhaseText: phaseText("running") });
     }
 
@@ -442,6 +446,7 @@ const genProgress = (() => {
          previews (KJNodes / bare b_preview) follow the sampling job, never a
          queued one that merely started earlier or was submitted later. */
       activePromptId = promptId;
+      job.started = true;
       const max = Number(d.max) || 0;
       const value = Number(d.value) || 0;
       const pct = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
@@ -508,6 +513,11 @@ const genProgress = (() => {
     const onPreview = (blob, mime) => {
       if (!(blob instanceof Blob)) return;
       if (promptId !== activePromptId) return; /* id-less preview: active job only */
+      /* A job that has not emitted execution_start/progress yet is still
+         WAITING — its node must not show a preview (the frames belong to the
+         sampling job). job.started is set by this job's own start events, so
+         it is reliable without depending on the global cursor. */
+      if (!job.started) return;
       try {
         if (job.previewUrl) URL.revokeObjectURL(job.previewUrl);
         job.previewUrl = URL.createObjectURL(blob);
