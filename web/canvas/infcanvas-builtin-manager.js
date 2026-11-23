@@ -189,25 +189,46 @@
     }
     row.appendChild(defaultBar);
 
-    /* Model manifest: filename + expected folder + empty URL placeholder. */
+    /* Model manifest: per model show the canonical ComfyUI folder, the
+       on-disk install status (probed by the backend via folder_paths) and a
+       download link placeholder. No custom colours — only host utility classes. */
     if (item.models?.length) {
       const modelBox = el("div", "mt-3 border-t pt-3");
       modelBox.appendChild(el("div", "mb-1 text-xs font-bold text-muted-foreground", t("builtinMgr.models")));
       for (const model of item.models) {
-        const line = el("div", "flex flex-wrap items-center gap-x-2 gap-y-1 py-1 text-xs text-foreground");
-        line.appendChild(el("span", "font-mono", model.name));
-        line.appendChild(el("span", "text-muted-foreground",
-          "models/" + (model.folder || "other") + "/"));
+        const block = el("div", "py-1 text-xs");
+        /* Line 1: filename + installed/missing status + download link. */
+        const head = el("div", "flex flex-wrap items-center gap-x-2 gap-y-1 text-foreground");
+        head.appendChild(el("span", "font-mono", model.name));
+        const installed = model.installed === true;
+        const status = el("span",
+          "inline-flex items-center gap-1 " + (installed ? "text-foreground" : "text-muted-foreground"));
+        status.appendChild(el("i", installed
+          ? "icon-[lucide--circle-check] size-3"
+          : "icon-[lucide--circle-x] size-3"));
+        status.appendChild(el("span", t(installed ? "builtinMgr.installed" : "builtinMgr.missing")));
+        bindTip(status, () => model.path || t("builtinMgr.notOnDisk"), "top");
+        head.appendChild(status);
         if (model.url) {
           const link = el("a", "text-primary underline", t("builtinMgr.download"));
           link.href = model.url;
           link.target = "_blank";
           link.rel = "noopener noreferrer";
-          line.appendChild(link);
+          head.appendChild(link);
         } else {
-          line.appendChild(el("span", "text-muted-foreground", t("builtinMgr.noUrl")));
+          head.appendChild(el("span", "text-muted-foreground", t("builtinMgr.noUrl")));
         }
-        modelBox.appendChild(line);
+        block.appendChild(head);
+        /* Line 2: canonical logical path (cross-machine, project-shipped). */
+        block.appendChild(el("div", "font-mono text-muted-foreground",
+          "models/" + (model.folder || "other") + "/" + model.name));
+        /* Line 3: resolved absolute path when actually installed on this machine. */
+        if (installed && model.path) {
+          const real = el("div", "truncate font-mono text-muted-foreground", model.path);
+          real.title = model.path;
+          block.appendChild(real);
+        }
+        modelBox.appendChild(block);
       }
       row.appendChild(modelBox);
     }

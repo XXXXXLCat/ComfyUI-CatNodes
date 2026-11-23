@@ -589,23 +589,59 @@ def _is_api_workflow(data: Any) -> bool:
 # stored in api_settings.json as a list of stems (not in the shipped files).
 VISIBILITY_KEY = "hidden_builtins"
 
-# Node input key -> ComfyUI model folder. Used to display the expected storage
-# path next to each model file. Download URLs are unknown to the bundle and are
-# intentionally left empty for the user to fill in.
+# Node class -> ComfyUI model folder (folder_paths key). Derived from the actual
+# loader nodes in the bundled workflows and verified against extra_model_paths.yaml:
+#   UNETLoader                -> diffusion_models  (NOT "unet": legacy alias)
+#   CLIPLoader                -> text_encoders     (NOT "clip": legacy alias)
+#   LoadBackgroundRemovalModel-> background_removal
+#   CheckpointLoaderSimple    -> checkpoints
+#   VAELoader                 -> vae
+#   AudioEncoderLoader        -> audio_encoders
+# Using the class (not the input key) avoids guessing: "unet_name" would suggest
+# "unet", but the real folder is "diffusion_models".
+MODEL_FOLDER_BY_NODE = {
+    "UNETLoader": "diffusion_models",
+    "CLIPLoader": "text_encoders",
+    "CLIPLoaderGGUF": "text_encoders",
+    "VAELoader": "vae",
+    "CheckpointLoaderSimple": "checkpoints",
+    "CheckpointLoader": "checkpoints",
+    "LoraLoader": "loras",
+    "LoraLoaderModelOnly": "loras",
+    "ControlNetLoader": "controlnet",
+    "LoadBackgroundRemovalModel": "background_removal",
+    "AudioEncoderLoader": "audio_encoders",
+}
+# Fallback for unrecognised custom nodes: input key -> folder. Only keys whose
+# meaning is unambiguous are listed; unknown keys fall back to "other".
 MODEL_FOLDER_BY_KEY = {
     "ckpt_name": "checkpoints",
-    "unet_name": "unet",
-    "clip_name": "clip",
-    "clip_name1": "clip",
-    "clip_name2": "clip",
+    "unet_name": "diffusion_models",
+    "clip_name": "text_encoders",
+    "clip_name1": "text_encoders",
+    "clip_name2": "text_encoders",
     "vae_name": "vae",
     "lora_name": "loras",
     "control_net_name": "controlnet",
-    "bg_removal_name": "birefnet",
-    "model_name": "unet",
+    "bg_removal_name": "background_removal",
     "audio_encoder_name": "audio_encoders",
 }
 _MODEL_FILE_SUFFIXES = (".safetensors", ".gguf", ".bin", ".pt", ".onnx", ".ckpt")
+
+
+def _model_install_path(folder: str, name: str) -> str:
+    """Absolute path of an actually-installed model, or "" when not found.
+    Uses folder_paths' resolved search paths, so it honours extra_model_paths.yaml
+    on whatever machine the plugin runs on."""
+    try:
+        folders = folder_paths.get_folder_paths(folder) or []
+    except Exception:
+        return ""
+    for base in folders:
+        candidate = os.path.join(base, name)
+        if os.path.isfile(candidate):
+            return os.path.normpath(candidate)
+    return ""
 
 
 def _hidden_builtins() -> set[str]:
@@ -626,24 +662,35 @@ def _builtin_names() -> list[str]:
 
 
 def _builtin_models(data: dict) -> list[dict]:
-    """Model files referenced by a bundled workflow: filename + expected
-    ComfyUI folder + empty download URL (the bundle ships no URLs)."""
+    """Model files referenced by a bundled workflow.
+
+    Each entry carries the canonical ComfyUI folder (derived from the loader
+    node's class), whether the file actually exists on this machine, and its
+    resolved absolute path when installed. Download URLs are unknown to the
+    bundle and left empty for the user to fill in later.
+    """
     found: list[dict] = []
     seen: set[tuple[str, str]] = set()
     for node in _api_nodes(data).values():
         inputs = node.get("inputs")
         if not isinstance(inputs, dict):
             continue
+        class_type = str(node.get("class_type") or "")
         for key, value in inputs.items():
             if not isinstance(value, str) or not value.lower().endswith(_MODEL_FILE_SUFFIXES):
                 continue
             if (key, value) in seen:
                 continue
             seen.add((key, value))
+            folder = (MODEL_FOLDER_BY_NODE.get(class_type)
+                      or MODEL_FOLDER_BY_KEY.get(key, "other"))
+            installed_path = _model_install_path(folder, value)
             found.append({
                 "name": value,
                 "key": key,
-                "folder": MODEL_FOLDER_BY_KEY.get(key, "other"),
+                "folder": folder,
+                "installed": bool(installed_path),
+                "path": installed_path,
                 "url": "",
             })
     return found
