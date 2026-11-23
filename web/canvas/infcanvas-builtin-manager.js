@@ -214,18 +214,44 @@
     row.appendChild(defaultBar);
 
     /* Model manifest, two lines per model:
-         line 1: filename + installed check/x (status probed by backend)
-         line 2: folder icon + canonical logical path, then the open-folder
-                 and download icon buttons on the SAME line (not below). */
+         line 1: [folder=copy path] [download] filename ✓  — icons BEFORE the name
+         line 2: canonical logical path (also clickable to copy). */
     if (item.models?.length) {
       const modelBox = el("div", "mt-3 border-t pt-3");
       modelBox.appendChild(el("div", "mb-1 text-xs font-bold text-muted-foreground", t("builtinMgr.models")));
       for (const model of item.models) {
         const installed = model.installed === true;
         const block = el("div", "py-1 text-xs");
-
-        /* Line 1: filename, with the check/x immediately after it. */
         const nameLine = el("div", "flex flex-wrap items-center gap-x-1.5 gap-y-1");
+
+        /* Single folder icon before the name: click to copy the model folder path. */
+        const copyBtn = el("button", BTN + " size-5 p-0 text-muted-foreground hover:text-foreground");
+        copyBtn.type = "button";
+        copyBtn.appendChild(el("i", "icon-[lucide--folder] size-3.5"));
+        bindTip(copyBtn, () => t("builtinMgr.copyFolder"), "top");
+        copyBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          copyModelFolder(model);
+        });
+        nameLine.appendChild(copyBtn);
+
+        /* Download icon before the name (disabled placeholder when no URL). */
+        if (model.url) {
+          const link = el("a", BTN + " size-5 p-0 text-primary");
+          link.href = model.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.appendChild(el("i", "icon-[lucide--download] size-3.5"));
+          bindTip(link, () => t("builtinMgr.download"), "top");
+          nameLine.appendChild(link);
+        } else {
+          const dlOff = el("span", "inline-flex size-5 items-center justify-center text-muted-foreground opacity-50");
+          dlOff.appendChild(el("i", "icon-[lucide--download] size-3.5"));
+          bindTip(dlOff, () => t("builtinMgr.noUrl"), "top");
+          nameLine.appendChild(dlOff);
+        }
+
+        /* Filename + installed check/x immediately after it. */
         nameLine.appendChild(el("span", "font-mono text-foreground", model.name));
         const mark = el("i", installed
           ? "icon-[lucide--circle-check] size-3 text-primary"
@@ -236,47 +262,16 @@
         nameLine.appendChild(mark);
         block.appendChild(nameLine);
 
-        /* Line 2: folder icon + logical path + [open folder] + [download],
-           all inline. Clicking the path or the folder button opens the folder. */
-        const pathLine = el("div", "mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground");
+        /* Line 2: canonical logical path, still clickable to copy, no icon. */
         const pathPart = el("div",
-          "flex cursor-pointer items-center gap-1 font-mono hover:text-foreground");
-        pathPart.appendChild(el("i", "icon-[lucide--folder] size-3 shrink-0"));
-        pathPart.appendChild(el("span", "models/" + (model.folder || "other") + "/"));
+          "mt-0.5 cursor-pointer font-mono text-muted-foreground hover:text-foreground",
+          "models/" + (model.folder || "other") + "/" + model.name);
         bindTip(pathPart, () => t("builtinMgr.copyFolder"), "top");
         pathPart.addEventListener("click", (event) => {
           event.stopPropagation();
           copyModelFolder(model);
         });
-        pathLine.appendChild(pathPart);
-
-        /* Copy-folder-path icon button (same line). */
-        const copyBtn = el("button", BTN + " size-5 p-0 text-muted-foreground hover:text-foreground");
-        copyBtn.type = "button";
-        copyBtn.appendChild(el("i", "icon-[lucide--copy] size-3.5"));
-        bindTip(copyBtn, () => t("builtinMgr.copyFolder"), "top");
-        copyBtn.addEventListener("click", (event) => {
-          event.stopPropagation();
-          copyModelFolder(model);
-        });
-        pathLine.appendChild(copyBtn);
-
-        /* Download icon / link (same line). */
-        if (model.url) {
-          const link = el("a", BTN + " size-5 p-0 text-primary");
-          link.href = model.url;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.appendChild(el("i", "icon-[lucide--download] size-3.5"));
-          bindTip(link, () => t("builtinMgr.download"), "top");
-          pathLine.appendChild(link);
-        } else {
-          const dlOff = el("span", "inline-flex size-5 items-center justify-center text-muted-foreground opacity-50");
-          dlOff.appendChild(el("i", "icon-[lucide--download] size-3.5"));
-          bindTip(dlOff, () => t("builtinMgr.noUrl"), "top");
-          pathLine.appendChild(dlOff);
-        }
-        block.appendChild(pathLine);
+        block.appendChild(pathPart);
 
         modelBox.appendChild(block);
       }
