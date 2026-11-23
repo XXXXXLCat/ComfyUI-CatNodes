@@ -101,6 +101,13 @@ const Root = {
        SCREEN size — the same "outside the scaled layer" feel as the menus.
        Bound as a CSS var on .ic-flow so Vue applies it to every node at once. */
     const iz = computed(() => 1 / (state.viewport.value.zoom || 1));
+    /* Handle magnet radius lives OUTSIDE the scaled layer: Vue Flow compares
+       the pointer (converted to flow coords) against handles using this radius
+       in FLOW units, so it would shrink with zoom and become near-unselectable
+       when zoomed far out. Multiply by iz (1/zoom) to keep a constant 20 SCREEN
+       px of snap range at any zoom. Pairs with the ::after hit area's inverse
+       scale in infcanvas-vueflow.css. */
+    const connectionRadius = computed(() => 20 * iz.value);
 
     const onViewportChange = (viewport) => {
       state.viewport.value = { x: viewport.x, y: viewport.y, zoom: viewport.zoom };
@@ -2111,6 +2118,7 @@ const Root = {
       :min-zoom="minZoom" :max-zoom="maxZoom"
       :snap-to-grid="snap" :snap-grid="snapGrid"
       :pan-on-drag="true"
+      :connection-radius="connectionRadius"
       :nodes-draggable="mode === 'select'" :elements-selectable="mode === 'select'"
       :nodes-connectable="mode === 'select'" :edges-updatable="mode === 'select'"
       connection-mode="strict"

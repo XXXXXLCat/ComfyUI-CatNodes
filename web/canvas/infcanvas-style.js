@@ -874,7 +874,9 @@ var infcanvas_vueflow_default = `\r
    their sub-pixel rounding differs mid-transition and the centre jitters even\r
    though both steady states compute equal. box-shadow spread is pre-divided by\r
    the scale (1.5 / (7/6) = 1.286px) so it renders 1.5px when active.\r
-   ::after = 20px invisible hit area (getSlotInPosition \xB110). */\r
+   ::after = 20px invisible hit area (getSlotInPosition \xB110), inverse-scaled by\r
+   --ic-iz so the hit area stays a constant 20 SCREEN px \u2014 easy to grab even\r
+   when the canvas is zoomed far out. Pairs with :connection-radius in flow-root.js. */\r
 .vue-flow__handle { width:6px; height:6px; min-width:6px; min-height:6px;\r
   border-radius:50%; background:transparent; border:0; }\r
 .vue-flow__handle::before { content:""; position:absolute; left:50%; top:50%;\r
@@ -884,7 +886,7 @@ var infcanvas_vueflow_default = `\r
   box-shadow:0 0 0 1px var(--color-smoke-600, #b2b2b2);\r
   transition:transform .1s, box-shadow .1s; }\r
 .vue-flow__handle::after { content:""; position:absolute; width:20px; height:20px;\r
-  left:50%; top:50%; transform:translate(-50%,-50%); border-radius:50%; }\r
+  left:50%; top:50%; transform:translate(-50%,-50%) scale(var(--ic-iz, 1)); border-radius:50%; }\r
 .vue-flow__handle:hover::before, .vue-flow__handle.connectingto::before,\r
 .vue-flow__handle.vue-flow__handle-connecting::before,\r
 .vue-flow__handle.vue-flow__handle-valid::before { transform:scale(1.166667);\r
