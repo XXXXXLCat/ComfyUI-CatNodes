@@ -398,7 +398,14 @@ const genProgress = (() => {
       endedAt: 0,
     };
     jobs.set(promptId, job);
-    activePromptId = promptId;
+    /* Do NOT steal the active cursor at SUBMIT time. begin() runs for every
+       queued node, so the newest WAITING job would become active while an
+       older job is actually sampling; id-less previews (KJNodes / bare
+       b_preview) would then render on that waiting node and, never finished,
+       stay there. Only a job that really starts owns the cursor — set on the
+       first submission as a single-job fallback, then on execution_start /
+       progress (both carry prompt_id). */
+    if (!activePromptId) activePromptId = promptId;
     writeNode(job, {
       genPhase: "queued", genPhaseText: phaseText("queued"), genProgress: 0,
       genTotalProgress: 0, genCurrentNodeProgress: 0, genCurrentNodeName: "",
@@ -430,6 +437,11 @@ const genProgress = (() => {
     listen(job, "progress", (e) => {
       const d = e?.detail;
       if (!d || d.prompt_id !== promptId) return;
+      /* A progress event only comes from the node that is ACTUALLY sampling,
+         and it carries prompt_id. Pin the active cursor here so id-less
+         previews (KJNodes / bare b_preview) follow the sampling job, never a
+         queued one that merely started earlier or was submitted later. */
+      activePromptId = promptId;
       const max = Number(d.max) || 0;
       const value = Number(d.value) || 0;
       const pct = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
