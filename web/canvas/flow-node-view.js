@@ -85,12 +85,20 @@ const IcNode = {
   props: { id: { type: String, required: true }, data: { type: Object, required: true }, selected: Boolean },
   setup(props) {
     const data = props.data;
-    /* Shared backend workflow list. Declared here (before the category tabs)
-       so tab visibility can react to the live list, including bundled defaults. */
-    const wfList = SHARED_WF_LIST;
-    /* computed: clicking "upload" on an empty node can turn it into a video
-       or audio node, so the rendered branch must follow data.kind live. */
+    /* Workflow scope by node type. The four medium-specific generators
+       (image / video / audio / text) may only use shipped/built-in workflows;
+       the universal (omni) node is where users pick the workflows they added
+       themselves. Both read the same backend list, split on `builtin`.
+       Declared before the category tabs so tab visibility reacts to the live
+       list, including bundled defaults. SHARED_WF_LIST itself stays untouched
+       (other nodes and the API dialog read the raw list). */
     const kind = computed(() => data.kind || "image");
+    const wfList = computed(() => {
+      const all = SHARED_WF_LIST.value || [];
+      return kind.value === "omni"
+        ? all.filter((w) => !w.builtin)
+        : all.filter((w) => w.builtin === true);
+    });
     /* A universal generator runs ANY workflow, so its result's real medium
        is only known after it runs. The node still identifies as kind "omni"
        for all panel/mode logic, but for result DISPLAY (thumbnail, video,

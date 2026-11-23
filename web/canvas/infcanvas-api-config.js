@@ -232,6 +232,12 @@ import {
   /* This project's list returns `name` as a display label and `filename`/`id`
      as the actual file stem; every REST path must use the stem. */
   const wfKey = (item) => item.filename || item.id || item.name;
+  /* The API dialog is for the user's OWN workflows only. Shipped/built-in
+     workflows serve the four medium-specific generator nodes and never appear
+     here — not selectable, not editable. Filter them out at every entry point
+     that ingests the backend /workflows list, so the dialog's entire view
+     (list, drag order, default pins, parameter editing) is user-only. */
+  const userOnly = (list) => Array.isArray(list) ? list.filter((w) => !w.builtin) : [];
   /* Bundled templates are read-only: they can be selected and pinned as a
      category default, but never renamed, deleted, re-categorised or edited.
      A user file with the same stem wins and is fully editable. */
@@ -686,7 +692,7 @@ import {
   async function loadWorkflows() {
     try {
       const data = await request("/workflows");
-      S.workflows = data.workflows || [];
+      S.workflows = userOnly(data.workflows);
       if (Array.isArray(data.categories)) S.categories = data.categories;
       const exists = S.workflows.some((item) => wfKey(item) === S.currentName);
       if (!exists) {
@@ -975,7 +981,7 @@ import {
     renderList();
     try {
       const data = await request("/workflows/order", jsonOptions("PUT", { names: list.map(wfKey) }));
-      if (data.workflows) S.workflows = data.workflows;
+      if (data.workflows) S.workflows = userOnly(data.workflows);
       notify(t("api.orderSaved"));
       window.dispatchEvent(new CustomEvent("infcanvas:workflows-changed"));
     } catch (error) {
@@ -1301,7 +1307,7 @@ import {
       const data = await request(
         "/workflows/" + encodeURIComponent(S.currentName) + "/default",
         jsonOptions("POST", {}));
-      if (data && Array.isArray(data.workflows)) S.workflows = data.workflows;
+      if (data && Array.isArray(data.workflows)) S.workflows = userOnly(data.workflows);
       renderList(); renderHead();
       /* The generate nodes mirror this list: the event is what makes every node
          that still follows its category default switch to the new one. */

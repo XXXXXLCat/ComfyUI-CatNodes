@@ -1,0 +1,18 @@
+{
+  "fields": [
+    {
+      "nodeId": "19:14",
+      "key": "bg_removal_name",
+      "type": "select",
+      "label": "Model",
+      "advanced": false,
+      "options": [
+        "birefnet.safetensors",
+        "lucida.safetensors",
+        "rmbg2.0.safetensors"
+      ]
+    }
+  ],
+  "category": "cat.removeBackground",
+  "is_default": true
+}
