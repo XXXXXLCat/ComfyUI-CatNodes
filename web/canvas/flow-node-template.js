@@ -48,7 +48,10 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
              isProgressing (not isGen) so text generators get progress too. -->
         <div v-if="isProgressing && data.status === 'running'" class="icn__genprogress nopan"
              @dblclick.stop>
-          <img v-if="data.genPreviewUrl" class="icn__gp-preview" :src="data.genPreviewUrl"
+          <video v-if="data.genPreviewUrl && isVideoMime(data.genPreviewMime)" class="icn__gp-preview"
+                 :src="data.genPreviewUrl" muted autoplay loop playsinline
+                 @loadedmetadata="onGenPreviewLoad" />
+          <img v-else-if="data.genPreviewUrl" class="icn__gp-preview" :src="data.genPreviewUrl"
                alt="" draggable="false" @load="onGenPreviewLoad" />
           <div v-if="data.genPreviewUrl" class="icn__gp-shade"></div>
           <div class="icn__gp-row">

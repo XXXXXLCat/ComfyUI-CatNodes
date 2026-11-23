@@ -1720,11 +1720,17 @@ const IcNode = {
        aspect ratio (width pinned to the node's stored width). Never touches
        data.size so the final result keeps the frame the user configured. */
     const onGenPreviewLoad = (event) => {
-      const img = event?.target;
-      const w = img?.naturalWidth, h = img?.naturalHeight;
+      const el = event?.target;
+      /* <img> exposes naturalWidth/Height; <video> exposes videoWidth/Height
+         once loadedmetadata fires. Both feed the same aspect sizing. */
+      const w = el?.naturalWidth || el?.videoWidth;
+      const h = el?.naturalHeight || el?.videoHeight;
       if (!(w > 0) || !(h > 0)) return;
       genPreviewH.value = Math.max(GEN_RUN_BODY_H, Math.round(size.value[0] * h / w));
     };
+    /* Live preview MIME can be video/mp4 (KJNodes) or image/* (native b_preview,
+       animated WebP). The template picks <video> vs <img> off this field. */
+    const isVideoMime = (mime) => typeof mime === "string" && mime.startsWith("video/");
 
     onMounted(() => nextTick(() => media.install()));
     watch(bar, (visible) => { if (visible) nextTick(() => media.install()); });
@@ -1760,7 +1766,7 @@ const IcNode = {
       selOpen, toggleSel, pickSel, wfValue, wfLabel, sizeLabel,
       promptEl, mention, mentionItems, closeMention, onPromptInput, hoverMention, pickMention, onPromptKeydown,
       refPreview, refMetaDuration, onRefMeta, onComposeStart, onComposeEnd, onPromptPaste, onRefOver, onRefOut,
-      setFileInput, pickFile, onPicked, acceptAttr, emptyHint, onImageLoad, onVideoMeta, onGenPreviewLoad,
+      setFileInput, pickFile, onPicked, acceptAttr, emptyHint, onImageLoad, onVideoMeta, onGenPreviewLoad, isVideoMime,
       emptyIcon, emptyIconSize, canUpload, hasIncoming,
       actions, onAction, editing, draft, setEditor, textHtml, textPlain, copyText, startEdit, commitEdit, onEditKey,
       renaming, setNameBox, startRename, commitRename, cancelRename, onNameKey, onNamePaste, displayTitle,

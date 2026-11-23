@@ -480,13 +480,31 @@ const genProgress = (() => {
       if (d.text) writeNode(job, { genPhaseText: String(d.text).slice(0, 60) });
     });
 
-    const onPreview = (blob) => {
+    /* Custom nodes may stream live previews as base64 over their own event
+       (e.g. KJNodes ModelPreviewOverrideKJ -> `kj_preview_override`, whose
+       payload carries {image, mime}). Decode to a Blob so both the native
+       blob events and KJ's event share one renderer. */
+    const base64ToBlob = (b64, mime) => {
+      if (typeof b64 !== "string" || !b64) return null;
+      try {
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+        return new Blob([bytes], { type: mime || "image/jpeg" });
+      } catch (e) { return null; }
+    };
+    const onPreview = (blob, mime) => {
       if (!(blob instanceof Blob)) return;
-      if (promptId !== activePromptId) return; /* bare preview: active job only */
+      if (promptId !== activePromptId) return; /* id-less preview: active job only */
       try {
         if (job.previewUrl) URL.revokeObjectURL(job.previewUrl);
         job.previewUrl = URL.createObjectURL(blob);
-        writeNode(job, { genPreviewUrl: job.previewUrl });
+        /* genPreviewMime lets the template pick <video> for MP4 vs <img> for
+           WebP/JPEG. Native blobs already carry type; KJ passes its own mime. */
+        writeNode(job, {
+          genPreviewUrl: job.previewUrl,
+          genPreviewMime: mime || blob.type || "image/jpeg",
+        });
       } catch (e) { /* no-op */ }
     };
     /* Preferred: metadata event carries jobId === prompt_id for exact routing. */
@@ -497,6 +515,15 @@ const genProgress = (() => {
     });
     /* Fallback for backends that only emit bare b_preview. */
     listen(job, "b_preview", (e) => onPreview(e?.detail));
+    /* KJNodes ModelPreviewOverrideKJ: base64 image + mime on a private event.
+       KJ's payload has no prompt_id, so — like bare b_preview — it is routed
+       to the active job only. Its step-0 init may carry sigmas with no image;
+       those are skipped because there is nothing to render yet. */
+    listen(job, "kj_preview_override", (e) => {
+      const d = e?.detail;
+      if (!d || !d.image) return;
+      onPreview(base64ToBlob(d.image, d.mime), d.mime);
+    });
 
     listen(job, "execution_success", (e) => {
       const d = e?.detail;
