@@ -600,6 +600,7 @@ VISIBILITY_KEY = "hidden_builtins"
 #   CheckpointLoaderSimple    -> checkpoints
 #   VAELoader                 -> vae
 #   AudioEncoderLoader        -> audio_encoders
+#   FrameInterpolationModelLoader -> frame_interpolation
 # Using the class (not the input key) avoids guessing: "unet_name" would suggest
 # "unet", but the real folder is "diffusion_models".
 MODEL_FOLDER_BY_NODE = {
@@ -614,6 +615,7 @@ MODEL_FOLDER_BY_NODE = {
     "ControlNetLoader": "controlnet",
     "LoadBackgroundRemovalModel": "background_removal",
     "AudioEncoderLoader": "audio_encoders",
+    "FrameInterpolationModelLoader": "frame_interpolation",
 }
 # Fallback for unrecognised custom nodes: input key -> folder. Only keys whose
 # meaning is unambiguous are listed; unknown keys fall back to "other".
@@ -628,6 +630,10 @@ MODEL_FOLDER_BY_KEY = {
     "control_net_name": "controlnet",
     "bg_removal_name": "background_removal",
     "audio_encoder_name": "audio_encoders",
+    # KJ preview node's tiny VAE decoder: its own options come from
+    # folder_paths.get_filename_list("vae_approx"). Keyed by input name (not
+    # node class) so other model inputs on that node keep their own folders.
+    "tiny_vae": "vae_approx",
 }
 _MODEL_FILE_SUFFIXES = (".safetensors", ".gguf", ".bin", ".pt", ".onnx", ".ckpt")
 
@@ -1316,6 +1322,14 @@ async def api_builtin_manage(request: web.Request) -> web.Response:
             "is_default": bool(category) and effective.get(category) == name,
             "models": _builtin_models(data, raw),
         })
+    # Management view is ordered by the official category order, then by
+    # display name inside each category. The client groups by first appearance,
+    # so sorting here is enough — no per-view sort logic to keep in sync.
+    cat_rank = {cat: index for index, cat in enumerate(WORKFLOW_CATEGORIES)}
+    items.sort(key=lambda item: (
+        cat_rank.get(item.get("category"), len(cat_rank)),
+        (item.get("name") or item["id"]).lower(),
+    ))
     return web.json_response({
         "workflows": items,
         "categories": WORKFLOW_CATEGORIES,
