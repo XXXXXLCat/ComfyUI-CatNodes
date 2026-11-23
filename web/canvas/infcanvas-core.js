@@ -471,7 +471,7 @@ import { createKeys } from "./infcanvas-keys.js";
 
   /* prompt compiler (infcanvas-prompt-compiler.js). API()/flow() are lazy
      getters; SAFE_INT_MAX is imported from the same module. */
-  const _compiler = createPromptCompiler({ API, flow, SLOT_IDS, backend });
+  const _compiler = createPromptCompiler({ API, flow, SLOT_IDS, backend, readPref: storageRead });
   const resolvePassThrough = _compiler.resolvePassThrough;
   const collectUpstreamCleanups = _compiler.collectUpstreamCleanups;
   const collectInputs = _compiler.collectInputs;

@@ -124,6 +124,16 @@
       set: (value) => writeVal("InfCanvas.ShowPreviewText", value),
     },
     {
+      id: "InfCanvas.Setting.WriteLoraTriggers",
+      type: "switch",
+      group: "canvas",
+      label: "settings.writeLoraTriggers",
+      desc: "settings.writeLoraTriggersHint",
+      def: true,
+      get: () => readVal("InfCanvas.Setting.WriteLoraTriggers", true),
+      set: (value) => writeVal("InfCanvas.Setting.WriteLoraTriggers", value),
+    },
+    {
       id: "InfCanvas.Setting.AutoSave",
       type: "switch",
       group: "canvas",

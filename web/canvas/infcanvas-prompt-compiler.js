@@ -36,7 +36,7 @@ export function effectiveTextData(data, inputs, kind) {
   return eff;
 }
 
-export function createPromptCompiler({ API, flow, SLOT_IDS, backend }) {
+export function createPromptCompiler({ API, flow, SLOT_IDS, backend, readPref }) {
 /* ---------------------------- generation ----------------------------- */
 
 /* Edges carry the connection order; a generate node has four typed inputs, so
@@ -836,8 +836,12 @@ async function buildPrompt(kind, template, data, inputs, loras = []) {
      but not finished when Generate was pressed, and a missing word here would
      silently change the generated image. */
   if (loras && loras.length) {
-    await ensureLoraMeta(loras, backend);
-    injectLoraTriggers(prompt, combinedTriggers(loras));
+    /* Settings switch: a missing key keeps the historical behaviour (write).
+       Only an explicit false disables trigger-word injection. */
+    if (readPref?.("InfCanvas.Setting.WriteLoraTriggers") !== false) {
+      await ensureLoraMeta(loras, backend);
+      injectLoraTriggers(prompt, combinedTriggers(loras));
+    }
   }
   /* LoRA stacks are wired into the generator as MODEL modifiers. Inject AFTER
      every other mutation so the rewired MODEL links are the final ones. */
