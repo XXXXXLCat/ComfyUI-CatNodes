@@ -66,12 +66,27 @@
     try { window.dispatchEvent(new CustomEvent("infcanvas:workflows-changed")); } catch (_) { /* no-op */ }
   }
 
-  async function openModelFolder(model) {
+  async function copyModelFolder(model) {
     try {
-      await api("/builtins/open-folder",
+      const data = await api("/builtins/folder-path",
         jsonOptions("POST", { folder: model.folder || "other", name: model.name }));
+      const path = data?.path;
+      if (!path) throw new Error(t("builtinMgr.copyFolderFailed"));
+      try {
+        await navigator.clipboard.writeText(path);
+      } catch (e) {
+        /* Clipboard API may be unavailable in an insecure context; fall back
+           to a hidden textarea + execCommand, same as the host console copy. */
+        const ta = el("textarea", "fixed opacity-0 pointer-events-none");
+        ta.value = path;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (_) { /* no-op */ }
+        ta.remove();
+      }
+      NS.api?.toast?.("success", t("builtinMgr.folderCopied"), path);
     } catch (error) {
-      notifyError(error?.message || t("builtinMgr.openFolderFailed"));
+      notifyError(error?.message || t("builtinMgr.copyFolderFailed"));
     }
   }
 
@@ -228,23 +243,23 @@
           "flex cursor-pointer items-center gap-1 font-mono hover:text-foreground");
         pathPart.appendChild(el("i", "icon-[lucide--folder] size-3 shrink-0"));
         pathPart.appendChild(el("span", "models/" + (model.folder || "other") + "/"));
-        bindTip(pathPart, () => t("builtinMgr.openFolder"), "top");
+        bindTip(pathPart, () => t("builtinMgr.copyFolder"), "top");
         pathPart.addEventListener("click", (event) => {
           event.stopPropagation();
-          openModelFolder(model);
+          copyModelFolder(model);
         });
         pathLine.appendChild(pathPart);
 
-        /* Open-folder icon button (same line). */
-        const openBtn = el("button", BTN + " size-5 p-0 text-muted-foreground hover:text-foreground");
-        openBtn.type = "button";
-        openBtn.appendChild(el("i", "icon-[lucide--folder-open] size-3.5"));
-        bindTip(openBtn, () => t("builtinMgr.openFolder"), "top");
-        openBtn.addEventListener("click", (event) => {
+        /* Copy-folder-path icon button (same line). */
+        const copyBtn = el("button", BTN + " size-5 p-0 text-muted-foreground hover:text-foreground");
+        copyBtn.type = "button";
+        copyBtn.appendChild(el("i", "icon-[lucide--copy] size-3.5"));
+        bindTip(copyBtn, () => t("builtinMgr.copyFolder"), "top");
+        copyBtn.addEventListener("click", (event) => {
           event.stopPropagation();
-          openModelFolder(model);
+          copyModelFolder(model);
         });
-        pathLine.appendChild(openBtn);
+        pathLine.appendChild(copyBtn);
 
         /* Download icon / link (same line). */
         if (model.url) {

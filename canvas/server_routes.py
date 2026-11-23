@@ -10,7 +10,6 @@ import asyncio
 import json
 import logging
 import os
-import platform
 import re
 import shutil
 import subprocess
@@ -1299,35 +1298,19 @@ async def api_builtin_visibility(request: web.Request) -> web.Response:
     return await api_builtin_manage(request)
 
 
-# Folders the "open folder" endpoint is allowed to reveal. Derived from the two
-# model maps so it can never be tricked into opening an arbitrary path by a
-# crafted request: only a known ComfyUI model folder key is accepted.
+# Folders the "copy folder path" endpoint is allowed to reveal. Derived from
+# the two model maps so it can never be tricked into returning an arbitrary
+# path by a crafted request: only a known ComfyUI model folder key is accepted.
 OPENABLE_MODEL_FOLDERS = frozenset(
     set(MODEL_FOLDER_BY_NODE.values()) | set(MODEL_FOLDER_BY_KEY.values())
 ) - {"other"}
 
 
-def _open_in_file_manager(path: str) -> bool:
-    """Reveal a file/folder in the OS file manager. Returns False if unsupported.
-    Never uses a shell; the path is passed as a single argument."""
-    try:
-        system = platform.system()
-        if system == "Windows":
-            subprocess.Popen(["explorer", path])
-        elif system == "Darwin":
-            subprocess.Popen(["open", "-R", path])
-        else:
-            subprocess.Popen(["xdg-open", path])
-        return True
-    except Exception:
-        logging.exception("[infcanvas] failed to open path in file manager: %s", path)
-        return False
-
-
-async def api_open_model_folder(request: web.Request) -> web.Response:
-    """Open the folder containing a built-in workflow's model in the OS file
-    manager. Accepts only a whitelisted folder key + a bare filename; resolves
-    the real directory through folder_paths so extra_model_paths.yaml is honoured."""
+async def api_model_folder_path(request: web.Request) -> web.Response:
+    """Return the real directory containing a built-in workflow's model, for
+    the client to copy to the clipboard. Accepts only a whitelisted folder key
+    + a bare filename; resolves through folder_paths so extra_model_paths.yaml
+    is honoured on whatever machine the plugin runs on."""
     try:
         payload = await request.json()
     except Exception:
@@ -1344,9 +1327,8 @@ async def api_open_model_folder(request: web.Request) -> web.Response:
         search_paths = folder_paths.get_folder_paths(folder) or []
     except Exception:
         search_paths = []
-    # Always open the containing FOLDER (never select the file). Prefer the
-    # directory where the file actually exists; otherwise fall back to the
-    # first configured folder so the user still sees where to place it.
+    # Prefer the directory where the file actually exists; otherwise fall back
+    # to the first configured folder so the user still gets a usable path.
     target_dir = ""
     for base in search_paths:
         candidate = os.path.join(base, name)
@@ -1358,9 +1340,7 @@ async def api_open_model_folder(request: web.Request) -> web.Response:
         target_dir = existing[0] if existing else ""
     if not target_dir:
         return web.json_response({"error": _err("未找到对应的模型目录", "Model folder not found")}, status=404)
-    if not _open_in_file_manager(target_dir):
-        return web.json_response({"error": _err("无法打开文件夹", "Could not open folder")}, status=500)
-    return web.json_response({"opened": target_dir})
+    return web.json_response({"path": os.path.normpath(target_dir)})
 
 
 async def api_rename_workflow(request: web.Request) -> web.Response:
@@ -2537,7 +2517,7 @@ def register_routes() -> None:
         ("GET", "/api/infcanvas/settings", api_config_ready),
         # Built-in workflow management (visibility + model manifest).
         ("GET", "/api/infcanvas/builtins/manage", api_builtin_manage),
-        ("POST", "/api/infcanvas/builtins/open-folder", api_open_model_folder),
+        ("POST", "/api/infcanvas/builtins/folder-path", api_model_folder_path),
         ("POST", "/api/infcanvas/builtins/{name}/visibility", api_builtin_visibility),
         ("PUT", "/api/infcanvas/workflows/order", api_reorder_workflows),
         ("POST", "/api/infcanvas/workflows", api_save_workflow),
