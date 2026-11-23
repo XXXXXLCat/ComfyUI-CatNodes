@@ -7,7 +7,8 @@
       "label": "Model",
       "advanced": false,
       "options": [
-        "birefnet.safetensors"
+        "birefnet.safetensors",
+        "lucida.safetensors"
       ]
     }
   ],

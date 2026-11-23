@@ -1,6 +1,7 @@
 {
   "_comment": "ModelScope download links for models referenced by bundled workflows. Key = model filename, value = direct file URL. Download links are NOT discoverable from the workflow JSON, so they are shipped as a separate manifest. Empty string means no link available.",
   "birefnet.safetensors": "https://modelscope.cn/models/Comfy-Org/BiRefNet/resolve/master/background_removal/birefnet.safetensors",
+  "lucida.safetensors": "https://modelscope.cn/models/Comfy-Org/BiRefNet/resolve/master/background_removal/lucida.safetensors",
   "moss_image_sft_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/moss-image/resolve/master/diffusion_models/moss_image_sft_int8_convrot.safetensors",
   "flux2-vae_small.safetensors": "https://modelscope.cn/models/Comfy-Org/moss-image/resolve/master/vae/flux2-vae_small.safetensors",
   "qwen_image_2.1_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/Qwen-Image-2.1/resolve/master/diffusion_models/qwen_image_2.1_int8_convrot.safetensors",
