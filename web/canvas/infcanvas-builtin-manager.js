@@ -253,10 +253,10 @@
         });
         line.appendChild(pathPart);
 
-        /* Installed: blue check. Missing: grey x. Both sit right after the path. */
+        /* Installed check/x right after the path. */
         const mark = el("i", installed
           ? "ml-1 icon-[lucide--circle-check] size-3.5 text-primary"
-          : "ml-1 icon-[lucide--x] size-3.5 text-muted-foreground");
+          : "ml-1 icon-[lucide--circle-x] size-3.5 text-muted-foreground");
         bindTip(mark, () => installed && model.path
           ? t("builtinMgr.installed") + ": " + model.path
           : t(installed ? "builtinMgr.installed" : "builtinMgr.missing"), "top");
