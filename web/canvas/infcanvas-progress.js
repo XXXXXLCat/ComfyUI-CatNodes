@@ -919,6 +919,43 @@ NS.generate = {
 const TRANSLATE_MODEL_KEY = "InfCanvas.TranslateModel";
 const TRANSLATE_MODEL_DEFAULT = "qwen3.5_2b_bf16.safetensors";
 
+/* ComfyUI's Comfy.Locale values (the raw setting, NOT our zh/en bucket) mapped
+   to full natural-language names. Qwen understands 201 languages, but a plain
+   name ("Japanese") is far more reliable in the instruction than a locale code
+   ("ja"/"pt-BR"). zh vs zh-TW MUST stay distinct: Simplified vs Traditional.
+   Unknown/future codes fall back to English rather than sending a raw code. */
+const TRANSLATE_LANG_NAMES = {
+  en: "English",
+  zh: "Simplified Chinese",
+  "zh-TW": "Traditional Chinese",
+  ru: "Russian",
+  ja: "Japanese",
+  ko: "Korean",
+  fr: "French",
+  es: "Spanish",
+  ar: "Arabic",
+  tr: "Turkish",
+  "pt-BR": "Brazilian Portuguese",
+  fa: "Persian",
+  he: "Hebrew",
+  it: "Italian",
+};
+
+function translateLangName(locale) {
+  const key = String(locale || "").trim();
+  if (TRANSLATE_LANG_NAMES[key]) return TRANSLATE_LANG_NAMES[key];
+  // Be forgiving about case / region suffix: "JA", "pt", "zh-cn" -> a known name.
+  const lower = key.toLowerCase();
+  const base = lower.split(/[-_]/)[0];
+  if (lower === "zh-tw" || lower === "zh-hant" || base === "hant") return TRANSLATE_LANG_NAMES["zh-TW"];
+  if (base === "zh") return TRANSLATE_LANG_NAMES.zh;
+  if (base === "pt") return TRANSLATE_LANG_NAMES["pt-BR"];
+  for (const [code, name] of Object.entries(TRANSLATE_LANG_NAMES)) {
+    if (code.toLowerCase() === lower) return name;
+  }
+  return TRANSLATE_LANG_NAMES.en;
+}
+
 function translateModel() {
   try { return localStorage.getItem(TRANSLATE_MODEL_KEY) || TRANSLATE_MODEL_DEFAULT; }
   catch (error) { return TRANSLATE_MODEL_DEFAULT; }
@@ -927,8 +964,7 @@ function translateModel() {
 async function translateText(text, targetLang) {
   const source = String(text ?? "").trim();
   if (!source) return "";
-  const langName = String(targetLang || "en").toLowerCase().startsWith("zh")
-    ? "Simplified Chinese" : "English";
+  const langName = translateLangName(targetLang);
   const instruction =
     "You are a professional translator. Translate the text between the markers into " + langName + ".\n" +
     "Preserve line breaks and markdown. Output ONLY the translation - no explanation, no quotes, no notes.\n\n" +
@@ -954,7 +990,7 @@ async function translateText(text, targetLang) {
   return String(hit.text).trim();
 }
 
-NS.translate = { text: translateText, model: translateModel };
+NS.translate = { text: translateText, model: translateModel, langName: translateLangName };
 
   return {
     extractOutputs,

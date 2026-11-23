@@ -1466,6 +1466,13 @@ const IcNode = {
        see" holds in either state (translated text copied while translated,
        original text copied while not). */
     const displayText = computed(() => translated.value || sourceText.value);
+    /* Tooltip follows the RAW ComfyUI locale (same source the translator uses),
+       so a Japanese UI says "Translate to Japanese" instead of the old hard-coded
+       English/中文. Recomputes when the host locale changes mid-session. */
+    const targetLangName = computed(() => {
+      const raw = NS.i18n?.rawLocale?.() || NS.i18n?.current?.() || "en";
+      return NS.translate?.langName?.(raw) || "English";
+    });
     const textHtml = computed(() => NS.tools?.renderText?.(displayText.value) || "");
     const textPlain = displayText;
     const copyText = async () => {
@@ -1490,7 +1497,9 @@ const IcNode = {
       if (!source.trim()) return;
       translating.value = true;
       try {
-        const lang = NS.i18n?.current?.() || "en";
+        /* Follow the RAW ComfyUI locale (ja / ko / zh-TW / pt-BR …), not our
+           zh/en UI bucket — Qwen can translate into all of them. */
+        const lang = NS.i18n?.rawLocale?.() || NS.i18n?.current?.() || "en";
         const result = await NS.translate?.text?.(source, lang);
         if (!result) throw new Error(t("trans.translateEmpty"));
         translated.value = result;
@@ -1799,7 +1808,7 @@ const IcNode = {
       setFileInput, pickFile, onPicked, acceptAttr, emptyHint, onImageLoad, onVideoMeta, onGenPreviewLoad, isVideoMime,
       emptyIcon, emptyIconSize, canUpload, hasIncoming,
       actions, onAction, editing, draft, setEditor, textHtml, textPlain, copyText, startEdit, commitEdit, onEditKey,
-      translated, translating, toggleTranslate,
+      translated, translating, toggleTranslate, targetLangName,
       renaming, setNameBox, startRename, commitRename, cancelRename, onNameKey, onNamePaste, displayTitle,
       hasText, hasDisplayText, showTextBody, isCleanup, isMerge, isPill, isGenOmni,
       NODE_TAGS, tagOpen, tagInfo, toggleTag, pickTag, openNodeMenu,

@@ -67,6 +67,19 @@ function remember(lang) {
     }
 }
 
+/* The UN-normalised ComfyUI locale, for features that need the real language
+   rather than the zh/en bucket used by our own two dictionaries. Translation
+   targets must follow e.g. ja / ko / zh-TW / pt-BR, which langCode() would
+   otherwise flatten to "en" (or "zh" for every Chinese variant). Returns the
+   raw setting value ("ja", "zh-TW", "pt-BR"…), "" when nothing authoritative
+   is available yet. Same source precedence as langCode(): live setting first,
+   then the previous page's stored value. */
+export function rawLocale() {
+    const setting = fromSetting();
+    if (setting) return String(setting);
+    return String(fromStorage() || "");
+}
+
 export function langCode() {
     // Always ask the setting first, even when a value is already cached: the
     // extension can be imported before `/api/settings` resolves, and anything we

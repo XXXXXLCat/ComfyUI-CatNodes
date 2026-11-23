@@ -14,7 +14,7 @@
  * CATEGORY_ALIASES maps those to current keys before translation.
  */
 import { Vue } from "./vendor/vueflow.bundle.mjs";
-import { langCode } from "../i18n.js";
+import { langCode, rawLocale } from "../i18n.js";
 
 (() => {
   const NS = (window.InfCanvas = window.InfCanvas || {});
@@ -1939,5 +1939,5 @@ import { langCode } from "../i18n.js";
     if (host !== lang.value) applyLang(host);
   }, 500);
 
-  NS.i18n = { t: translate, cat, normalizeCategory, catShort: CAT_SHORT, lang, setLang, toggleLang, current, onChange, EN, ZH };
+  NS.i18n = { t: translate, cat, normalizeCategory, catShort: CAT_SHORT, lang, setLang, toggleLang, current, rawLocale, onChange, EN, ZH };
 })();
