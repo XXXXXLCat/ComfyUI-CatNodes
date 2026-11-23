@@ -679,39 +679,61 @@ def _builtin_names() -> list[str]:
     )
 
 
-def _builtin_models(data: dict) -> list[dict]:
+def _builtin_models(data: dict, fields: dict | None = None) -> list[dict]:
     """Model files referenced by a bundled workflow.
 
     Each entry carries the canonical ComfyUI folder (derived from the loader
     node's class), whether the file actually exists on this machine, its
     resolved absolute path when installed, and a direct download URL from the
     bundled model_links.json manifest (empty when no link is shipped).
+
+    Besides the API graph, select fields may offer alternative model files
+    (e.g. BiRefNet's birefnet/lucida). Their options are included so the
+    management view lists every model the user can pick. Only values with a
+    model-file suffix qualify — sampler/schedule/ratio options are ignored.
     """
     found: list[dict] = []
     seen: set[tuple[str, str]] = set()
     links = _model_download_links()
-    for node in _api_nodes(data).values():
+    nodes = _api_nodes(data)
+
+    def add(key: str, value: str, class_type: str = "") -> None:
+        if (key, value) in seen:
+            return
+        seen.add((key, value))
+        folder = (MODEL_FOLDER_BY_NODE.get(class_type)
+                  or MODEL_FOLDER_BY_KEY.get(key, "other"))
+        installed_path = _model_install_path(folder, value)
+        found.append({
+            "name": value,
+            "key": key,
+            "folder": folder,
+            "installed": bool(installed_path),
+            "path": installed_path,
+            "url": links.get(value, ""),
+        })
+
+    for node in nodes.values():
         inputs = node.get("inputs")
         if not isinstance(inputs, dict):
             continue
         class_type = str(node.get("class_type") or "")
         for key, value in inputs.items():
-            if not isinstance(value, str) or not value.lower().endswith(_MODEL_FILE_SUFFIXES):
+            if isinstance(value, str) and value.lower().endswith(_MODEL_FILE_SUFFIXES):
+                add(key, value, class_type)
+    if isinstance(fields, dict):
+        for field in fields.get("fields") or []:
+            if not isinstance(field, dict):
                 continue
-            if (key, value) in seen:
+            key = str(field.get("key") or "")
+            options = field.get("options")
+            if not isinstance(options, list):
                 continue
-            seen.add((key, value))
-            folder = (MODEL_FOLDER_BY_NODE.get(class_type)
-                      or MODEL_FOLDER_BY_KEY.get(key, "other"))
-            installed_path = _model_install_path(folder, value)
-            found.append({
-                "name": value,
-                "key": key,
-                "folder": folder,
-                "installed": bool(installed_path),
-                "path": installed_path,
-                "url": links.get(value, ""),
-            })
+            parent = nodes.get(str(field.get("nodeId") or "")) or {}
+            class_type = str(parent.get("class_type") or "")
+            for value in options:
+                if isinstance(value, str) and value.lower().endswith(_MODEL_FILE_SUFFIXES):
+                    add(key, value, class_type)
     return found
 
 
@@ -1282,7 +1304,7 @@ async def api_builtin_manage(request: web.Request) -> web.Response:
             "hidden": name in hidden,
             "shadowed": shadowed,
             "is_default": bool(category) and effective.get(category) == name,
-            "models": _builtin_models(data),
+            "models": _builtin_models(data, raw),
         })
     return web.json_response({
         "workflows": items,
