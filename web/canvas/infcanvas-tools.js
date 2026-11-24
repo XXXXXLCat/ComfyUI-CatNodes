@@ -1565,6 +1565,26 @@ import { CSS_TOOLS as CSS } from "./infcanvas-style.js";
     });
     toast("success", t("media.addedFavorites"), t("media.savedFavoritesFolder", { name: saved.filename }));
   };
+  /* Download the original asset file backing this node. Only shown when the
+     node actually holds a file (see actionsFor), so text-only/empty generator
+     nodes never offer a dead download. Fetch as a blob so the local filename
+     is controlled by us rather than the server's Content-Disposition. */
+  R.download = async (ctx) => {
+    const asset = ctx.data?.result || ctx.data?.asset;
+    const url = ctx.url || asset?.url || (asset && NS.api?.viewUrl?.(asset));
+    if (!url) { toast("warning", t("core.nothingDownload")); return; }
+    const filename = asset?.filename || asset?.name ||
+      (() => { try { return decodeURIComponent(new URL(url, location.href).pathname.split("/").pop() || ""); } catch (e) { return ""; } })() ||
+      "download";
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(t("image.downloadFailedHttp") + " " + response.status);
+      saveBlob(await response.blob(), filename);
+    } catch (error) {
+      console.error("[InfCanvas download]", error);
+      toast("error", t("image.download") + " " + t("image.operationFailed"), String(error?.message || error));
+    }
+  };
   R.delete = (ctx) => NS.api?.removeNode?.(ctx.id);
   /* Feed a material file straight into the node from the disk. Only offered on
      an empty generator whose input is free (see ICanvasNode's canUpload): the
@@ -1586,7 +1606,7 @@ import { CSS_TOOLS as CSS } from "./infcanvas-style.js";
     videoCrop: "crop", videoSpeed: "gauge", reverse: "rewind", rotate: "rotate-3d",
     splitScenes: "film",
     frame: "camera", clip: "scissors", speed: "gauge", favorite: "bookmark",
-    upload: "upload", delete: "trash-2",
+    download: "download", upload: "upload", delete: "trash-2",
   };
 
   // Hover tooltips for the node action buttons. Each describes what the tool
@@ -1608,6 +1628,7 @@ import { CSS_TOOLS as CSS } from "./infcanvas-style.js";
     clip:         "image.trimCutClipsRemoveJoin",
     speed:        "image.speedChangePlayback01",
     favorite:     "media.addFavoritesSaveAssetInto",
+    download:     "image.downloadSaveOriginalAssetFile",
     upload:       "image.uploadPickLocalAssetFill",
     delete:       "image.deleteRemoveNodeCanvasFile",
   };
@@ -1621,8 +1642,11 @@ import { CSS_TOOLS as CSS } from "./infcanvas-style.js";
     const pairs = [];
     if (media && TOOL_SETS[kind]) pairs.push(...TOOL_SETS[kind]);
     if (media) pairs.push(["favorite", "media.addFavorites"]);
-    /* Upload sits just left of delete — the last slot before the destructive
-       one, so the row reads "do things … fill … destroy". */
+    /* Download sits just left of the destructive slot, and only appears when
+       the node actually holds a file — text-only/empty nodes have nothing to
+       save. Upload and download are mutually exclusive: an empty generator can
+       be filled (upload), a filled one can be saved (download). */
+    if (media) pairs.push(["download", "image.download"]);
     if (options?.canUpload) pairs.push(["upload", "image.upload"]);
     pairs.push(["delete", "panel.delete"]);
     return pairs.map(([key, label]) => ({
