@@ -16,6 +16,13 @@
       "default": false
     },
     {
+      "nodeId": "34",
+      "key": "thinking",
+      "type": "switch",
+      "label": "field.thinking",
+      "advanced": true
+    },
+    {
       "nodeId": "66",
       "key": "value",
       "type": "switch",
@@ -50,24 +57,6 @@
       "max": 16,
       "step": 0.01,
       "default": 4
-    },
-    {
-      "nodeId": "63",
-      "key": "multiple",
-      "type": "number",
-      "label": "field.multiplier",
-      "advanced": false,
-      "min": 8,
-      "max": 128,
-      "step": 4,
-      "default": 32
-    },
-    {
-      "nodeId": "34",
-      "key": "thinking",
-      "type": "switch",
-      "label": "field.thinking",
-      "advanced": true
     },
     {
       "nodeId": "38",
