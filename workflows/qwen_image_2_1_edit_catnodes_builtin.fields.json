@@ -4,45 +4,35 @@
       "nodeId": "459:500",
       "key": "prompt",
       "type": "textarea",
-      "label": "Prompt",
+      "label": "field.prompt",
       "advanced": false
     },
     {
       "nodeId": "459:484",
       "key": "switch",
       "type": "switch",
-      "label": "Refine Prompt",
+      "label": "field.reprompt",
       "advanced": false
-    },
-    {
-      "nodeId": "459:500",
-      "key": "max_length",
-      "type": "number",
-      "label": "Max Length",
-      "advanced": true,
-      "min": 1,
-      "max": 32768,
-      "step": 1
     },
     {
       "nodeId": "459:500",
       "key": "thinking",
       "type": "switch",
-      "label": "Thinking",
+      "label": "field.thinking",
       "advanced": true
     },
     {
       "nodeId": "459:468",
       "key": "switch",
       "type": "switch",
-      "label": "Custom Size",
+      "label": "field.customSize",
       "advanced": false
     },
     {
       "nodeId": "502",
       "key": "aspect_ratio",
       "type": "select",
-      "label": "Aspect Ratio",
+      "label": "field.aspectRatio",
       "advanced": false,
       "options": [
         "1:1 (Square)",
@@ -60,7 +50,7 @@
       "nodeId": "502",
       "key": "megapixels",
       "type": "number",
-      "label": "Megapixels",
+      "label": "field.megapixels",
       "advanced": false,
       "min": 0.1,
       "max": 16,
@@ -68,20 +58,10 @@
       "default": 1
     },
     {
-      "nodeId": "502",
-      "key": "multiple",
-      "type": "number",
-      "label": "Multiple",
-      "advanced": true,
-      "min": 8,
-      "max": 128,
-      "step": 4
-    },
-    {
       "nodeId": "459:458",
       "key": "seed",
       "type": "random",
-      "label": "Seed",
+      "label": "field.seed",
       "advanced": false,
       "min": 0,
       "max": 18446744073709552000,
@@ -92,7 +72,7 @@
       "nodeId": "459:458",
       "key": "steps",
       "type": "slider",
-      "label": "Steps",
+      "label": "field.steps",
       "advanced": true,
       "min": 1,
       "max": 10000,
@@ -102,7 +82,7 @@
       "nodeId": "459:458",
       "key": "cfg",
       "type": "slider",
-      "label": "CFG",
+      "label": "field.cfg",
       "advanced": true,
       "min": 0,
       "max": 100,
@@ -112,7 +92,7 @@
       "nodeId": "459:458",
       "key": "sampler_name",
       "type": "select",
-      "label": "Sampler",
+      "label": "field.sampler",
       "advanced": true,
       "options": [
         "euler",
@@ -166,7 +146,7 @@
       "nodeId": "459:458",
       "key": "scheduler",
       "type": "select",
-      "label": "Scheduler",
+      "label": "field.scheduler",
       "advanced": true,
       "options": [
         "simple",

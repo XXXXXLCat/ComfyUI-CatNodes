@@ -158,6 +158,38 @@
       "images.image_2": [
         "475",
         0
+      ],
+      "images.image_3": [
+        "900",
+        0
+      ],
+      "images.image_4": [
+        "901",
+        0
+      ],
+      "images.image_5": [
+        "902",
+        0
+      ],
+      "images.image_6": [
+        "903",
+        0
+      ],
+      "images.image_7": [
+        "904",
+        0
+      ],
+      "images.image_8": [
+        "905",
+        0
+      ],
+      "images.image_9": [
+        "906",
+        0
+      ],
+      "images.image_10": [
+        "907",
+        0
       ]
     },
     "class_type": "TextEncodeQwenImage21",
@@ -252,6 +284,34 @@
       "images.image3": [
         "900",
         0
+      ],
+      "images.image4": [
+        "901",
+        0
+      ],
+      "images.image5": [
+        "902",
+        0
+      ],
+      "images.image6": [
+        "903",
+        0
+      ],
+      "images.image7": [
+        "904",
+        0
+      ],
+      "images.image8": [
+        "905",
+        0
+      ],
+      "images.image9": [
+        "906",
+        0
+      ],
+      "images.image10": [
+        "907",
+        0
       ]
     },
     "class_type": "TextGenerateV2",
@@ -325,7 +385,7 @@
     }
   },
   "_mediaCaps": {
-    "image": 3,
+    "image": 10,
     "video": null,
     "audio": null
   },
@@ -337,6 +397,69 @@
     "class_type": "LoadImage",
     "_meta": {
       "title": "LoadImage"
+    }
+  },
+  "901": {
+    "inputs": {
+      "image": "example.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "902": {
+    "inputs": {
+      "image": "example.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "903": {
+    "inputs": {
+      "image": "example.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "904": {
+    "inputs": {
+      "image": "example.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "905": {
+    "inputs": {
+      "image": "example.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "906": {
+    "inputs": {
+      "image": "example.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "907": {
+    "inputs": {
+      "image": "example.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
     }
   }
 }
