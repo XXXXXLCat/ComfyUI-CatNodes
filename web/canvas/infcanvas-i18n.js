@@ -1307,7 +1307,7 @@ import { langCode, rawLocale } from "../i18n.js";
     "core.noSelectedNodeRunning": "选中的节点没有在运行",
     "core.noTasks": "没有任务",
     "core.noWorkflowConnected": "未接入工作流",
-    "core.noWorkflowConnectedNoText": "未接入工作流或无文本输入",
+    "core.noWorkflowConnectedNoText": "未接入工作流或该工作流无需文本输入",
     "core.nodeBypassedPassThrough": "该节点已忽略（透传）",
     "core.nodeCountUnit": "个节点",
     "core.nodeDefinitionsRefreshed": "节点定义已刷新",
