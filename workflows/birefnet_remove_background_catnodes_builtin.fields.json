@@ -4,7 +4,7 @@
       "nodeId": "19:14",
       "key": "bg_removal_name",
       "type": "select",
-      "label": "Model",
+      "label": "field.model",
       "advanced": false,
       "options": [
         "birefnet.safetensors",
