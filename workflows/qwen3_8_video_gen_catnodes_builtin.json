@@ -24,7 +24,7 @@
   },
   "7": {
     "inputs": {
-      "prompt": "Describe this cideo in extreme detail.",
+      "prompt": "",
       "max_length": 4096,
       "sampling_mode": "on",
       "thinking": false,
@@ -43,6 +43,10 @@
       "sampling_mode.seed": 42,
       "videos.video1": [
         "9",
+        0
+      ],
+      "system_prompt": [
+        "10",
         0
       ]
     },
@@ -77,5 +81,14 @@
     "video": 2,
     "audio": null
   },
-  "_name": "Qwen3.8 Video 2 Prompt"
+  "_name": "Qwen3.8 Video 2 Prompt",
+  "10": {
+    "inputs": {
+      "value": "Describe this video in extreme detail."
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Text (System Prompt)"
+    }
+  }
 }
