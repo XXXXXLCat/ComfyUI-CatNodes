@@ -645,8 +645,10 @@ const IcNode = {
        still greys out tabs/modes that DO have a workflow but do not fit the
        current assets. Clicking a top group sets mode to that group's first
        workflow-backed mode, avoiding "show group A, run workflow B". */
+    /* 2026-11-24: mode tabs are keyed by the FINE subCategory (cat.*), while
+       `category` is now the 7-group top level used by the API dialog / omni. */
     const workflowCategories = computed(() => new Set(
-      wfList.value.map((item) => item && item.category).filter(Boolean)
+      wfList.value.map((item) => item && item.subCategory).filter(Boolean)
     ));
     const hasWorkflowCategory = (cat) => !!cat && workflowCategories.value.has(cat);
     const topGroups = computed(() => MODE_TOP_GROUPS[kind.value] || []);
@@ -667,7 +669,15 @@ const IcNode = {
       const g = TOP_OF_MODE[m];
       if (g && visibleTopGroups.value.indexOf(g) >= 0 && g !== topTab.value) topTab.value = g;
     }, { immediate: true });
-    const topModes = computed(() => modesWithWorkflow(topTab.value));
+    /* Top-level tab row is hidden (2026-11-24): the mode row now shows ALL
+       fine modes backed by a workflow for this node kind, across its groups. */
+    const topModes = computed(() => {
+      const out = [];
+      for (const group of topGroups.value) {
+        for (const mode of modesWithWorkflow(group)) if (!out.includes(mode)) out.push(mode);
+      }
+      return out;
+    });
     /* Workflows arrive asynchronously. Once the list lands (or changes), move
        off a hidden group/mode silently so the visible tabs always own the run. */
     watch(visibleTopGroups, (groups) => {
@@ -1252,7 +1262,35 @@ const IcNode = {
        shows only the workflows matching its active mode: image -> 文生图/
        图像编辑/图像放大/背景移除, video -> the 4 video modes, audio -> the 4
        audio modes. */
+    /* Universal node: user workflows are now grouped by the 7 TOP categories
+       (their `category` field), shown as a single tab row. Legacy workflows
+       whose category is still a fine cat.* value are folded into their top
+       group so they remain reachable. */
+    const omniCategories = computed(() => {
+      const out = [];
+      for (const w of wfList.value) {
+        const c = w && w.category;
+        if (!c) continue;
+        const top = c.startsWith("group.") ? c : (TOP_OF_MODE[c] || "");
+        if (top && Object.prototype.hasOwnProperty.call(MODE_TOP_GROUPS, top) && !out.includes(top)) out.push(top);
+      }
+      return out;
+    });
+    const omniCategory = ref("");
+    watch(omniCategories, (list) => {
+      if (list.length && list.indexOf(omniCategory.value) < 0) omniCategory.value = list[0];
+    }, { immediate: true });
+    const setOmniCategory = (cat) => {
+      if (omniCategories.value.indexOf(cat) < 0 || cat === omniCategory.value) return;
+      omniCategory.value = cat;
+      const pool = wfList.value.filter((w) => w.category === cat);
+      if (pool.length && (!data.workflow || !pool.some((w) => w.id === data.workflow))) {
+        const def = pool.find((w) => w.is_default) || pool[0];
+        if (def) patch({ workflow: def.id }, { silent: true });
+      }
+    };
     const activeCategory = computed(() => {
+      if (isGenOmni.value) return omniCategory.value;
       if (isGenImage.value) return imageMode.value;
       if (isGenVideo.value) return videoMode.value;
       if (isGenAudio.value) return audioMode.value;
@@ -1262,7 +1300,9 @@ const IcNode = {
     const filteredWfList = computed(() => {
       const cat = activeCategory.value;
       if (!cat) return wfList.value;
-      return wfList.value.filter((w) => w.category === cat);
+      /* Generators filter by fine subCategory; omni (cat="") is handled below. */
+      const field = isGenOmni.value ? "category" : "subCategory";
+      return wfList.value.filter((w) => w[field] === cat);
     });
     /* A node that already produced something keeps pointing at its template
        even after that template is deleted: the API list is live and no longer
@@ -1328,7 +1368,8 @@ const IcNode = {
        the pin changes; adopting happens once, never as a live follow. */
     const wfPool = computed(() => {
       const cat = activeCategory.value;
-      const pool = cat ? wfList.value.filter((w) => w.category === cat) : wfList.value;
+      const field = isGenOmni.value ? "category" : "subCategory";
+      const pool = cat ? wfList.value.filter((w) => w[field] === cat) : wfList.value;
       return pool.length ? pool : wfList.value;
     });
     const defaultWfId = computed(() => {
@@ -1795,6 +1836,7 @@ const IcNode = {
       isGenAudio, audioModes, audioMode, setAudioMode, audioSlots, audioFamily,
       isGenText, textModes, textMode, setTextMode, textModeReason, textModeAvailable,
       visibleTopGroups, topTab, topModes, setTopTab, topGroupReason, topGroupAvailable,
+      omniCategories, omniCategory, setOmniCategory,
       audioModeReason, audioModeAvailable, wiredAudio, wiredTextNodes, wiredText,
       textWires, boxCount, noTextWorkflow, boxWiredAt, boxDisabledAt, wiredTextAt,
       apiFields, promptTextFields, hasPromptArea, textAreaValue, setTextArea, textAreaLabel,
