@@ -4,21 +4,14 @@
       "nodeId": "7",
       "key": "prompt",
       "type": "textarea",
-      "label": "Prompt",
+      "label": "field.prompt",
       "advanced": false
-    },
-    {
-      "nodeId": "7",
-      "key": "thinking",
-      "type": "switch",
-      "label": "Thinking",
-      "advanced": true
     },
     {
       "nodeId": "7",
       "key": "max_length",
       "type": "number",
-      "label": "Max Length",
+      "label": "field.maxLength",
       "advanced": true,
       "min": 1,
       "max": 32768,
@@ -26,9 +19,16 @@
     },
     {
       "nodeId": "7",
+      "key": "thinking",
+      "type": "switch",
+      "label": "field.thinking",
+      "advanced": true
+    },
+    {
+      "nodeId": "7",
       "key": "sampling_mode.seed",
       "type": "random",
-      "label": "Seed",
+      "label": "field.seed",
       "advanced": false,
       "min": 0,
       "max": 18446744073709552000,
