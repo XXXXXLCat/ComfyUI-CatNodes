@@ -1,6 +1,16 @@
 {
   "fields": [
     {
+      "nodeId": "16:9",
+      "key": "value",
+      "type": "number",
+      "label": "field.multiplier",
+      "advanced": false,
+      "min": 1,
+      "max": 16,
+      "step": 1
+    },
+    {
       "nodeId": "16:1",
       "key": "model_name",
       "type": "select",
@@ -21,16 +31,6 @@
       "type": "switch",
       "label": "field.applyMultiplierToFps",
       "advanced": false
-    },
-    {
-      "nodeId": "16:9",
-      "key": "value",
-      "type": "number",
-      "label": "field.multiplier",
-      "advanced": false,
-      "min": 1,
-      "max": 16,
-      "step": 1
     }
   ],
   "category": "cat.videoInterpolation",
