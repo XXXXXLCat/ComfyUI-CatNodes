@@ -466,7 +466,7 @@ const IcNode = {
         out.push({
           id: src.id,
           kind,
-          name: asset?.name || asset?.filename || t(src.data?.title || "wire.asset"),
+          name: asset?.name || asset?.filename || src.data?.title || "wire.asset",
           /* The @ reference label is stored in the prompt as plain text, so it
              follows the UI language at insert time: 图片1 / 视频1 in Chinese,
              Image1 / Video1 in English. The parser accepts both spellings. */

@@ -75,7 +75,6 @@ export function usePromptMention({ data, incomingAssets, isRich, setPrompt, bind
       chip.contentEditable = "false";
       chip.dataset.ref = item.label;
       chip.dataset.kind = item.kind || "image";
-      bindTip(chip, item.name || item.label);
       if (item.thumb) {
         const img = document.createElement("img");
         img.className = "icn__gpv-ref-img";
@@ -131,9 +130,6 @@ export function usePromptMention({ data, incomingAssets, isRich, setPrompt, bind
       if (!el) return;
       const text = data.prompt || "";
       el.innerHTML = toRich(text);
-      el.querySelectorAll(".icn__gpv-ref").forEach((chip) => {
-        bindTip(chip, chip.dataset.name || chip.dataset.ref || "");
-      });
       lastSynced = text;
     };
     const syncPrompt = () => {
