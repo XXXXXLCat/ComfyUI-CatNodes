@@ -436,6 +436,18 @@
       "title": "Model Preview Override"
     }
   },
+  "190": {
+    "inputs": {
+      "source": [
+        "168",
+        0
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Preview as Text"
+    }
+  },
   "_mediaCaps": {
     "image": null,
     "video": null,

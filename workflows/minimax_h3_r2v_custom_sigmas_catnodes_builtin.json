@@ -738,6 +738,18 @@
       "title": "Load Audio"
     }
   },
+  "190": {
+    "inputs": {
+      "source": [
+        "157",
+        0
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Preview as Text"
+    }
+  },
   "_mediaCaps": {
     "image": 9,
     "video": 3,
