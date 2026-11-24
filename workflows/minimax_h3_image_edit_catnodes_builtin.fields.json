@@ -18,7 +18,7 @@
       "nodeId": "66",
       "key": "value",
       "type": "switch",
-      "label": "field.customResolution",
+      "label": "field.customSize",
       "advanced": false
     },
     {
