@@ -15,13 +15,6 @@
       "advanced": false
     },
     {
-      "nodeId": "37:43",
-      "key": "switch",
-      "type": "switch",
-      "label": "field.tiledDecode",
-      "advanced": false
-    },
-    {
       "nodeId": "37:13",
       "key": "max_duration",
       "type": "number",
@@ -154,6 +147,13 @@
         "bong_tangent",
         "beta57"
       ]
+    },
+    {
+      "nodeId": "37:43",
+      "key": "switch",
+      "type": "switch",
+      "label": "field.tiledDecode",
+      "advanced": false
     }
   ],
   "category": "cat.textToMusic",

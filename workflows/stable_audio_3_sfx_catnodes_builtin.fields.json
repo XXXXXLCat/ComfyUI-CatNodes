@@ -8,16 +8,6 @@
       "advanced": false
     },
     {
-      "nodeId": "52:36",
-      "key": "value",
-      "type": "number",
-      "label": "field.duration",
-      "advanced": false,
-      "min": 1,
-      "max": 120,
-      "step": 1
-    },
-    {
       "nodeId": "52:35",
       "key": "value",
       "type": "switch",
@@ -30,6 +20,16 @@
       "type": "switch",
       "label": "field.thinking",
       "advanced": true
+    },
+    {
+      "nodeId": "52:36",
+      "key": "value",
+      "type": "number",
+      "label": "field.duration",
+      "advanced": false,
+      "min": 1,
+      "max": 120,
+      "step": 1
     },
     {
       "nodeId": "52:3",
