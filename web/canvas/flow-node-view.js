@@ -1792,7 +1792,7 @@ const IcNode = {
       textWires, boxCount, noTextWorkflow, boxWiredAt, boxDisabledAt, wiredTextAt,
       apiFields, promptTextFields, hasPromptArea, textAreaValue, setTextArea, textAreaLabel,
       apiBarFields, visibleBarFields, advancedCount, toggleAdvanced,
-      plainParams, paramLabel, paramText, openSetFromBar,
+      plainParams, fieldLabelText, paramLabel, paramText, openSetFromBar,
       fieldId, fieldValue, setFieldValue,
       setOpen, toggleSet, popStyle, fieldText, fieldFill, bumpField, commitFieldNum,
       stepField, canFieldDec, canFieldInc, editingField,
