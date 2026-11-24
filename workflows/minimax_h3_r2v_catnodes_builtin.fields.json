@@ -4,21 +4,40 @@
       "nodeId": "138",
       "key": "value",
       "type": "textarea",
-      "label": "Prompt",
+      "label": "field.prompt",
       "advanced": false
     },
     {
-      "nodeId": "146",
-      "key": "value",
+      "nodeId": "157",
+      "key": "switch",
       "type": "switch",
-      "label": "Turbo mode",
+      "label": "field.reprompt",
+      "advanced": false,
+      "default": false
+    },
+    {
+      "nodeId": "149",
+      "key": "switch",
+      "type": "switch",
+      "label": "field.lowVramMode",
       "advanced": false
+    },
+    {
+      "nodeId": "132",
+      "key": "value",
+      "type": "number",
+      "label": "field.duration",
+      "advanced": false,
+      "min": 1,
+      "max": 15,
+      "step": 1,
+      "default": 5
     },
     {
       "nodeId": "115",
       "key": "aspect_ratio",
       "type": "select",
-      "label": "Aspect Ratio",
+      "label": "field.aspectRatio",
       "advanced": false,
       "options": [
         "1:1 (Square)",
@@ -36,7 +55,7 @@
       "nodeId": "115",
       "key": "megapixels",
       "type": "number",
-      "label": "Megapixels",
+      "label": "field.megapixels",
       "advanced": false,
       "min": 0.1,
       "max": 16,
@@ -44,30 +63,10 @@
       "default": 0.4
     },
     {
-      "nodeId": "115",
-      "key": "multiple",
-      "type": "number",
-      "label": "Multiple",
-      "advanced": true,
-      "min": 8,
-      "max": 128,
-      "step": 4
-    },
-    {
-      "nodeId": "132",
-      "key": "value",
-      "type": "number",
-      "label": "Duration",
-      "advanced": false,
-      "min": 1,
-      "max": 15,
-      "step": 1
-    },
-    {
       "nodeId": "129",
       "key": "noise_seed",
       "type": "random",
-      "label": "Seed",
+      "label": "field.seed",
       "advanced": false,
       "min": 0,
       "max": 18446744073709552000,
@@ -75,10 +74,28 @@
       "default": 42
     },
     {
+      "nodeId": "136",
+      "key": "ref_image_size",
+      "type": "select",
+      "label": "field.refImageSize",
+      "advanced": true,
+      "options": [
+        "match",
+        "resize"
+      ]
+    },
+    {
+      "nodeId": "159",
+      "key": "thinking",
+      "type": "switch",
+      "label": "field.thinking",
+      "advanced": true
+    },
+    {
       "nodeId": "123",
       "key": "sampler_name",
       "type": "select",
-      "label": "Sampler",
+      "label": "field.sampler",
       "advanced": true,
       "options": [
         "euler",
@@ -136,46 +153,24 @@
         "res_6s_ode",
         "res_5s_ode",
         "res_3s_ode",
-        "res_2s_ode",
-        "res_3m_ode",
-        "res_2m_ode",
-        "res_6s",
-        "res_5s",
-        "res_3s",
-        "res_2s",
-        "res_3m",
-        "res_2m"
+        "res_2s_ode"
       ]
     },
     {
       "nodeId": "124",
       "key": "scheduler",
       "type": "select",
-      "label": "Scheduler",
+      "label": "field.scheduler",
       "advanced": true,
       "options": [
         "simple",
-        "sgm_uniform",
+        "normal",
         "karras",
         "exponential",
+        "sgm_uniform",
+        "uni_pc",
         "ddim_uniform",
-        "beta",
-        "normal",
-        "linear_quadratic",
-        "kl_optimal",
-        "bong_tangent",
-        "beta57"
-      ]
-    },
-    {
-      "nodeId": "136",
-      "key": "ref_image_size",
-      "type": "select",
-      "label": "Ref image size",
-      "advanced": true,
-      "options": [
-        "match",
-        "max"
+        "beta"
       ]
     }
   ],
