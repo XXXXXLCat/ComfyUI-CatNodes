@@ -221,7 +221,7 @@
   },
   "23:22": {
     "inputs": {
-      "switch": true,
+      "switch": false,
       "on_false": [
         "23:24",
         0

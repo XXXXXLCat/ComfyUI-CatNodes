@@ -12,7 +12,8 @@
       "key": "value",
       "type": "switch",
       "label": "field.reprompt",
-      "advanced": false
+      "advanced": false,
+      "default": false
     },
     {
       "nodeId": "66",

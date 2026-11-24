@@ -234,8 +234,11 @@
   },
   "459:484": {
     "inputs": {
-      "switch": true,
-      "on_false": "Replace costumes for the character",
+      "switch": false,
+      "on_false": [
+        "908",
+        0
+      ],
       "on_true": [
         "459:500",
         0
@@ -250,9 +253,21 @@
       }
     }
   },
+  "908": {
+    "inputs": {
+      "value": "Replace costumes for the character"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Text String (Prompt)"
+    }
+  },
   "459:500": {
     "inputs": {
-      "prompt": "",
+      "prompt": [
+        "908",
+        0
+      ],
       "max_length": 4096,
       "sampling_mode": "on",
       "thinking": false,

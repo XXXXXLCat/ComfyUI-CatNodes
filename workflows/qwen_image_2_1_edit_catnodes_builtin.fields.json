@@ -1,8 +1,8 @@
 {
   "fields": [
     {
-      "nodeId": "459:500",
-      "key": "prompt",
+      "nodeId": "908",
+      "key": "value",
       "type": "textarea",
       "label": "field.prompt",
       "advanced": false
@@ -12,7 +12,8 @@
       "key": "switch",
       "type": "switch",
       "label": "field.reprompt",
-      "advanced": false
+      "advanced": false,
+      "default": false
     },
     {
       "nodeId": "459:500",
