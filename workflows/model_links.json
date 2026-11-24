@@ -41,7 +41,6 @@
   "minimax_h3_image_pruned_int8_convrot.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-H3-Image/resolve/master/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors",
   "minimax_h3_image_vae_fp16.safetensors": "https://modelscope.cn/models/Comfy-Org/MiniMax-H3-Image/resolve/master/vae/minimax_h3_image_vae_fp16.safetensors",
   "minimax_h3_ref2v_turbo_4step_v1.0_768p_comfyui_bf16.safetensors": "https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_ref2v_turbo_4step_v1.0_768p_comfyui_bf16.safetensors",
-  "minimax_h3_fl2v_turbo_4step_v1.3_768p_comfyui_bf16.safetensors": "https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_4step_v1.3_768p_comfyui_bf16.safetensors",
   "taeh3.safetensors": "https://huggingface.co/Kijai/MiniMax-H3-TAE/resolve/main/vae_approx/taeh3.safetensors",
   "rife_v4.25.safetensors": "https://modelscope.cn/models/Comfy-Org/frame_interpolation/resolve/master/frame_interpolation/rife_v4.25.safetensors",
   "rife_v4.25_heavy.safetensors": "https://modelscope.cn/models/Comfy-Org/frame_interpolation/resolve/master/frame_interpolation/rife_v4.25_heavy.safetensors",
