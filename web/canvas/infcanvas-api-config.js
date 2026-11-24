@@ -43,6 +43,13 @@ import {
   /* i18n: lazy reference; i18n.js loads after most modules, but every call
      site runs after app init when NS.i18n is available. */
   const t = (key, params) => (NS.i18n ? NS.i18n.t(key, params) : key);
+  /* Field labels: builtin workflows store a `field.*` i18n key; user workflows
+     store their own literal text. Only translate keys, pass everything else
+     through verbatim so user-defined names are never touched. */
+  const labelText = (label, fallback) => {
+    const raw = String(label ?? "");
+    return raw.startsWith("field.") ? t(raw) : (raw || fallback);
+  };
   /* Category display: normalise legacy backend names, then translate. */
   const cat = (name) => (NS.i18n?.cat ? NS.i18n.cat(name) : t(name || "api.uncategorized"));
 
@@ -1834,7 +1841,7 @@ import {
       grip.innerHTML = ICO.grip;
       row.appendChild(grip);
       const box = el("label", "icn__gpa-box");
-      box.appendChild(el("span", "text-xs font-normal text-foreground", field.label || t("field.prompt")));
+      box.appendChild(el("span", "text-xs font-normal text-foreground", labelText(field.label, t("field.prompt"))));
       /* Host's own node textarea class — pixel-identical to a ComfyUI prompt
          box (mono 10px, var(--input) bg, no radius). ac-prompt-area only adds
          layout min-height; placeholder uses the host muted-foreground token. */
@@ -1936,8 +1943,9 @@ import {
       const grip = el("div", "ac-prow-grip z-10 flex items-stretch w-3");
       grip.innerHTML = ICO.grip;
       const wrap = el("div", "col-span-2 grid min-w-0 grid-cols-subgrid justify-between gap-2");
-      const label = el("div", "content-center-safe truncate", field.label || fieldKey(field.nodeId, field.key));
-      bindTip(label, field.label || fieldKey(field.nodeId, field.key));
+      const labelTextValue = labelText(field.label, fieldKey(field.nodeId, field.key));
+      const label = el("div", "content-center-safe truncate", labelTextValue);
+      bindTip(label, labelTextValue);
       const cell = el("div", "relative min-w-0 flex-1");
       const inner = el("div", "min-w-0 cursor-default rounded-lg transition-all");
       inner.appendChild(buildFieldControl(field, index));
