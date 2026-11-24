@@ -116,9 +116,13 @@
     const host = mountHost?.querySelector?.("[data-builtin-mgr-list]");
     if (!host) return;
     host.replaceChildren();
+    /* Built-ins are classified by their FINE subCategory (27 cat.* keys), the
+       same granularity the four generator mode tabs use — NOT the 7 top groups
+       used by the API dialog / omni node. Group by subCategory so each section
+       matches one generator mode. */
     const grouped = new Map();
     for (const item of items) {
-      const key = item.category || "";
+      const key = item.subCategory || "";
       if (!grouped.has(key)) grouped.set(key, []);
       grouped.get(key).push(item);
     }
@@ -185,7 +189,7 @@
        category's available count from the current list, mirroring the backend
        guard; disable the switch when this item is the only one left. */
     const availableInCategory = items.filter((w) =>
-      (w.category || "") === (item.category || "") && !w.hidden && !w.shadowed).length;
+      (w.subCategory || "") === (item.subCategory || "") && !w.hidden && !w.shadowed).length;
     const lockHide = !item.hidden && availableInCategory <= 1;
     const sw = makeSwitch(!item.hidden, async (show, btn, knob) => {
       if (show === !item.hidden) return;

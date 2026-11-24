@@ -514,6 +514,22 @@ def _normalize_category(value: Any) -> str:
     return CATEGORY_RENAMES.get(text, text)
 
 
+def _normalize_default_key(value: Any) -> str:
+    """Normalise a `category_defaults` pin key WITHOUT folding fine cat.* keys.
+
+    Built-ins are pinned and read by their fine subCategory (cat.*), while user
+    workflows are pinned/read by their top category (group.*). Both canonical
+    forms must survive verbatim: reusing `_normalize_category` here would turn
+    every cat.* pin into a group.* key, silently breaking "set as default" for
+    all built-in workflows in the four generators. Only legacy Chinese aliases
+    are folded to a top group for backwards compatibility.
+    """
+    text = str(value or "").strip()
+    if text in WORKFLOW_CATEGORIES or text in WORKFLOW_SUBCATEGORIES:
+        return text
+    return CATEGORY_RENAMES.get(text, text)
+
+
 def _fields_path(name: str) -> str:
     return os.path.join(_workflow_dir(), name + ".fields.json")
 
@@ -781,8 +797,15 @@ def _builtin_models(data: dict, fields: dict | None = None) -> list[dict]:
 
 
 def _category_available_count(category: str, hidden: set[str]) -> int:
-    """How many workflows of a category remain usable: user workflows (never
-    hidden) plus visible built-ins. Guards 'at least one per category'."""
+    """How many workflows of a FINE category (subCategory) remain usable.
+
+    Guards the built-in manager's 'at least one per sub-category' rule: the
+    manager groups built-ins by subCategory and the four generators expose one
+    mode tab per subCategory, so a user workflow (which only carries a top
+    category and never appears in those tabs) must not count here. A builtin
+    shadowed by a same-named user file still counts once — that file is what
+    the tabs actually run.
+    """
     count = 0
     for name in _builtin_names():
         if name in hidden:
@@ -791,18 +814,12 @@ def _category_available_count(category: str, hidden: set[str]) -> int:
         if os.path.isfile(_workflow_path(name)):
             count += 1
             continue
-        if _category_of(_load_builtin_raw_fields(name)) == category:
+        if _subcategory_of(_load_builtin_raw_fields(name)) == category:
             count += 1
-    # User-only workflows in this category (not backed by a builtin stem).
-    if os.path.isdir(_workflow_dir()):
-        for filename in os.listdir(_workflow_dir()):
-            if not filename.endswith(".json") or filename.endswith(".fields.json"):
-                continue
-            name = filename[:-5]
-            if not WF_NAME_RE.fullmatch(name) or name in _builtin_names():
-                continue
-            if _load_category(name) == category:
-                count += 1
+    # User-only workflows are deliberately NOT counted: they carry only a top
+    # category, never appear in the four generators' sub-category mode tabs,
+    # and are not managed on this page. Only built-ins (and files shadowing a
+    # builtin stem, counted above) can fill a sub-category's mode tab.
     return count
 
 
@@ -1275,7 +1292,12 @@ async def api_set_default(request: web.Request) -> web.Response:
     name = _safe_workflow_name(request.match_info.get("name", ""))
     if _read_effective_workflow(name) is None:
         return web.json_response({"error": _err("工作流不存在", "Workflow not found")}, status=404)
-    category = _workflow_category(name)
+    # Built-ins are classified by FINE subCategory everywhere they are shown
+    # (generator mode tabs + the built-in manager); user workflows are grouped
+    # by the 7 top categories (API dialog + omni node). Pin with the same key
+    # each side reads, so "set as default" actually takes effect.
+    category = (_workflow_subcategory(name) if _is_builtin_only(name)
+                else _workflow_category(name))
     if not category:
         return web.json_response({"error": _err("请先给这个工作流设置分类", "Set a category for this workflow first")}, status=400)
     try:
@@ -1308,10 +1330,13 @@ async def api_builtin_manage(request: web.Request) -> web.Response:
     settings = _load_api_settings()
     pinned = settings.get("category_defaults") or {}
     pinned = pinned if isinstance(pinned, dict) else {}
-    pinned = {_normalize_category(key): value for key, value in pinned.items()}
-    # Resolve the effective default per category the same way list_workflows
-    # does: user pin > bundled is_default > first visible entry. Keeps this
-    # dialog's default state in sync with the generate-node selectors.
+    pinned = {_normalize_default_key(key): value for key, value in pinned.items()}
+    # Resolve the effective default per FINE category (subCategory / cat.*)
+    # the same way list_workflows does for built-ins: user pin > bundled
+    # is_default > first visible entry. The management dialog groups built-ins
+    # by their 27 fine sub-categories (not the 7 top groups used by the API
+    # dialog / omni node), so it must key defaults by subCategory too — else
+    # the pin shown here would not match what the four generators actually use.
     first_of: dict[str, str] = {}
     sidecar_default: dict[str, str] = {}
     pool: dict[str, set[str]] = {}
@@ -1319,7 +1344,7 @@ async def api_builtin_manage(request: web.Request) -> web.Response:
         if name in hidden or os.path.isfile(_workflow_path(name)):
             continue
         raw = _load_builtin_raw_fields(name)
-        category = _category_of(raw)
+        category = _subcategory_of(raw)
         if not category:
             continue
         pool.setdefault(category, set()).add(name)
@@ -1345,23 +1370,24 @@ async def api_builtin_manage(request: web.Request) -> web.Response:
         if data is None:
             continue
         raw = _load_builtin_raw_fields(name)
-        category = _category_of(raw)
+        subcategory = _subcategory_of(raw)
         items.append({
             "id": name,
             "name": data.get("name") or data.get("_name") or name,
-            "category": category,
-            "subCategory": _subcategory_of(raw),
+            "category": _category_of(raw),
+            "subCategory": subcategory,
             "hidden": name in hidden,
             "shadowed": shadowed,
-            "is_default": bool(category) and effective.get(category) == name,
+            "is_default": bool(subcategory) and effective.get(subcategory) == name,
             "models": _builtin_models(data, raw),
         })
-    # Management view is ordered by the official category order, then by
-    # display name inside each category. The client groups by first appearance,
-    # so sorting here is enough — no per-view sort logic to keep in sync.
-    cat_rank = {cat: index for index, cat in enumerate(WORKFLOW_CATEGORIES)}
+    # Management view groups built-ins by their FINE category (27 subCategories,
+    # not the 7 top groups). Order by the official sub-category order, then by
+    # display name inside each sub-category. The client groups by first
+    # appearance, so sorting here is enough — no per-view sort logic to sync.
+    cat_rank = {cat: index for index, cat in enumerate(WORKFLOW_SUBCATEGORIES)}
     items.sort(key=lambda item: (
-        cat_rank.get(item.get("category"), len(cat_rank)),
+        cat_rank.get(item.get("subCategory"), len(cat_rank)),
         (item.get("name") or item["id"]).lower(),
     ))
     return web.json_response({
@@ -1386,7 +1412,10 @@ async def api_builtin_visibility(request: web.Request) -> web.Response:
     hide = payload.get("hidden") is True
     hidden = _hidden_builtins()
     if hide:
-        category = _category_of(_load_builtin_raw_fields(name))
+        # Guard at FINE granularity: the manager groups built-ins by subCategory
+        # and the four generators expose one mode tab per subCategory, so hiding
+        # the last workflow of a fine category must be refused.
+        category = _subcategory_of(_load_builtin_raw_fields(name))
         if category and _category_available_count(category, hidden | {name}) < 1:
             return web.json_response({
                 "error": _err("该分类至少要保留一个可用工作流", "Each category must keep at least one workflow"),
@@ -1645,8 +1674,10 @@ async def list_workflows(request: web.Request) -> web.Response:
     # then the category's first workflow in saved drag order.
     pinned = _load_api_settings().get("category_defaults")
     pinned = pinned if isinstance(pinned, dict) else {}
-    # Old pins may be keyed by a legacy fine name; normalise to top OR keep as-is.
-    pinned = {_normalize_category(key): value for key, value in pinned.items()}
+    # Keep canonical cat.* / group.* pin keys verbatim; fold only legacy Chinese
+    # aliases. Built-ins are read by subCategory here, so folding cat.* to a
+    # group.* key would make every built-in default pin unreadable.
+    pinned = {_normalize_default_key(key): value for key, value in pinned.items()}
     eff_key = lambda w: (w.get("subCategory") or "") if w.get("builtin") else (w.get("category") or "")
     first_of: dict[str, str] = {}
     builtin_default_of: dict[str, str] = {}
