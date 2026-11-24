@@ -25,7 +25,8 @@
       "advanced": false,
       "min": 0,
       "max": 2048,
-      "step": 0.001
+      "step": 0.001,
+      "default": 5.0
     },
     {
       "nodeId": "66:57",
