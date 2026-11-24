@@ -44,28 +44,32 @@
   },
   "32": {
     "inputs": {
-      "clip": [
-        "30",
-        0
-      ],
       "prompt": [
         "37",
         0
       ],
       "width": [
-        "50",
+        "64",
         0
       ],
       "height": [
-        "50",
-        1
+        "65",
+        0
+      ],
+      "clip": [
+        "30",
+        0
       ],
       "vae": [
         "31",
         0
       ],
-      "images.image_1": [
+      "images.image_0": [
         "48",
+        0
+      ],
+      "images.image_1": [
+        "67",
         0
       ]
     },
@@ -88,23 +92,12 @@
   },
   "34": {
     "inputs": {
-      "max_length": 8196,
-      "sampling_mode": "on",
-      "thinking": true,
-      "use_default_template": true,
-      "mtp": "auto",
-      "clip": [
-        "35",
-        0
-      ],
       "prompt": [
         "40",
         0
       ],
-      "system_prompt": [
-        "36",
-        0
-      ],
+      "max_length": 8196,
+      "sampling_mode": "on",
       "sampling_mode.temperature": 1,
       "sampling_mode.top_k": 20,
       "sampling_mode.top_p": 0.95,
@@ -112,8 +105,23 @@
       "sampling_mode.repetition_penalty": 1,
       "sampling_mode.presence_penalty": 0,
       "sampling_mode.seed": 42,
+      "thinking": true,
+      "use_default_template": true,
+      "mtp": "auto",
+      "clip": [
+        "35",
+        0
+      ],
       "images.image1": [
         "48",
+        0
+      ],
+      "images.image2": [
+        "67",
+        0
+      ],
+      "system_prompt": [
+        "36",
         0
       ]
     },
@@ -195,11 +203,11 @@
   },
   "40": {
     "inputs": {
-      "find": "{input text}",
       "string": [
         "39",
         0
       ],
+      "find": "{input text}",
       "replace": [
         "43",
         0
@@ -248,7 +256,7 @@
   },
   "43": {
     "inputs": {
-      "value": ""
+      "value": "Replace the vintage yellow taxi in <Picture 1> with a pastel pink ice-cream truck with a scalloped awning and a glowing service window, sitting in the same side profile at the curb."
     },
     "class_type": "PrimitiveStringMultiline",
     "_meta": {
@@ -257,11 +265,11 @@
   },
   "44": {
     "inputs": {
-      "key": "expanded_caption",
       "json_string": [
         "34",
         0
-      ]
+      ],
+      "key": "expanded_caption"
     },
     "class_type": "JsonExtractString",
     "_meta": {
@@ -280,12 +288,12 @@
   "48": {
     "inputs": {
       "resize_type": "scale to multiple",
+      "resize_type.multiple": 32,
       "scale_method": "area",
       "input": [
         "56",
         0
-      ],
-      "resize_type.multiple": 32
+      ]
     },
     "class_type": "ResizeImageMaskNode",
     "_meta": {
@@ -307,12 +315,12 @@
   "56": {
     "inputs": {
       "resize_type": "scale total pixels",
+      "resize_type.megapixels": 16,
       "scale_method": "area",
       "input": [
         "45",
         0
-      ],
-      "resize_type.megapixels": 4
+      ]
     },
     "class_type": "ResizeImageMaskNode",
     "_meta": {
@@ -344,10 +352,79 @@
       "title": "Compare Images"
     }
   },
+  "63": {
+    "inputs": {
+      "aspect_ratio": "1:1 (Square)",
+      "megapixels": 4,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "ResolutionSelector"
+    }
+  },
+  "64": {
+    "inputs": {
+      "switch": [
+        "66",
+        0
+      ],
+      "on_false": [
+        "50",
+        0
+      ],
+      "on_true": [
+        "63",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "ComfySwitchNode"
+    }
+  },
+  "65": {
+    "inputs": {
+      "switch": [
+        "66",
+        0
+      ],
+      "on_false": [
+        "50",
+        1
+      ],
+      "on_true": [
+        "63",
+        1
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "ComfySwitchNode"
+    }
+  },
+  "66": {
+    "inputs": {
+      "value": false
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "PrimitiveBoolean"
+    }
+  },
+  "67": {
+    "inputs": {
+      "image": "vintage_yellow_taxi.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "_name": "MiniMax H3 Image Edit",
   "_mediaCaps": {
     "image": 2,
     "video": null,
     "audio": null
-  },
-  "_name": "MiniMax H3 Image Edit"
+  }
 }
