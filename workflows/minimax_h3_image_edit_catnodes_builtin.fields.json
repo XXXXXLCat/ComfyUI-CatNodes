@@ -4,38 +4,28 @@
       "nodeId": "43",
       "key": "value",
       "type": "textarea",
-      "label": "Prompt",
+      "label": "field.prompt",
       "advanced": false
     },
     {
       "nodeId": "61",
       "key": "value",
       "type": "switch",
-      "label": "Refine Prompt",
+      "label": "field.reprompt",
       "advanced": false
     },
     {
       "nodeId": "34",
       "key": "thinking",
       "type": "switch",
-      "label": "Thinking",
+      "label": "field.thinking",
       "advanced": true
-    },
-    {
-      "nodeId": "34",
-      "key": "max_length",
-      "type": "number",
-      "label": "Max Length",
-      "advanced": true,
-      "min": 1,
-      "max": 32768,
-      "step": 1
     },
     {
       "nodeId": "38",
       "key": "seed",
       "type": "random",
-      "label": "Seed",
+      "label": "field.seed",
       "advanced": false,
       "min": 0,
       "max": 18446744073709552000,
@@ -46,7 +36,7 @@
       "nodeId": "38",
       "key": "steps",
       "type": "slider",
-      "label": "Steps",
+      "label": "field.steps",
       "advanced": true,
       "min": 1,
       "max": 10000,
@@ -56,7 +46,7 @@
       "nodeId": "38",
       "key": "cfg",
       "type": "slider",
-      "label": "CFG",
+      "label": "field.cfg",
       "advanced": true,
       "min": 0,
       "max": 100,
@@ -66,7 +56,7 @@
       "nodeId": "38",
       "key": "sampler_name",
       "type": "select",
-      "label": "Sampler",
+      "label": "field.sampler",
       "advanced": true,
       "options": [
         "euler",
@@ -139,7 +129,7 @@
       "nodeId": "38",
       "key": "scheduler",
       "type": "select",
-      "label": "Scheduler",
+      "label": "field.scheduler",
       "advanced": true,
       "options": [
         "simple",
