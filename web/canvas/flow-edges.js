@@ -66,7 +66,7 @@ const edgeTone = (kind) => EDGE_TONE_VAR[kind] || "--color-datatype-IMAGE";
         const base = EDGE_LABEL_KIND[kinds[0]];
         if (!base) return "";
         const index = incoming.findIndex((e) => e.id === props.id) + 1;
-        return index ? t(base + "{n}", { n: index }) : "";
+        return index ? t(base, { n: index }) : "";
       });
       /* Same metrics as .icn__tag-chip: 20px tall, 9px side padding, 12px
          glyphs (CJK 12px, latin/digits ~7px), no dot. */

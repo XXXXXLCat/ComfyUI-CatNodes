@@ -70,7 +70,7 @@ const t = (key, params) => (NS.i18n ? NS.i18n.t(key, params) : key);
   /* Edge-centre labels: 文本1 / 图像2 / 视频1 … Only shown when one target
      receives 2+ wires whose sources are ALL the same kind. */
   export const EDGE_LABEL_KIND = {
-    text: "field.text", image: "core.image", video: "field.video", audio: "field.audio", lora: "panel.lora",
+    text: "core.textIndexed", image: "core.imageIndexed", video: "core.video", audio: "core.audio", lora: "core.lora",
   };
   /* Fixed slot layout of the wired-assets row; null = follow actual wires. */
   export const MODE_ASSET_SLOTS = {
