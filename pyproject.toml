@@ -2,5 +2,6 @@
 name = "ComfyUI-CatNodes"
 description = "ComfyUI V3 nodes for memory reclamation, switching, canvas control and image sizing, plus an embedded infinite canvas"
 version = "1.0.0"
+license = "GPL-3.0-only"
 dependencies = []
 requires-python = ">=3.10"

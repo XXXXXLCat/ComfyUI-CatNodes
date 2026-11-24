@@ -132,3 +132,16 @@ ComfyUI 启动后，菜单栏出现状态区，显示五项读数，每 0.5 秒�
 ### 无限画布素材载入
 
 在 `infinite_canvas` 分类下显示为「Infinite Canvas Asset」。用于把画布素材带入工作流。
+
+## 开源协议
+
+ComfyUI-CatNodes 采用 **GNU 通用公共许可证第三版（仅此版本，GPL-3.0-only）**。完整正文见 `LICENSE`。
+
+这是强著佐权（copyleft）协议：如果你分发修改版或衍生作品，必须以同一协议开源。
+
+内置的第三方代码保留各自原有协议，不受本项目协议变更影响：
+
+- `canvas/ui_workflow_converter.py` —— Unlicense，见 `licenses/UI_CONVERTER_LICENSE.txt`。
+- `web/canvas/vendor/vueflow.bundle.mjs` —— Vue Flow，MIT 协议。
+
+1.0.0 及更早版本曾以 MIT 协议发布，该授权对这些历史版本仍然有效。GPL-3.0-only 自 `LICENSE` 文件替换所在的版本起生效。

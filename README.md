@@ -132,3 +132,16 @@ A live resolution preview appears below the inputs. Outputs are the fitted image
 ### Infinite Canvas Asset
 
 Found as **Infinite Canvas Asset** in the `infinite_canvas` category. Brings a canvas asset into a workflow.
+
+## License
+
+ComfyUI-CatNodes is licensed under the **GNU General Public License v3.0 only** (`GPL-3.0-only`). See `LICENSE` for the full text.
+
+This is a strong copyleft license: if you distribute a modified or derivative version, you must release it under the same license.
+
+Vendored third-party code keeps its own license and is not re-licensed:
+
+- `canvas/ui_workflow_converter.py` — Unlicense, see `licenses/UI_CONVERTER_LICENSE.txt`.
+- `web/canvas/vendor/vueflow.bundle.mjs` — Vue Flow, MIT License.
+
+Version 1.0.0 and earlier were distributed under the MIT License; that grant remains valid for those releases. The GPL-3.0-only terms apply from the version in which `LICENSE` was replaced.
