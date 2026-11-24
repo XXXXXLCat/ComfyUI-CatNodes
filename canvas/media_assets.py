@@ -98,7 +98,9 @@ import logging
 import mimetypes
 import os
 import re
+import secrets
 import shutil
+import string
 import subprocess
 import time
 import uuid
@@ -864,40 +866,52 @@ async def _h_media_pick(request: web.Request) -> web.Response:
 
 
 def _save_favorite_blocking(root: str, category: str, filename: str, payload: bytes) -> dict:
-    """Write one asset into ``root/<category>/`` with collision dedup.
+    """Write one asset into ``root/<category>/`` under a fresh timestamp name.
 
-    Same bytes already stored -> report ``reused`` without writing a copy;
-    a different file with the same name gets ``_1`` / ``_2`` ... appended.
+    The saved name is ``YYYYMMDDHHMMSS_xxxxxx.ext`` — 14-digit local time, an
+    underscore, 6 random lowercase letters/digits, then the original extension.
+    The incoming ``filename`` only supplies that extension. Byte-identical
+    content already stored is still reused (with its existing name) so repeat
+    favourites do not pile up copies.
     """
     folder = os.path.join(root, category)
     os.makedirs(folder, exist_ok=True)
-    stem, ext = os.path.splitext(filename)
-    candidate = filename
-    index = 1
-    while True:
+    ext = os.path.splitext(filename)[1]
+
+    # Byte-level dedup first: a repeat favourite reuses the already saved file
+    # and keeps its original timestamp name. Size pre-filter keeps the scan
+    # cheap even when the folder holds many assets.
+    try:
+        with os.scandir(folder) as entries:
+            for entry in entries:
+                if not entry.is_file():
+                    continue
+                try:
+                    if entry.stat().st_size != len(payload):
+                        continue
+                    with open(entry.path, "rb") as handle:
+                        if handle.read() == payload:
+                            return {"filename": entry.name, "category": category,
+                                    "path": entry.path, "reused": True}
+                except OSError:
+                    continue
+    except OSError:
+        pass
+
+    # A collision needs the same second AND the same 6 random characters —
+    # regenerate rather than falling back to a _1 suffix.
+    alphabet = string.ascii_lowercase + string.digits
+    for _ in range(100):
+        stamp = time.strftime("%Y%m%d%H%M%S")
+        suffix = "".join(secrets.choice(alphabet) for _ in range(6))
+        candidate = f"{stamp}_{suffix}{ext}"
         dest = os.path.join(folder, candidate)
         if not os.path.exists(dest):
-            break
-        # Avoid piling up byte-identical copies of the same asset.
-        try:
-            if os.path.getsize(dest) == len(payload):
-                with open(dest, "rb") as handle:
-                    if handle.read() == payload:
-                        return {"filename": candidate, "category": category,
-                                "path": dest, "reused": True}
-        except OSError:
-            pass
-        if index > 999:
-            try:
-                from .server_routes import _err as _err2
-            except Exception:
-                from server_routes import _err2
-            raise OSError(_err2("同名文件过多", "too many same-named files in the Favorites folder"))
-        candidate = f"{stem}_{index}{ext}"
-        index += 1
-    with open(dest, "wb") as handle:
-        handle.write(payload)
-    return {"filename": candidate, "category": category, "path": dest, "reused": False}
+            with open(dest, "wb") as handle:
+                handle.write(payload)
+            return {"filename": candidate, "category": category,
+                    "path": dest, "reused": False}
+    raise OSError("could not generate a unique favorite filename")
 
 
 async def _h_favorites_add(request: web.Request) -> web.Response:
