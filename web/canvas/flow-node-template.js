@@ -254,13 +254,13 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
         <div v-if="visibleTopGroups.length > 1" class="icn__gpv-tops">
           <button v-for="g in visibleTopGroups" :key="g" class="icn__gpv-top"
                   :class="{ 'is-on': topTab === g, 'is-disabled': !topGroupAvailable(g) }"
-                  v-tip="topGroupReason(g) || ($t('core.switch') + $t(g))" type="button"
+                  type="button"
                   @click.stop="setTopTab(g)">{{ $t(g) }}</button>
         </div>
         <div class="icn__gpv-modes">
           <button v-for="m in topModes" :key="m" class="icn__gpv-mode"
                   :class="{ 'is-on': videoMode === m, 'is-disabled': !modeAvailable(m) }"
-                  v-tip="modeReason(m) || ($t('core.switch') + $t(m))" type="button"
+                  type="button"
                   @click.stop="setVideoMode(m)">{{ $cat(m) }}</button>
         </div>
         <!-- Wired assets: shared row (shared with the image & audio panels). -->
@@ -344,15 +344,13 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
         <div v-if="visibleTopGroups.length > 1" class="icn__gpv-tops">
           <button v-for="g in visibleTopGroups" :key="g" class="icn__gpv-top"
                   :class="{ 'is-on': topTab === g, 'is-disabled': !topGroupAvailable(g) }"
-                  v-tip="topGroupReason(g) || ($t('core.switch') + $t(g))" type="button"
+                  type="button"
                   @click.stop="setTopTab(g)">{{ $t(g) }}</button>
         </div>
         <div class="icn__gpv-modes">
           <button v-for="m in topModes" :key="m" class="icn__gpv-mode"
                   :class="{ 'is-on': isGenText ? textMode === m : audioMode === m,
                             'is-disabled': isGenText ? !textModeAvailable(m) : !audioModeAvailable(m) }"
-                  v-tip="isGenText ? (textModeReason(m) || ($t('core.switch') + $t(m)))
-                    : (audioModeReason(m) || ($t('core.switch') + $t(m)))"
                   type="button" @click.stop="isGenText ? setTextMode(m) : setAudioMode(m)">{{ $cat(m) }}</button>
         </div>
         <!-- Wired assets (音频 only: 音乐翻唱 / 语音克隆 wait for one clip; the
@@ -410,7 +408,7 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
         <div v-if="visibleTopGroups.length > 1" class="icn__gpv-tops">
           <button v-for="g in visibleTopGroups" :key="g" class="icn__gpv-top"
                   :class="{ 'is-on': topTab === g, 'is-disabled': !topGroupAvailable(g) }"
-                  v-tip="topGroupReason(g) || ($t('core.switch') + $t(g))" type="button"
+                  type="button"
                   @click.stop="setTopTab(g)">{{ $t(g) }}</button>
         </div>
         <!-- The universal generator has no medium/mode vocabulary — it runs
@@ -418,7 +416,7 @@ export const icNodeTemplate = `    <div class="icn" :class="['icn--' + data.role
         <div v-if="!isGenOmni" class="icn__gpv-modes">
           <button v-for="m in topModes" :key="m" class="icn__gpv-mode"
                   :class="{ 'is-on': imageMode === m, 'is-disabled': !imageModeAvailable(m) }"
-                  v-tip="imageModeReason(m) || ($t('core.switch') + $t(m))" type="button"
+                  type="button"
                   @click.stop="setImageMode(m)">{{ $cat(m) }}</button>
         </div>
         <!-- Wired assets: the SAME row the video generator uses, so a node in
