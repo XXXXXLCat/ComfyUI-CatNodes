@@ -4,21 +4,21 @@
       "nodeId": "459:474",
       "key": "prompt",
       "type": "textarea",
-      "label": "Prompt",
+      "label": "field.prompt",
       "advanced": false
     },
     {
       "nodeId": "459:468",
       "key": "switch",
       "type": "switch",
-      "label": "Custom Size",
+      "label": "field.customSize",
       "advanced": false
     },
     {
       "nodeId": "477",
       "key": "aspect_ratio",
       "type": "select",
-      "label": "Aspect Ratio",
+      "label": "field.aspectRatio",
       "advanced": false,
       "options": [
         "1:1 (Square)",
@@ -36,7 +36,7 @@
       "nodeId": "477",
       "key": "megapixels",
       "type": "number",
-      "label": "Megapixels",
+      "label": "field.megapixels",
       "advanced": false,
       "min": 0.1,
       "max": 16,
@@ -44,20 +44,10 @@
       "default": 1
     },
     {
-      "nodeId": "477",
-      "key": "multiple",
-      "type": "number",
-      "label": "Multiple",
-      "advanced": true,
-      "min": 8,
-      "max": 128,
-      "step": 4
-    },
-    {
       "nodeId": "459:458",
       "key": "seed",
       "type": "random",
-      "label": "Seed",
+      "label": "field.seed",
       "advanced": false,
       "min": 0,
       "max": 18446744073709552000,
@@ -68,7 +58,7 @@
       "nodeId": "459:458",
       "key": "steps",
       "type": "slider",
-      "label": "Steps",
+      "label": "field.steps",
       "advanced": true,
       "min": 1,
       "max": 10000,
@@ -78,7 +68,7 @@
       "nodeId": "459:458",
       "key": "cfg",
       "type": "slider",
-      "label": "CFG",
+      "label": "field.cfg",
       "advanced": true,
       "min": 0,
       "max": 100,
@@ -88,7 +78,7 @@
       "nodeId": "459:458",
       "key": "sampler_name",
       "type": "select",
-      "label": "Sampler",
+      "label": "field.sampler",
       "advanced": true,
       "options": [
         "euler",
@@ -161,7 +151,7 @@
       "nodeId": "459:458",
       "key": "scheduler",
       "type": "select",
-      "label": "Scheduler",
+      "label": "field.scheduler",
       "advanced": true,
       "options": [
         "simple",

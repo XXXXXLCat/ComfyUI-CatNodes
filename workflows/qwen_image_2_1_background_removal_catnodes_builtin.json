@@ -136,7 +136,7 @@
   },
   "459:474": {
     "inputs": {
-      "prompt": "Remove the background, and output a PNG image",
+      "prompt": "",
       "negative_prompt": "",
       "resolution": 0,
       "clip": [
