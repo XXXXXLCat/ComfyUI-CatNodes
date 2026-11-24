@@ -40,7 +40,7 @@
   },
   "66:54": {
     "inputs": {
-      "seed": 0,
+      "seed": 42,
       "steps": 1,
       "cfg": 1,
       "sampler_name": "euler",

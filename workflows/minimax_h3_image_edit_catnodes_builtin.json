@@ -111,7 +111,7 @@
       "sampling_mode.min_p": 0,
       "sampling_mode.repetition_penalty": 1,
       "sampling_mode.presence_penalty": 0,
-      "sampling_mode.seed": 0,
+      "sampling_mode.seed": 42,
       "images.image1": [
         "48",
         0
@@ -156,7 +156,7 @@
   },
   "38": {
     "inputs": {
-      "seed": 0,
+      "seed": 42,
       "steps": 6,
       "cfg": 1,
       "sampler_name": "euler",

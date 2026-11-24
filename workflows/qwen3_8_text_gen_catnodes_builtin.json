@@ -40,7 +40,7 @@
       "sampling_mode.min_p": 0.05,
       "sampling_mode.repetition_penalty": 1.05,
       "sampling_mode.presence_penalty": 0,
-      "sampling_mode.seed": 0,
+      "sampling_mode.seed": 42,
       "images.image1": [
         "101",
         0

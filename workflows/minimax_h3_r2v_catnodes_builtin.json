@@ -170,7 +170,7 @@
   },
   "129": {
     "inputs": {
-      "noise_seed": 0
+      "noise_seed": 42
     },
     "class_type": "RandomNoise",
     "_meta": {
