@@ -38,7 +38,13 @@ export function useFieldControls({ fieldValue, setFieldValue, fieldId, apiBarFie
     /* Read-only summary on the bottom settings row: plain (non-advanced) params only,
        dot-separated. Editing stays in the gear popover; clicking the summary forwards to it. */
     const plainParams = computed(() => apiBarFields.value.filter((f) => !isAdvancedField(f)));
-    const paramLabel = (f) => String(f?.label || fieldId(f) || "").trim();
+    /* Builtin fields carry a `field.*` i18n key; user-authored fields carry
+       literal text. Translate only keys so this summary never shows a bare
+       key and never rewrites a user's own parameter name. */
+    const paramLabel = (f) => {
+      const raw = String(f?.label || fieldId(f) || "").trim();
+      return raw.startsWith("field.") ? t(raw) : raw;
+    };
     const paramText = (f) => {
       if (!f) return "";
       if (f.type === "switch") return fieldValue(f) ? t("core.on") : t("core.off");
