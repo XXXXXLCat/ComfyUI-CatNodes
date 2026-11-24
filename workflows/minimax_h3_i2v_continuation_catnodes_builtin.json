@@ -263,7 +263,7 @@
     "inputs": {
       "attention": "comfy kitchen attention",
       "model": [
-        "149",
+        "181",
         0
       ]
     },
@@ -382,6 +382,75 @@
     "class_type": "LoadImage",
     "_meta": {
       "title": "Load Image"
+    }
+  },
+  "179": {
+    "inputs": {
+      "head_chunks": 4,
+      "model": [
+        "182",
+        0
+      ]
+    },
+    "class_type": "MiniMaxLowVRAMAttention",
+    "_meta": {
+      "title": "MiniMax Low VRAM Attention"
+    }
+  },
+  "180": {
+    "inputs": {
+      "chunks": 2,
+      "seq_threshold": 4096,
+      "model": [
+        "179",
+        0
+      ]
+    },
+    "class_type": "MiniMaxChunkFeedForward",
+    "_meta": {
+      "title": "MiniMax Chunk Feed Forward"
+    }
+  },
+  "181": {
+    "inputs": {
+      "switch": false,
+      "on_false": [
+        "182",
+        0
+      ],
+      "on_true": [
+        "180",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch (Low VRAM)",
+      "sourceLabels": {
+        "switch": "lowVramMode"
+      }
+    }
+  },
+  "182": {
+    "inputs": {
+      "max_resolution": 480,
+      "jpeg_quality": 80,
+      "suppress_default_preview": true,
+      "preview_frames": [
+        "154",
+        1
+      ],
+      "preview_fps": 6,
+      "tiny_vae": "taeh3.safetensors",
+      "preview": "",
+      "model": [
+        "149",
+        0
+      ]
+    },
+    "class_type": "ModelPreviewOverrideKJ",
+    "_meta": {
+      "title": "Model Preview Override"
     }
   },
   "_mediaCaps": {

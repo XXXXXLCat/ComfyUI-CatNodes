@@ -16,6 +16,13 @@
       "default": false
     },
     {
+      "nodeId": "181",
+      "key": "switch",
+      "type": "switch",
+      "label": "field.lowVramMode",
+      "advanced": false
+    },
+    {
       "nodeId": "171",
       "key": "thinking",
       "type": "switch",
