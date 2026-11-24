@@ -1306,7 +1306,7 @@ const IcNode = {
     /* ---- exposed-parameter controls (numeric widget + bar summary) ----
        Injected only; isRandomField stays with the data layer (syncFieldSpecs).
        Placed after noWorkflow is defined to avoid a TDZ on that injected ref. */
-    const { fieldStep, fieldMin, fieldMax, fieldNum, decimalsOf, fieldText, plainParams, paramLabel, 
+    const { fieldStep, fieldMin, fieldMax, fieldNum, decimalsOf, fieldText, plainParams, fieldLabelText, paramLabel,
       paramText, openSetFromBar, fieldFill, clampField, bumpField, commitFieldNum, stepField, canFieldDec, 
       canFieldInc, editingField, scrubStart, scrubMove, scrubCancel, scrubEnd } = useFieldControls({ fieldValue, setFieldValue, fieldId, apiBarFields, isAdvancedField, noWorkflow, t });
     /* Default template follows the node's medium, so a fresh text generator

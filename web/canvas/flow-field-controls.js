@@ -39,12 +39,14 @@ export function useFieldControls({ fieldValue, setFieldValue, fieldId, apiBarFie
        dot-separated. Editing stays in the gear popover; clicking the summary forwards to it. */
     const plainParams = computed(() => apiBarFields.value.filter((f) => !isAdvancedField(f)));
     /* Builtin fields carry a `field.*` i18n key; user-authored fields carry
-       literal text. Translate only keys so this summary never shows a bare
-       key and never rewrites a user's own parameter name. */
-    const paramLabel = (f) => {
-      const raw = String(f?.label || fieldId(f) || "").trim();
-      return raw.startsWith("field.") ? t(raw) : raw;
+       literal text. Translate only keys so neither the bar summary nor the
+       gear popover shows a bare key, and user-defined names pass verbatim.
+       Callers keep their own fallback (toggle name, empty string, field id). */
+    const fieldLabelText = (raw, fallback) => {
+      const text = String(raw ?? "").trim();
+      return text.startsWith("field.") ? t(text) : (text || fallback);
     };
+    const paramLabel = (f) => fieldLabelText(f?.label, fieldId(f));
     const paramText = (f) => {
       if (!f) return "";
       if (f.type === "switch") return fieldValue(f) ? t("core.on") : t("core.off");
@@ -121,5 +123,5 @@ export function useFieldControls({ fieldValue, setFieldValue, fieldId, apiBarFie
       const input = event?.currentTarget?.parentElement?.querySelector("input");
       if (input) { input.focus(); input.select(); }
     };
-    return { fieldStep, fieldMin, fieldMax, fieldNum, decimalsOf, fieldText, plainParams, paramLabel, paramText, openSetFromBar, fieldFill, clampField, bumpField, commitFieldNum, stepField, canFieldDec, canFieldInc, editingField, scrubStart, scrubMove, scrubCancel, scrubEnd };
+    return { fieldStep, fieldMin, fieldMax, fieldNum, decimalsOf, fieldText, plainParams, fieldLabelText, paramLabel, paramText, openSetFromBar, fieldFill, clampField, bumpField, commitFieldNum, stepField, canFieldDec, canFieldInc, editingField, scrubStart, scrubMove, scrubCancel, scrubEnd };
 }

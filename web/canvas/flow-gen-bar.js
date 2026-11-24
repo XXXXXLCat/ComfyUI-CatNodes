@@ -45,7 +45,7 @@ export function genBarHtml({ barClass, wfTip, sendClass }) {
                   <div class="z-10 flex items-stretch w-3"></div>
                   <!-- WidgetLayoutField -->
                   <div class="col-span-2 grid min-w-0 grid-cols-subgrid justify-between gap-2">
-                    <div class="content-center-safe truncate" v-tip="f.label || fieldId(f)">{{ f.label || fieldId(f) }}</div>
+                    <div class="content-center-safe truncate" v-tip="fieldLabelText(f.label, fieldId(f))">{{ fieldLabelText(f.label, fieldId(f)) }}</div>
                     <div class="relative min-w-0 flex-1">
                       <div class="min-w-0 cursor-default rounded-lg transition-all"
                            :class="f.type !== 'switch' && 'focus-within:ring focus-within:ring-ring'"
@@ -105,7 +105,7 @@ export function genBarHtml({ barClass, wfTip, sendClass }) {
                              class="flex w-full min-w-0 items-center overflow-hidden rounded-lg bg-secondary text-foreground h-7.5 hover:bg-accent">
                           <button type="button" role="combobox"
                                   class="flex min-w-0 flex-1 cursor-pointer items-center overflow-hidden border-none bg-transparent p-0 outline-none"
-                                  v-tip="(f.label || '') + ' ' + $t('field.currentValue', { value: fieldValue(f) })"
+                                  v-tip="fieldLabelText(f.label, '') + ' ' + $t('field.currentValue', { value: fieldValue(f) })"
                                   @click.stop="toggleSel('f:' + fieldId(f), $event)">
                             <span class="min-w-[4ch] flex-1 truncate pr-1 pl-2 text-left text-xs">{{ fieldValue(f) }}</span>
                           </button>
@@ -121,7 +121,7 @@ export function genBarHtml({ barClass, wfTip, sendClass }) {
                              class="-m-1 ml-auto flex w-fit items-center gap-2 rounded-full p-1">
                           <button type="button" :data-state="fieldValue(f) ? 'checked' : 'unchecked'"
                                   class="group inline-flex h-6 w-10 shrink-0 cursor-pointer touch-manipulation items-center justify-center rounded-full border-0 bg-transparent p-0 outline-none transition-shadow focus-visible:ring-1 focus-visible:ring-ring"
-                                  v-tip="(f.label || $t('field.toggle')) + $t('core.punctColon') + (fieldValue(f) ? $t('core.on') : $t('core.off'))"
+                                  v-tip="fieldLabelText(f.label, $t('field.toggle')) + $t('core.punctColon') + (fieldValue(f) ? $t('core.on') : $t('core.off'))"
                                   @click.stop="setFieldValue(f, !fieldValue(f))">
                             <span class="pointer-events-none inline-flex h-5 w-9 items-center rounded-full border border-transparent bg-border px-0.5 transition-colors group-data-[state=checked]:bg-primary">
                               <span :data-state="fieldValue(f) ? 'checked' : 'unchecked'"
@@ -134,7 +134,7 @@ export function genBarHtml({ barClass, wfTip, sendClass }) {
                         <label v-else class="relative flex w-full min-w-0 items-center">
                           <input class="flex w-full min-w-0 appearance-none rounded-lg border-none bg-secondary px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                                  :value="fieldValue(f)" spellcheck="false" autocomplete="off"
-                                 v-tip="f.label || ''"
+                                 v-tip="fieldLabelText(f.label, '')"
                                  @change="setFieldValue(f, $event.target.value)"
                                  @pointerdown.stop @mousedown.stop @dblclick.stop />
                         </label>
