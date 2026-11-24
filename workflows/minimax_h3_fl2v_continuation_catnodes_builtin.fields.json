@@ -16,6 +16,13 @@
       "default": false
     },
     {
+      "nodeId": "171",
+      "key": "thinking",
+      "type": "switch",
+      "label": "field.thinking",
+      "advanced": true
+    },
+    {
       "nodeId": "155",
       "key": "value",
       "type": "number",
