@@ -459,48 +459,53 @@ def _is_builtin_only(name: str) -> bool:
             and os.path.isfile(_builtin_workflow_path(name)))
 
 
-# Workflow categories shown in the API dialog and used by the generate nodes
-# to filter their API selector. Keep this list in sync with the node tabs.
+# Top-level workflow categories (7 "big" groups). Stored in `category` and
+# shown in the API dialog's list + category picker. Generated nodes use the
+# finer `subCategory` (below) for their mode tabs and input rules.
 WORKFLOW_CATEGORIES = [
-    "cat.textToImage",
-    "cat.imageEdit",
-    "cat.imageUpscale",
-    "cat.removeBackground",
-    "cat.refToVideo",
-    "cat.textToVideo",
-    "cat.imageToVideo",
-    "cat.firstLastFrame",
-    "cat.textToMusic",
-    "cat.musicCover",
-    "cat.textToSpeech",
-    "cat.voiceClone",
-    "cat.llmChat",
-    "cat.speechToText",
-    "cat.videoToPrompt",
-    "cat.imageToPrompt",
-    "cat.videoInterpolation",
-    "cat.textToSfx",
-    "cat.videoEdit",
-    "cat.videoUpscale",
-    "cat.imageRelight",
-    "cat.multiAngle",
-    "cat.inpaint",
-    "cat.panorama",
-    "cat.outpaint",
-    "cat.removeWatermark",
-    "cat.cutout",
+    "group.image",
+    "group.imageTools",
+    "group.video",
+    "group.videoTools",
+    "group.music",
+    "group.audio",
+    "group.llm",
 ]
 
-# Renamed 2026-11-17 (twice: the original names, then a clarity pass). Old
-# fields.json / category_defaults / saved nodes may still carry ANY previous
-# name, including the intermediate ones from the first pass. Map every alias
-# straight to the FINAL name so a single lookup is enough (no chained renames).
+# Fine-grained sub-categories (27), stored in `subCategory`. These are the
+# former category values; the 4 medium generators keep using them as mode keys
+# so their mode tabs and input-rule tables need no changes.
+WORKFLOW_SUBCATEGORIES = [
+    "cat.textToImage", "cat.imageEdit", "cat.imageUpscale", "cat.removeBackground",
+    "cat.refToVideo", "cat.textToVideo", "cat.imageToVideo", "cat.firstLastFrame",
+    "cat.textToMusic", "cat.musicCover", "cat.textToSfx", "cat.textToSpeech",
+    "cat.voiceClone", "cat.llmChat", "cat.speechToText", "cat.videoToPrompt",
+    "cat.imageToPrompt", "cat.videoInterpolation", "cat.videoEdit", "cat.videoUpscale",
+    "cat.imageRelight", "cat.multiAngle", "cat.inpaint", "cat.panorama",
+    "cat.outpaint", "cat.removeWatermark", "cat.cutout",
+]
+
+# sub-category -> owning top category. Same mapping as flow-rules.js TOP_OF_MODE.
+SUBCATEGORY_TOP = {
+    **{k: "group.image" for k in ("cat.textToImage", "cat.imageEdit", "cat.inpaint", "cat.panorama", "cat.outpaint")},
+    **{k: "group.imageTools" for k in ("cat.imageUpscale", "cat.removeBackground", "cat.imageRelight", "cat.multiAngle", "cat.removeWatermark", "cat.cutout")},
+    **{k: "group.video" for k in ("cat.refToVideo", "cat.textToVideo", "cat.imageToVideo", "cat.firstLastFrame")},
+    **{k: "group.videoTools" for k in ("cat.videoInterpolation", "cat.videoEdit", "cat.videoUpscale")},
+    **{k: "group.music" for k in ("cat.textToMusic", "cat.musicCover", "cat.textToSfx")},
+    **{k: "group.audio" for k in ("cat.textToSpeech", "cat.voiceClone")},
+    **{k: "group.llm" for k in ("cat.llmChat", "cat.imageToPrompt", "cat.videoToPrompt", "cat.speechToText")},
+}
+
+# Legacy aliases: old Chinese names AND every former cat.* value map to the
+# owning TOP category, so old fields.json / saved category_defaults keys that
+# still carry a fine-grained value keep working after the 7-category migration.
 CATEGORY_RENAMES = {
-    "图片生成": "cat.textToImage", "图片编辑": "cat.imageEdit", "图片放大": "cat.imageUpscale",
-    "移除背景": "cat.removeBackground", "全能参考": "cat.refToVideo", "参考视频": "cat.refToVideo",
-    "首帧": "cat.imageToVideo", "首尾帧": "cat.firstLastFrame", "音乐设计": "cat.textToMusic",
-    "音乐翻唱": "cat.musicCover", "语音设计": "cat.textToSpeech", "TTS": "cat.textToSpeech",
-    "语音克隆": "cat.voiceClone", "LLM": "cat.llmChat", "LLM对话": "cat.llmChat",
+    "图片生成": "group.image", "图片编辑": "group.image", "图片放大": "group.imageTools",
+    "移除背景": "group.imageTools", "全能参考": "group.video", "参考视频": "group.video",
+    "首帧": "group.video", "首尾帧": "group.video", "音乐设计": "group.music",
+    "音乐翻唱": "group.music", "语音设计": "group.audio", "TTS": "group.audio",
+    "语音克隆": "group.audio", "LLM": "group.llm", "LLM对话": "group.llm",
+    **{sub: top for sub, top in SUBCATEGORY_TOP.items()},
 }
 
 
@@ -533,9 +538,24 @@ def _load_builtin_raw_fields(name: str) -> dict:
     return _read_fields_file(_builtin_fields_path(name))
 
 
+def _subcategory_of(raw: dict) -> str:
+    """Fine-grained category (27) from `subCategory`; legacy `category=cat.*`
+    values are accepted too so old sidecars keep their mode key."""
+    sub = str(raw.get("subCategory", "") or "").strip()
+    if sub in WORKFLOW_SUBCATEGORIES:
+        return sub
+    legacy = _normalize_category(raw.get("category", ""))
+    return legacy if legacy in WORKFLOW_SUBCATEGORIES else ""
+
+
 def _category_of(raw: dict) -> str:
+    """Top category (7) from `category`; derives it from a valid subCategory or
+    from a legacy `category=cat.*` value when the top field is absent/invalid."""
     category = _normalize_category(raw.get("category", ""))
-    return category if category in WORKFLOW_CATEGORIES else ""
+    if category in WORKFLOW_CATEGORIES:
+        return category
+    sub = _subcategory_of(raw)
+    return SUBCATEGORY_TOP.get(sub, "")
 
 
 def _load_category(name: str) -> str:
@@ -545,6 +565,19 @@ def _load_category(name: str) -> str:
 
 def _load_builtin_category(name: str) -> str:
     return _category_of(_load_builtin_raw_fields(name))
+
+
+def _load_subcategory(name: str) -> str:
+    return _subcategory_of(_load_raw_fields(name))
+
+
+def _load_builtin_subcategory(name: str) -> str:
+    return _subcategory_of(_load_builtin_raw_fields(name))
+
+
+def _workflow_subcategory(name: str) -> str:
+    """Sub-category for read paths: user first, shipped sidecar as fallback."""
+    return _load_subcategory(name) or _load_builtin_subcategory(name)
 
 
 def _workflow_category(name: str) -> str:
@@ -1317,6 +1350,7 @@ async def api_builtin_manage(request: web.Request) -> web.Response:
             "id": name,
             "name": data.get("name") or data.get("_name") or name,
             "category": category,
+            "subCategory": _subcategory_of(raw),
             "hidden": name in hidden,
             "shadowed": shadowed,
             "is_default": bool(category) and effective.get(category) == name,
@@ -1333,6 +1367,7 @@ async def api_builtin_manage(request: web.Request) -> web.Response:
     return web.json_response({
         "workflows": items,
         "categories": WORKFLOW_CATEGORIES,
+        "subCategories": WORKFLOW_SUBCATEGORIES,
         "hidden": sorted(hidden),
     })
 
@@ -1460,7 +1495,9 @@ async def api_get_fields(request: web.Request) -> web.Response:
     return web.json_response({
         "fields": _public_fields(name, workflow),
         "category": _workflow_category(name),
+        "subCategory": _workflow_subcategory(name),
         "categories": WORKFLOW_CATEGORIES,
+        "subCategories": WORKFLOW_SUBCATEGORIES,
         "prompt_placeholder": _has_prompt_placeholder(workflow),
     })
 
@@ -1490,6 +1527,10 @@ async def api_save_category(request: web.Request) -> web.Response:
             payload_out["fields"] = _clean_fields(fields, _read_workflow_data(name) or {})
         if category:
             payload_out["category"] = category
+        # Preserve a fine subCategory if a legacy user sidecar carried one.
+        inherited_sub = _subcategory_of(raw)
+        if inherited_sub:
+            payload_out["subCategory"] = inherited_sub
         with open(_fields_path(name), "w", encoding="utf-8") as handle:
             json.dump(payload_out, handle, ensure_ascii=False, indent=2)
     return web.json_response({"category": category})
@@ -1560,6 +1601,7 @@ async def list_workflows(request: web.Request) -> web.Response:
                 "nodes": len(_api_nodes(data)),
                 "updated": int(os.path.getmtime(path)),
                 "category": _load_category(name),
+                "subCategory": _load_subcategory(name),
                 "builtin": False,
                 "builtin_default": False,
             })
@@ -1587,6 +1629,7 @@ async def list_workflows(request: web.Request) -> web.Response:
                 "nodes": len(_api_nodes(data)),
                 "updated": int(os.path.getmtime(path)),
                 "category": _category_of(raw),
+                "subCategory": _subcategory_of(raw),
                 "builtin": True,
                 "builtin_default": raw.get("is_default") is True,
             })
@@ -1595,39 +1638,40 @@ async def list_workflows(request: web.Request) -> web.Response:
     workflows.sort(key=lambda item: (
         ranked.get(item["id"], len(ranked)), 1 if item["builtin"] else 0, item["id"],
     ))
-    # One default per category. User pins from api_settings.json win; then a
-    # bundled template that declares is_default; then the category's first
-    # workflow in saved drag order. Built-ins only supply an initial default.
+    # Default workflow is per "effective category": built-ins are keyed by their
+    # fine subCategory (the 4 generators pick a default per mode tab), while user
+    # workflows are keyed by the top category (the universal node picks per big
+    # group). User pins from api_settings.json win, then a bundled is_default,
+    # then the category's first workflow in saved drag order.
     pinned = _load_api_settings().get("category_defaults")
     pinned = pinned if isinstance(pinned, dict) else {}
-    # category_defaults was keyed by the old names; normalise so pins survive
-    # the rename without touching the user's settings file.
+    # Old pins may be keyed by a legacy fine name; normalise to top OR keep as-is.
     pinned = {_normalize_category(key): value for key, value in pinned.items()}
+    eff_key = lambda w: (w.get("subCategory") or "") if w.get("builtin") else (w.get("category") or "")
     first_of: dict[str, str] = {}
     builtin_default_of: dict[str, str] = {}
     for item in workflows:
-        category = item.get("category") or ""
-        if not category:
+        key = eff_key(item)
+        if not key:
             continue
-        if category not in first_of:
-            first_of[category] = item["id"]
-        if item.get("builtin") and item.get("builtin_default") and category not in builtin_default_of:
-            builtin_default_of[category] = item["id"]
+        if key not in first_of:
+            first_of[key] = item["id"]
+        if item.get("builtin") and item.get("builtin_default") and key not in builtin_default_of:
+            builtin_default_of[key] = item["id"]
     effective: dict[str, str] = {}
-    for category, fallback in first_of.items():
-        pool = {
-            entry["id"] for entry in workflows if (entry.get("category") or "") == category
-        }
-        chosen = pinned.get(category)
+    for key, fallback in first_of.items():
+        pool = {entry["id"] for entry in workflows if eff_key(entry) == key}
+        chosen = pinned.get(key)
         if chosen not in pool:
-            chosen = builtin_default_of.get(category) or fallback
-        effective[category] = chosen
+            chosen = builtin_default_of.get(key) or fallback
+        effective[key] = chosen
     for item in workflows:
-        category = item.get("category") or ""
-        item["is_default"] = bool(category) and effective.get(category) == item["id"]
-        item["default_pinned"] = bool(category) and pinned.get(category) == item["id"]
+        key = eff_key(item)
+        item["is_default"] = bool(key) and effective.get(key) == item["id"]
+        item["default_pinned"] = bool(key) and pinned.get(key) == item["id"]
     return web.json_response({
-        "workflows": workflows, "defaults": effective, "categories": WORKFLOW_CATEGORIES,
+        "workflows": workflows, "defaults": effective,
+        "categories": WORKFLOW_CATEGORIES, "subCategories": WORKFLOW_SUBCATEGORIES,
     })
 
 
