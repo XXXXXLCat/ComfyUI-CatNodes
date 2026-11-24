@@ -128,9 +128,10 @@ import {
     const key = NS.i18n?.normalizeCategory ? NS.i18n.normalizeCategory(title) : String(title || "");
     if (!key) return "";
     if (key === "api.uncategorized") return CAT_ICON_FILE;
-    /* TOP_GROUPS / TOP_ICONS 定义在下方，但 catIcon 只在渲染时调用，此时已初始化。 */
+    /* 2026-11-24: 左栏标题就是大类 key（group.*），直接匹配 name 取图标。
+       兼容旧细分类：若仍传入 cat.*，用 cats 反查所属大类。 */
     for (const top of TOP_GROUPS) {
-      if (top.cats.includes(key)) return TOP_ICONS[top.icon] || "";
+      if (key === top.name || top.cats.includes(key)) return TOP_ICONS[top.icon] || "";
     }
     return "";
   }
@@ -871,83 +872,29 @@ import {
       host.appendChild(group);
     };
 
-    /* ---- 2026-11-21 二级结构渲染 ----
-       一级（固定、不可折叠）= 视觉分组标题；其下是该一级的二级分类（保持原有
-       可折叠 disclosure）。未分类是特殊 bucket，始终单独排在最前。
-       一级只做展示归类：二级 title 仍是存储值，拖拽/默认/折叠逻辑完全不变。 */
+    /* ---- 2026-11-24 单层大类结构 ----
+       category 现在是 7 个大类（group.*），二级细分移到 subCategory。左栏只
+       渲染一层大类，工作流直接挂在其大类下（renderCategory 的 'top' 样式）。
+       未分类仍是特殊 bucket，排最前。 */
     const seen = new Set();
 
-    /* 未分类 bucket 排最前，按用户要求提升为一级分类（灰小字 + 图标 + chevron，
-       与其它一级分组同级；独立折叠状态，默认折叠）。 */
     if (S.categories.includes("api.uncategorized") || groups.has("api.uncategorized")) {
       renderCategory("api.uncategorized", D.list, "top");
       seen.add("api.uncategorized");
     }
 
-    /* 一级分组：可折叠头（图标 + 名称 + chevron）+ 其下的二级分类。
-       一级状态独立于二级，默认全部折叠（用户 2026-11-21 要求）；折叠只隐藏
-       children 容器，不重建 DOM，避免打断正在进行的拖拽。
-       一级文字 = 图1「基础」灰小字；二级文字 = 图2「图像」白色 14px。 */
+    /* 7 个大类，顺序取 TOP_GROUPS（后端 categories 顺序一致）。每个大类一个
+       可折叠 disclosure，其 children 直接是该大类的所有工作流行。 */
     for (const top of TOP_GROUPS) {
-      const section = el("div", "flex flex-col gap-2");
-      const topHead = el("div", "flex h-10 w-full cursor-pointer items-center justify-between gap-2 px-4");
-      const headLeft = el("div", "flex min-w-0 items-center gap-2");
-      /* 图标跟随文字颜色：一级是灰字，图标也用 text-muted-foreground。 */
-      const topIcon = el("span", "flex size-4 shrink-0 items-center justify-center text-muted-foreground");
-      topIcon.innerHTML = TOP_ICONS[top.icon] || "";
-      headLeft.appendChild(topIcon);
-      /* 一级文字按用户给的图1真值（节点库「基础」分组小标题）：
-         text-xs font-bold text-muted-foreground uppercase（12px/700/灰/大写）。 */
-      headLeft.appendChild(el("h3", "text-xs font-bold text-muted-foreground uppercase", t(top.name)));
-      topHead.appendChild(headLeft);
-      const topCaret = el("span", "flex size-5 shrink-0 items-center justify-center text-muted-foreground");
-      topCaret.innerHTML = CHEVRON_SVG;
-      topHead.appendChild(topCaret);
-      topHead.setAttribute("role", "button");
-      topHead.setAttribute("tabindex", "0");
-      section.appendChild(topHead);
-
-      const children = el("div", "flex flex-col gap-2");
-      let hasChild = false;
-      for (const c of top.cats) {
-        /* 只渲染后端声明的分类，或工作流实际携带的分类（stray 分类在下方兜底）。 */
-        if (!S.categories.includes(c) && !groups.has(c)) continue;
-        renderCategory(c, children);
-        seen.add(c);
-        hasChild = true;
-      }
-      if (!hasChild) continue;
-
-      /* Disclosure state for the first level. apply() is the single place that
-         syncs caret rotation, children visibility, a11y and tooltip together. */
-      const applyTop = () => {
-        const open = expandedTopGroups.has(top.name);
-        children.style.display = open ? "flex" : "none";
-        topCaret.firstElementChild.style.transform = open ? "rotate(0deg)" : "rotate(-90deg)";
-        topHead.setAttribute("aria-expanded", open ? "true" : "false");
-        bindTip(topHead, () => (open ? t("api.collapseGroup") : t("api.expandGroup")) + " · " + t(top.name));
-      };
-      const toggleTop = () => {
-        if (expandedTopGroups.has(top.name)) expandedTopGroups.delete(top.name);
-        else expandedTopGroups.add(top.name);
-        applyTop();
-      };
-      topHead.addEventListener("click", toggleTop);
-      topHead.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggleTop(); }
-      });
-      applyTop();
-      section.appendChild(children);
-      D.list.appendChild(section);
+      if (!groups.has(top.name) && !S.categories.includes(top.name)) continue;
+      renderCategory(top.name, D.list, "top");
+      seen.add(top.name);
     }
 
-    /* 兜底：后端新增但尚未归入任何一级的分类，或工作流带来的 stray 分类，
-       追加到末尾，确保没有工作流因展示分组而消失。 */
-    for (const c of S.categories) {
-      if (!seen.has(c) && c !== "api.uncategorized") { renderCategory(c, D.list); seen.add(c); }
-    }
+    /* 兜底：工作流带来的、不属于任何已知大类的 stray category，追加到末尾，
+       确保没有工作流因展示分组而消失。 */
     for (const c of groups.keys()) {
-      if (!seen.has(c) && c !== "api.uncategorized") { renderCategory(c, D.list); seen.add(c); }
+      if (!seen.has(c) && c !== "api.uncategorized") { renderCategory(c, D.list, "top"); seen.add(c); }
     }
   }
 
