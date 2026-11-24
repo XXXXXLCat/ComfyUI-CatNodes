@@ -43,6 +43,67 @@ function viewUrl(asset) {
   } catch (error) { return url; }
 }
 
+/* Gallery assets carry a signed /xcat/gallery/file URL whose HMAC is minted
+   with a per-process secret. A ComfyUI restart invalidates it, but the canvas
+   persists the URL verbatim — after a reload the node shows the filename with
+   no image. Re-mint just that one URL from its own source/path (no manifest
+   scan, no thumbnails). The backend re-resolves it under the caller's identity,
+   so multi-user isolation is preserved. Non-gallery URLs (bare /view, blob:,
+   external) are left untouched. */
+const GALLERY_FILE_PATH = "/xcat/gallery/file";
+function isGalleryUrl(url) {
+  return typeof url === "string" && url.includes(GALLERY_FILE_PATH + "?");
+}
+async function renewGalleryUrl(url) {
+  if (!isGalleryUrl(url)) return null;
+  let source, path;
+  try {
+    const query = url.slice(url.indexOf(GALLERY_FILE_PATH + "?") + GALLERY_FILE_PATH.length + 1);
+    const params = new URLSearchParams(query);
+    source = params.get("source") || "output";
+    path = params.get("path") || "";
+  } catch (error) { return null; }
+  if (!path) return null;
+  try {
+    /* Only source+path are sent. The backend derives the owner from the
+       authenticated request identity — an expired token cannot vouch for a
+       `u` param, so echoing it here would be a cross-account re-sign vector. */
+    const q = new URLSearchParams({ source, path });
+    const api = API();
+    const res = await api.fetchApi("/xcat/gallery/renew?" + q.toString());
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.url) return data.url;
+    }
+  } catch (error) { /* offline / old backend: keep the existing URL */ }
+  return null;
+}
+/* Renew every gallery-backed asset on a loaded document. Returns a list of
+   { nodeId, key, url } updates (key is "asset" or "result") so the caller can
+   apply them through Vue Flow's reactive node data — mutating the plain doc
+   objects directly would not repaint. One request per distinct URL. */
+async function renewDocGalleryUrls(doc) {
+  const seen = new Map();
+  const targets = [];
+  for (const node of (doc?.nodes || [])) {
+    for (const key of ["asset", "result"]) {
+      const asset = node?.data?.[key];
+      if (!isGalleryUrl(asset?.url)) continue;
+      if (!seen.has(asset.url)) seen.set(asset.url, renewGalleryUrl(asset.url));
+      targets.push({ nodeId: String(node.id), key, old: asset.url });
+    }
+  }
+  if (!seen.size) return [];
+  const resolved = await Promise.all([...seen.entries()].map(async ([url, promise]) => [url, await promise]));
+  const fresh = new Map(resolved);
+  const updates = [];
+  for (const { nodeId, key, old } of targets) {
+    const url = fresh.get(old);
+    if (url && url !== old) updates.push({ nodeId, key, url });
+  }
+  return updates;
+}
+
 /* Resolve a possibly-mislabelled asset to a working /view URL via the backend,
    which searches input/output for the real file. Falls back to the local
    viewUrl() if the backend is unreachable (e.g. not yet restarted). */
@@ -218,7 +279,8 @@ async function updatePrompt(id, title, text) {
 }
 
   return {
-    viewUrl, resolveMediaUrl, refreshViewUrl, backend,
+    viewUrl, resolveMediaUrl, refreshViewUrl, renewGalleryUrl, renewDocGalleryUrls,
+    isGalleryUrl, backend,
     addToFavorites, listPrompts, addPrompt, removePrompt, updatePrompt,
   };
 }

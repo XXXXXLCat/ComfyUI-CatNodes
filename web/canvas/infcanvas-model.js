@@ -2,7 +2,7 @@
    and every document/tab command. Extracted from infcanvas-core.js. Host
    helpers (toast/dialogs/storage/state/flow/backend) are injected explicitly;
    all symbols are returned so core can rebind them without changing callers. */
-export function createModel({ NS, tr, API, refreshViewUrl, backend, uid, readTextFile, toast, confirmDialog, promptDialog, state, TABS_KEY, DRAFT_KEY, META_KEY, storageRead, storageWrite, storageRemove, flow, activeDoc, autoSaveEnabled, autoSaveDelay }) {
+export function createModel({ NS, tr, API, refreshViewUrl, renewDocGalleryUrls, backend, uid, readTextFile, toast, confirmDialog, promptDialog, state, TABS_KEY, DRAFT_KEY, META_KEY, storageRead, storageWrite, storageRemove, flow, activeDoc, autoSaveEnabled, autoSaveDelay }) {
 const SPECS = [
   { type: "infcanvas/media_image", role: "media", kind: "image", title: "core.image", desc: "core.imageAssetGenerateImageComfyui", icon: "pi pi-image", workflow: "image", size: [480, 270] },
   { type: "infcanvas/media_video", role: "media", kind: "video", title: "field.video", desc: "core.videoAssetGenerateVideoComfyui", icon: "pi pi-video", workflow: "video", size: [480, 270] },
@@ -469,6 +469,28 @@ function switchDoc(id) {
   persistTabs();
   NS.ui?.renderTabs();
   NS.ui?.refreshPanels();
+  /* Gallery asset URLs are signed with a per-process key, so assets restored
+     from disk after a ComfyUI restart carry an expired signature and render
+     blank. Re-mint them in the background. load() assigned state.nodes.value
+     straight from doc.nodes (same object graph), and Vue's ref wraps it
+     reactively, so writing asset.url in place repaints the node. This is a
+     repair, not a user edit: no markDirty / autosave is triggered. */
+  if (renewDocGalleryUrls) {
+    renewDocGalleryUrls(doc).then((updates) => {
+      if (!updates.length || !state.docs.includes(doc)) return;
+      for (const { nodeId, key, url } of updates) {
+        /* Live Flow node (reactive) — writing here repaints the media element. */
+        const live = flow()?.findNode?.(nodeId);
+        if (live?.data?.[key]) live.data[key].url = url;
+        /* Doc object is the same graph load() handed to Flow, but update it
+           explicitly so a later save serialises the fresh signature too. */
+        const src = doc.nodes?.find((n) => String(n.id) === nodeId);
+        if (src?.data?.[key]) src.data[key].url = url;
+      }
+    }).catch((error) => {
+      console.warn("[InfCanvas] gallery URL renew failed", error);
+    });
+  }
 }
 
 async function saveActive(askName = false, docOverride = null, silent = false, expectedGen = null) {

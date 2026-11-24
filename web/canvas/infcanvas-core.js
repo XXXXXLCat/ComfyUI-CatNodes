@@ -32,6 +32,7 @@ import { createKeys } from "./infcanvas-keys.js";
   const viewUrl = _backend.viewUrl;
   const resolveMediaUrl = _backend.resolveMediaUrl;
   const refreshViewUrl = _backend.refreshViewUrl;
+  const renewDocGalleryUrls = _backend.renewDocGalleryUrls;
   const backend = _backend.backend;
   const addToFavorites = _backend.addToFavorites;
   const listPrompts = _backend.listPrompts;
@@ -220,7 +221,7 @@ import { createKeys } from "./infcanvas-keys.js";
      and document commands. Injected with host helpers; all symbols rebound
      below so the remaining core code and NS.api keep their call sites. */
   const _model = createModel({
-    NS, tr, API, refreshViewUrl, backend, uid, readTextFile, toast,
+    NS, tr, API, refreshViewUrl, renewDocGalleryUrls, backend, uid, readTextFile, toast,
     confirmDialog, promptDialog, state, TABS_KEY, DRAFT_KEY, META_KEY,
     storageRead, storageWrite, storageRemove, flow, activeDoc,
     autoSaveEnabled, autoSaveDelay,

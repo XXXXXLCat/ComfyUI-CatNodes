@@ -25,6 +25,12 @@ renders them with the native media-asset layout:
     is served as a normal range-capable response, which is what the audio
     player, the lightbox and downloads need.
 
+``GET /xcat/gallery/renew?source=&path=[&u=]``
+    Re-mints a signed file URL for one gallery asset whose token has expired
+    (e.g. after a ComfyUI restart). Resolves the file with the caller's identity
+    — so multi-user isolation still applies — and returns ``{"url": ...}``.
+    No directory walk, no thumbnail work: one HMAC on one path.
+
 ``GET /xcat/gallery/prompt?source=&path=&token=``
     Reads the prompt/parameter fields ComfyUI embeds in generated images and
     audio/video containers. Returns ``{found, models, prompts, params, count}``
@@ -152,6 +158,7 @@ MAX_ZIP_BYTES = 2 * 1024 * 1024 * 1024
 
 LIST_ROUTE = "/xcat/gallery"
 FILE_ROUTE = "/xcat/gallery/file"
+RENEW_ROUTE = "/xcat/gallery/renew"
 PROMPT_ROUTE = "/xcat/gallery/prompt"
 ZIP_ROUTE = "/xcat/gallery/zip"
 DELETE_ROUTE = "/xcat/gallery/delete"
@@ -1108,6 +1115,36 @@ async def _h_list(request: web.Request) -> web.Response:
         },
         headers={"Cache-Control": "no-store"},
     )
+
+
+async def _h_renew(request: web.Request) -> web.Response:
+    """Re-mint a signed URL for one asset whose token expired on restart.
+
+    Canvases persist gallery asset URLs verbatim. Those URLs carry an HMAC
+    signed with a per-process secret, so a ComfyUI restart invalidates every
+    one of them — the node then shows a filename with no content. Rather than
+    persist a long-lived key or re-scan the whole manifest, the canvas asks
+    for a fresh signature for just the few assets it actually displays.
+
+    Authorisation reuses _resolve(): the file must exist under the caller's
+    own tree, so a forged `source`/`path` cannot mint a URL to another
+    account's files. The owner is NEVER taken from the query — the expired
+    token cannot vouch for a `u` param, so trusting it would let a caller
+    re-mint another account's 收藏 URL. We always use the request identity;
+    the media-source `u` a canvas stored is the signed-in user anyway.
+    No directory walk and no thumbnail generation — one lookup plus one HMAC.
+    """
+    user = _request_user(request)
+    if _multi_user_enabled() and not user:
+        return web.json_response({"error": "unknown user"}, status=401)
+    source = str(request.query.get("source", "output") or "output")
+    path = str(request.query.get("path", "") or "")
+    # Owner comes only from the authenticated identity, never from the query.
+    owner = user or ""
+    target = _resolve(source, path, user, require_user=True, owner=owner)
+    if target is None:
+        return web.Response(status=404)
+    return web.json_response({"url": _file_url(source, path, False, owner)})
 
 
 async def _h_file(request: web.Request) -> web.Response:
@@ -2085,6 +2122,7 @@ def _attach(server_instance) -> None:
         for prefix in ("", "/api"):
             app.router.add_route("GET", prefix + LIST_ROUTE, _h_list)
             app.router.add_route("GET", prefix + FILE_ROUTE, _h_file)
+            app.router.add_route("GET", prefix + RENEW_ROUTE, _h_renew)
             app.router.add_route("GET", prefix + PROMPT_ROUTE, _h_prompt)
             app.router.add_route("POST", prefix + ZIP_ROUTE, _h_zip)
             app.router.add_route("POST", prefix + DELETE_ROUTE, _h_delete)
