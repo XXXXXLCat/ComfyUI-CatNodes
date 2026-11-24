@@ -368,7 +368,7 @@
   },
   "43": {
     "inputs": {
-      "value": "Replace the vintage yellow taxi in <Picture 1> with a pastel pink ice-cream truck with a scalloped awning and a glowing service window, sitting in the same side profile at the curb."
+      "value": ""
     },
     "class_type": "PrimitiveStringMultiline",
     "_meta": {

@@ -255,7 +255,7 @@
   },
   "908": {
     "inputs": {
-      "value": "Replace costumes for the character"
+      "value": ""
     },
     "class_type": "PrimitiveStringMultiline",
     "_meta": {
