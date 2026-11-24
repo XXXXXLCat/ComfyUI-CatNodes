@@ -592,7 +592,7 @@
   }
 
   R.splitScenes = (ctx) => {
-    const S = { scenes: [], selected: new Set(), ready: false };
+    const S = { scenes: [], selected: new Set(), ready: false, threshold: 0.35 };
     let ui = null;
 
     const applyText = () => t("media.sceneExportSelected", { n: S.selected.size });
@@ -639,16 +639,34 @@
     };
 
     const detect = async () => {
+      // Clear any previous result before a (re)detection so changing the
+      // sensitivity never leaves stale cards/selection behind.
+      S.scenes = [];
+      S.selected.clear();
+      S.ready = false;
+      ui.setApplyEnabled(false);
+      const status = ui.body.querySelector(".ict-scene-status");
+      const grid = ui.body.querySelector(".ict-scene-grid");
+      if (grid) { grid.hidden = true; grid.innerHTML = ""; }
+      if (status) { status.hidden = false; status.textContent = t("media.sceneDetecting"); }
+
+      // Read the current sensitivity from the slider + number pair.
+      const slider = ui.body.querySelector(".ict-scene-threshold");
+      const number = ui.body.querySelector(".ict-scene-number");
+      let value = slider ? Number(slider.value) : S.threshold;
+      if (!Number.isFinite(value)) value = S.threshold;
+      S.threshold = clamp(value, 0.05, 1);
+      if (slider) slider.value = String(S.threshold);
+      if (number) number.value = S.threshold.toFixed(2);
+
       const ok = await getProbes().video.check();
       ui.setApiReady(ok); ui.setWarn(ok);
       if (!ok) { ui.setStatus(t("media.backendApiNotReadyRestart"), true); return; }
       try {
         const data = await T().request(T().API_VIDEO,
-          { ref: refOf(ctx), action: "detectScenes", threshold: 0.35 }, ui.signal);
+          { ref: refOf(ctx), action: "detectScenes", threshold: S.threshold }, ui.signal);
         S.scenes = Array.isArray(data.scenes) ? data.scenes : [];
         S.scenes.forEach((_, i) => S.selected.add(i));
-        const status = ui.body.querySelector(".ict-scene-status");
-        const grid = ui.body.querySelector(".ict-scene-grid");
         if (!S.scenes.length) {
           if (status) { status.hidden = false; status.textContent = t("media.sceneNoScenes"); }
           ui.setApplyEnabled(false);
@@ -683,9 +701,31 @@
       build(body, modalUi) {
         ui = modalUi;
         body.innerHTML =
+          '<p class="ict-label">' + t("media.sceneSensitivity") + '</p>' +
+          '<div class="ict-slider-field" style="margin-bottom:8px">' +
+            '<input class="ict-slider-range ict-scene-threshold" type="range" min="0.05" max="1" step="0.05" value="0.35" aria-label="' + t("media.sceneSensitivity") + '" />' +
+            '<input class="ict-input ict-scene-number" type="number" min="0.05" max="1" step="0.05" value="0.35" aria-label="' + t("media.sceneSensitivity") + '" />' +
+          '</div>' +
+          '<p class="ict-hint" style="margin:0 0 10px">' + t("media.sceneSensitivityHint") + '</p>' +
+          '<button class="ict-btn ict-scene-redetect" type="button" style="margin-bottom:14px">' + t("media.sceneRedetect") + '</button>' +
           '<p class="ict-scene-status">' + t("media.sceneDetecting") + '</p>' +
           '<div class="ict-scene-count"></div>' +
           '<div class="ict-scene-grid" hidden></div>';
+        const slider = body.querySelector(".ict-scene-threshold");
+        const number = body.querySelector(".ict-scene-number");
+        const redetect = body.querySelector(".ict-scene-redetect");
+        const syncPair = () => {
+          const v = clamp(Number(slider.value) || 0.35, 0.05, 1);
+          slider.value = String(v); number.value = v.toFixed(2);
+        };
+        slider.addEventListener("input", syncPair);
+        number.addEventListener("change", () => {
+          const raw = Number(number.value);
+          const v = Number.isFinite(raw) ? clamp(raw, 0.05, 1) : 0.35;
+          slider.value = String(v); number.value = v.toFixed(2);
+        });
+        number.addEventListener("focus", function () { this.select(); });
+        redetect.addEventListener("click", () => detect());
         detect();
       },
       onApply: () => {
