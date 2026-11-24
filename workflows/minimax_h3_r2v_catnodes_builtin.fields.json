@@ -78,10 +78,10 @@
       "key": "ref_image_size",
       "type": "select",
       "label": "field.refImageSize",
-      "advanced": true,
+      "advanced": false,
       "options": [
         "match",
-        "resize"
+        "max"
       ]
     },
     {
