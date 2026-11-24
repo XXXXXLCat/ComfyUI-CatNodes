@@ -162,6 +162,7 @@
       ]
     }
   ],
-  "category": "cat.textToImage",
+  "category": "group.image",
+  "subCategory": "cat.textToImage",
   "is_default": true
 }

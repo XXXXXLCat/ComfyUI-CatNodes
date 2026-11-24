@@ -135,6 +135,7 @@
       ]
     }
   ],
-  "category": "cat.textToSfx",
+  "category": "group.music",
+  "subCategory": "cat.textToSfx",
   "is_default": true
 }

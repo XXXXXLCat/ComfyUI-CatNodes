@@ -183,6 +183,7 @@
       ]
     }
   ],
-  "category": "cat.imageEdit",
+  "category": "group.image",
+  "subCategory": "cat.imageEdit",
   "is_default": false
 }

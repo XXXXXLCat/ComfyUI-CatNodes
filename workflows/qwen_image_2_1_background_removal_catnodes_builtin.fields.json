@@ -168,6 +168,7 @@
       ]
     }
   ],
-  "category": "cat.cutout",
+  "category": "group.imageTools",
+  "subCategory": "cat.cutout",
   "is_default": false
 }

@@ -36,6 +36,7 @@
       "default": 42
     }
   ],
-  "category": "cat.llmChat",
+  "category": "group.llm",
+  "subCategory": "cat.llmChat",
   "is_default": false
 }

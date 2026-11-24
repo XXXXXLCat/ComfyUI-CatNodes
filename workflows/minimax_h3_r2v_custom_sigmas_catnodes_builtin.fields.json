@@ -164,6 +164,7 @@
       "advanced": true
     }
   ],
-  "category": "cat.refToVideo",
+  "category": "group.video",
+  "subCategory": "cat.refToVideo",
   "is_default": false
 }

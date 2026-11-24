@@ -12,6 +12,7 @@
       ]
     }
   ],
-  "category": "cat.removeBackground",
+  "category": "group.imageTools",
+  "subCategory": "cat.removeBackground",
   "is_default": true
 }

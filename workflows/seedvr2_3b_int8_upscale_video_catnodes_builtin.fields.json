@@ -170,6 +170,7 @@
       ]
     }
   ],
-  "category": "cat.videoUpscale",
+  "category": "group.videoTools",
+  "subCategory": "cat.videoUpscale",
   "is_default": false
 }

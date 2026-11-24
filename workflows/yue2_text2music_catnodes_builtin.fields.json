@@ -146,6 +146,7 @@
       ]
     }
   ],
-  "category": "cat.textToMusic",
+  "category": "group.music",
+  "subCategory": "cat.textToMusic",
   "is_default": true
 }

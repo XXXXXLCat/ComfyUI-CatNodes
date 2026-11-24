@@ -184,6 +184,7 @@
       ]
     }
   ],
-  "category": "cat.textToVideo",
+  "category": "group.video",
+  "subCategory": "cat.textToVideo",
   "is_default": false
 }

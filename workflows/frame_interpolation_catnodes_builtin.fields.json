@@ -33,6 +33,7 @@
       "advanced": false
     }
   ],
-  "category": "cat.videoInterpolation",
+  "category": "group.videoTools",
+  "subCategory": "cat.videoInterpolation",
   "is_default": false
 }

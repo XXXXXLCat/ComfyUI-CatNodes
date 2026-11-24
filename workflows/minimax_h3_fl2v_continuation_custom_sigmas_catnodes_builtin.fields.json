@@ -161,6 +161,7 @@
       "advanced": true
     }
   ],
-  "category": "cat.firstLastFrame",
+  "category": "group.video",
+  "subCategory": "cat.firstLastFrame",
   "is_default": false
 }

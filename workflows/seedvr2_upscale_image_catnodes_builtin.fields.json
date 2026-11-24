@@ -114,6 +114,7 @@
       ]
     }
   ],
-  "category": "cat.imageUpscale",
+  "category": "group.imageTools",
+  "subCategory": "cat.imageUpscale",
   "is_default": true
 }

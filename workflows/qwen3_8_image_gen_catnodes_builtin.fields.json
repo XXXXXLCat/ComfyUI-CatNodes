@@ -36,6 +36,7 @@
       "default": 42
     }
   ],
-  "category": "cat.imageToPrompt",
+  "category": "group.llm",
+  "subCategory": "cat.imageToPrompt",
   "is_default": false
 }
