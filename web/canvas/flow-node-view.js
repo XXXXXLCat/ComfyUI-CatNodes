@@ -762,9 +762,16 @@ const IcNode = {
     };
     /* The field's own label wins (a renamed field must keep working); only
        an unlabelled field falls back to the built-in slot name. */
-    const textAreaLabel = (field, i) => String(field?.label || "").trim()
-      || (i === 1 && isGenAudio.value ? t(audioSlots.value.b.label)
+    const textAreaLabel = (field, i) => {
+      /* Node-surface labels may be i18n keys (field.*); translate them so a
+         bare key never leaks onto the canvas. Literal/user-authored labels
+         pass through. Inlined here because fieldLabelText is injected later
+         (useFieldControls below) and would hit a TDZ at definition time. */
+      const raw = String(field?.label || "").trim();
+      const label = raw.startsWith("field.") ? t(raw) : raw;
+      return label || (i === 1 && isGenAudio.value ? t(audioSlots.value.b.label)
         : i === 0 ? t(audioSlots.value.a.label) : "");
+    };
     /* One source of truth for the on-screen text areas. A workflow takes
        prompts either through an exposed text field bound to an area or
        through a literal placeholder in the template. With neither, drawing
