@@ -1574,7 +1574,7 @@ import { CSS_TOOLS as CSS } from "./infcanvas-style.js";
   const TOOL_SETS = {
     image: [["crop", "image.crop"], ["grid", "image.gridCrop"], ["mirror", "image.rotate"], ["adjust", "image.colorAdjust"]],
     video: [["videoCrop", "image.crop"], ["videoSpeed", "image.speed"], ["reverse", "media.reverse"], ["rotate", "image.rotate"],
-            ["extractAudio", "image.splitAudio"], ["trim", "media.trim"], ["frame", "image.captureFrame"]],
+            ["extractAudio", "image.splitAudio"], ["trim", "media.trim"], ["splitScenes", "media.sceneSplit"], ["frame", "image.captureFrame"]],
     audio: [["clip", "media.trim"], ["speed", "image.speed"]],
   };
 
@@ -1584,6 +1584,7 @@ import { CSS_TOOLS as CSS } from "./infcanvas-style.js";
     crop: "crop", grid: "layout-grid", mirror: "rotate-3d", adjust: "aperture",
     extractAudio: "audio-lines-off", trim: "scissors",
     videoCrop: "crop", videoSpeed: "gauge", reverse: "rewind", rotate: "rotate-3d",
+    splitScenes: "film",
     frame: "camera", clip: "scissors", speed: "gauge", favorite: "bookmark",
     upload: "upload", delete: "trash-2",
   };
@@ -1602,6 +1603,7 @@ import { CSS_TOOLS as CSS } from "./infcanvas-style.js";
     rotate:       "image.rotate90Clockwise18090",
     extractAudio: "image.splitAudioPullAudioTrack",
     trim:         "image.trimCutClipStartEnd",
+    splitScenes:  "media.sceneSplitHint",
     frame:        "image.captureFrameGrabFrameGiven",
     clip:         "image.trimCutClipsRemoveJoin",
     speed:        "image.speedChangePlayback01",

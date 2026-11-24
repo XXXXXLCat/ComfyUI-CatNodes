@@ -1768,7 +1768,7 @@ def _subprocess_flags() -> dict[str, int]:
     return {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0)}
 
 
-async def _run_media_cmd(cmd: list[str], timeout: int) -> str:
+async def _run_media_cmd(cmd: list[str], timeout: int, want_stderr: bool = False) -> str:
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -1784,7 +1784,10 @@ async def _run_media_cmd(cmd: list[str], timeout: int) -> str:
     if proc.returncode != 0:
         detail = (err or b"").decode("utf-8", "replace").strip().splitlines()
         raise RuntimeError(detail[-1] if detail else _err(f"FFmpeg 退出码 {proc.returncode}", f"FFmpeg exit code {proc.returncode}"))
-    return (out or b"").decode("utf-8", "replace").strip()
+    # showinfo/metadata filters report frame timestamps on stderr; the default
+    # (stdout) is preserved for every other media command.
+    stream = err if want_stderr else out
+    return (stream or b"").decode("utf-8", "replace").strip()
 
 
 async def _probe_duration(path: str) -> float | None:
@@ -2199,12 +2202,66 @@ async def process_audio(request: web.Request) -> web.Response:
     })
 
 
+async def _detect_video_scenes(src: str, ffmpeg: str, duration: float | None,
+                               threshold: float) -> tuple[list[dict], float]:
+    """Locate scene cuts with FFmpeg's scene-score filter.
+
+    `select='gt(scene,T)'` keeps only frames whose change from the previous
+    frame exceeds T; `showinfo` then prints each retained frame's `pts_time`
+    on stderr. Those timestamps are the boundaries between shots. Two-phase
+    UI: this returns boundaries only (no files, no nodes); the client renders
+    thumbnails by seeking the source video and calls `splitExport` for the
+    segments the user ticks.
+    """
+    cmd = [
+        ffmpeg, "-hide_banner", "-nostdin",
+        "-i", src,
+        "-vf", "select='gt(scene,%.3f)',showinfo" % threshold,
+        "-an", "-f", "null", "-",
+    ]
+    text = await _run_media_cmd(cmd, _VIDEO_PROCESS_TIMEOUT, want_stderr=True)
+    cuts: list[float] = []
+    for raw in re.findall(r"pts_time:([0-9]*\.?[0-9]+)", text):
+        try:
+            point = float(raw)
+        except ValueError:
+            continue
+        if not (point == point and abs(point) != float("inf")):
+            continue
+        if duration and not (0 < point < duration - 0.05):
+            continue
+        # A single hard cut often fires on two consecutive frames; collapse
+        # near-duplicate detections so we don't produce sub-second shots.
+        if cuts and point - cuts[-1] < 0.4:
+            continue
+        cuts.append(point)
+        if len(cuts) >= 63:
+            break
+    bounds = [0.0] + cuts + ([duration] if duration else [])
+    scenes: list[dict] = []
+    for i in range(len(bounds) - 1):
+        start, end = bounds[i], bounds[i + 1]
+        if end - start < 0.2:
+            continue
+        scenes.append({
+            "index": len(scenes),
+            "start": round(start, 3),
+            "end": round(end, 3),
+        })
+    if not scenes and duration:
+        scenes = [{"index": 0, "start": 0.0, "end": round(duration, 3)}]
+    return scenes, threshold
+
+
 async def process_video(request: web.Request) -> web.Response:
     """POST /api/infcanvas/video/process
-    body: {ref, action: "extractAudio"|"crop"|"speed"|"reverse"|"rotate"|"trim"|"frame",
+    body: {ref, action: "extractAudio"|"crop"|"speed"|"reverse"|"rotate"|"trim"|"frame"|
+                          "detectScenes"|"splitExport",
            start?, end?, frame?: "current"|"first"|"last", time?,
-           x?, y?, w?, h?, speed?, angle?, mode?}
+           x?, y?, w?, h?, speed?, angle?, mode?, threshold?, segments?}
     rotate: mode = "flipX"|"flipY"|"90"|"180"|"270" (angle is the legacy alias).
+    detectScenes: threshold? (0.05..1, default 0.35) -> {scenes:[{index,start,end}]}.
+    splitExport: segments?: [{start,end}] (1..64) -> one mp4 node per segment.
     """
     payload = await _read_payload(request)
     ref = payload.get("ref") or {}
@@ -2218,7 +2275,8 @@ async def process_video(request: web.Request) -> web.Response:
         return web.json_response({"error": str(exc)}, status=400)
 
     action = payload.get("action")
-    if action not in ("extractAudio", "crop", "speed", "reverse", "rotate", "trim", "frame"):
+    if action not in ("extractAudio", "crop", "speed", "reverse", "rotate", "trim", "frame",
+                      "detectScenes", "splitExport"):
         return web.json_response({"error": _err("未知操作", "Unknown operation")}, status=400)
 
     info = await _probe_video(src)
@@ -2227,6 +2285,24 @@ async def process_video(request: web.Request) -> web.Response:
     duration = (info or {}).get("duration")
 
     ffmpeg = _ffmpeg_bin("ffmpeg") or "ffmpeg"
+
+    # Scene detection is a read-only probe: return boundaries, spawn no nodes.
+    if action == "detectScenes":
+        try:
+            threshold = float(payload.get("threshold", 0.35))
+        except (TypeError, ValueError):
+            return web.json_response({"error": _err("检测灵敏度格式错误", "Invalid sensitivity")}, status=400)
+        if not (0.05 <= threshold <= 1.0) or threshold != threshold:
+            return web.json_response({"error": _err("检测灵敏度须在 0.05 至 1 之间", "Sensitivity must be between 0.05 and 1")}, status=400)
+        try:
+            scenes, threshold = await _detect_video_scenes(src, ffmpeg, duration, threshold)
+        except Exception as exc:
+            return web.json_response({"error": _err(f"分镜检测失败: {exc}", f"Scene detection failed: {exc}")}, status=500)
+        return web.json_response({
+            "ok": True, "action": "detectScenes",
+            "scenes": scenes, "threshold": threshold, "duration": duration,
+        })
+
     base = [ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin", "-y"]
     stem = os.path.splitext(filename)[0]
     made: list[dict] = []
@@ -2240,6 +2316,62 @@ async def process_video(request: web.Request) -> web.Response:
         }
         made.append(item)
         return item["path"]
+
+    # Split export is one FFmpeg command per selected segment, each becoming
+    # its own video node. Self-contained because the shared tail below runs a
+    # single command; kept here so all validation/cleanup semantics stay local.
+    if action == "splitExport":
+        raw = payload.get("segments")
+        if not isinstance(raw, list) or not (1 <= len(raw) <= 64):
+            return web.json_response({"error": _err("分镜数量须在 1 至 64 之间", "Segment count must be between 1 and 64")}, status=400)
+        segments: list[tuple[float, float]] = []
+        for item in raw:
+            try:
+                s, e = float(item["start"]), float(item["end"])
+            except (TypeError, ValueError, KeyError):
+                return web.json_response({"error": _err("分镜时间格式错误", "Invalid segment time format")}, status=400)
+            if not all(v == v and abs(v) != float("inf") for v in (s, e)):
+                return web.json_response({"error": _err("分镜时间格式错误", "Invalid segment time format")}, status=400)
+            if not (0 <= s < e):
+                return web.json_response({"error": _err("分镜须满足 0 ≤ 开始 < 结束", "Segments must satisfy 0 <= start < end")}, status=400)
+            if duration and e > duration + 0.05:
+                return web.json_response({"error": _err("分镜结束时间超出视频时长", "Segment end exceeds video duration")}, status=400)
+            segments.append((s, e))
+        has_audio = bool((info or {}).get("has_audio"))
+        cmds: list[tuple[str, list[str]]] = []
+        for i, (s, e) in enumerate(segments):
+            label = f"分镜 {i + 1} · {s:.2f}–{e:.2f} 秒"
+            segment_path = add_out("mp4", "asset-video", label, e - s)
+            one = base + [
+                "-ss", "%.6f" % s, "-i", src, "-t", "%.6f" % (e - s),
+                "-map", "0:V:0",
+            ]
+            if has_audio:
+                one += ["-map", "0:a:0?"]
+            one += [
+                "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+                "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-pix_fmt", "yuv420p",
+                "-c:a", "aac", "-b:a", "192k",
+                "-f", "mp4", "-movflags", "+faststart", segment_path,
+            ]
+            cmds.append((segment_path, one))
+        try:
+            for segment_path, one in cmds:
+                await _run_media_cmd(one, _VIDEO_PROCESS_TIMEOUT)
+                if not os.path.isfile(segment_path) or os.path.getsize(segment_path) < 128:
+                    raise RuntimeError(_err("生成的分镜文件为空", "Generated segment is empty"))
+        except Exception as exc:
+            _cleanup_outputs([item["path"] for item in made])
+            return web.json_response({"error": _err(f"分镜导出失败: {exc}", f"Split export failed: {exc}")}, status=500)
+        files = [
+            _output_asset(
+                item["name"],
+                f"{stem} · {item['label']}.{item['ext']}",
+                item["role"], item["duration"],
+            )
+            for item in made
+        ]
+        return web.json_response({"ok": True, "action": "splitExport", "files": files})
 
     if action == "extractAudio":
         if info is not None and not info["has_audio"]:

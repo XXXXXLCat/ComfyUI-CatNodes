@@ -3005,6 +3005,28 @@ var infcanvas_tools_default = `\r
 .ict-mirror-btn.is-wide { grid-column:span 2; }\r
 .ict-mirror-btn svg, .ict-mirror-btn i { flex:0 0 auto; }\r
 .ict-mirror-preview img { max-height:100%; transition:transform .15s ease; }\r
+/* Scene split: shot cards grid, selection via .is-selected (icon toggled in JS). */\r
+.ict-scene-status { margin:0 0 8px; color:var(--icn2-fg, #ffffff); font-size:var(--text-sm, 14px); }\r
+.ict-scene-count { margin:0 0 10px; color:var(--icn2-muted, #8a8a8a); font-size:var(--text-xs, 12px); }\r
+.ict-scene-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px; }\r
+.ict-scene-grid[hidden] { display:none; }\r
+.ict-scene-card { position:relative; display:flex; flex-direction:column; overflow:hidden; padding:0;\r
+  box-sizing:border-box; border:1px solid var(--ic-line, #494a50); border-radius:var(--icn2-r-md, 6px);\r
+  background:var(--icn2-secondary, #262729); color:var(--icn2-fg, #ffffff);\r
+  font-family:inherit; text-align:left; cursor:pointer; transition:border-color .12s ease, background-color .12s ease; }\r
+.ict-scene-card:hover, .ict-scene-card:focus-visible { outline:none; border-color:var(--icn2-ring, #8a8a8a); }\r
+.ict-scene-card.is-selected { border-color:var(--icn2-primary, #0b8ce9); }\r
+.ict-scene-thumb { display:block; width:100%; aspect-ratio:16 / 9; background:var(--icn2-accent, #313235); }\r
+.ict-scene-thumb img { display:block; width:100%; height:100%; object-fit:cover; }\r
+.ict-scene-meta { display:flex; flex-direction:column; gap:2px; padding:6px 8px 8px;\r
+  font-size:var(--text-xs, 12px); }\r
+.ict-scene-meta b { color:var(--icn2-primary, #0b8ce9); }\r
+.ict-scene-meta span { color:var(--icn2-fg, #ffffff); font-variant-numeric:tabular-nums; }\r
+.ict-scene-meta small { color:var(--icn2-muted, #8a8a8a); font-size:var(--text-2xs, 10px); }\r
+.ict-scene-check { position:absolute; top:6px; right:6px; width:22px; height:22px;\r
+  display:flex; align-items:center; justify-content:center; border-radius:var(--icn2-r, 4px);\r
+  background:color-mix(in srgb, var(--color-black) 60%, transparent); color:var(--icn2-fg, #ffffff); }\r
+.ict-scene-card.is-selected .ict-scene-check { background:var(--icn2-primary, #0b8ce9); color:var(--foreground, #fff); }\r
 .ict-lut-block { margin-top:2px; padding-top:12px; border-top:1px solid var(--ic-line, #494a50);\r
   display:flex; flex-direction:column; gap:8px; }\r
 .ict-lut-file { display:flex; align-items:center; gap:6px; }\r

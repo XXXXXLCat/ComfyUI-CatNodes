@@ -542,6 +542,164 @@
     });
   };
 
+  /* --------------------------- video: scene split ------------------------ */
+  /* Two-phase tool. Phase 1 calls the backend's FFmpeg scene detector and
+     gets back {index,start,end} boundaries (no files, no nodes). The dialog
+     paints a first-frame thumbnail per shot by seeking an offscreen video
+     (same canvas technique as buildThumbs — no extra backend files). Phase 2
+     sends the ticked segments to splitExport, which returns one mp4 per shot
+     that spawnRefs turns into nodes; the source node is never touched. */
+  function sceneThumbs(src, scenes, cb, alive) {
+    const video = document.createElement("video");
+    video.muted = true; video.preload = "auto"; video.playsInline = true; video.src = src;
+    const out = new Array(scenes.length).fill("");
+    let index = 0, done = false, started = false, timer = 0;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (timer) clearTimeout(timer);
+      video.onloadeddata = video.onseeked = video.onerror = null;
+      try { video.removeAttribute("src"); video.load(); } catch (error) { /* optional */ }
+      cb(out);
+    };
+    const shot = () => {
+      if (done) return;
+      if ((alive && !alive()) || index >= scenes.length) return finish();
+      const seek = scenes[index].start + Math.min(0.15, Math.max(0, (scenes[index].end - scenes[index].start) / 2));
+      try { video.currentTime = seek; } catch (error) { index += 1; shot(); }
+    };
+    const start = () => {
+      if (started || done) return;
+      started = true;
+      shot();
+    };
+    timer = setTimeout(finish, 30000);
+    video.addEventListener("loadeddata", start);
+    if (video.readyState >= 2) setTimeout(start, 0);
+    video.addEventListener("seeked", () => {
+      if (done || (alive && !alive())) return finish();
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = 160; canvas.height = 90;
+        const scale = Math.max(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
+        const w = video.videoWidth * scale, h = video.videoHeight * scale;
+        canvas.getContext("2d").drawImage(video, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+        out[index] = canvas.toDataURL("image/jpeg", 0.72);
+      } catch (error) { /* placeholder */ }
+      index += 1; shot();
+    });
+    video.addEventListener("error", finish);
+  }
+
+  R.splitScenes = (ctx) => {
+    const S = { scenes: [], selected: new Set(), ready: false };
+    let ui = null;
+
+    const applyText = () => t("media.sceneExportSelected", { n: S.selected.size });
+    const paintCount = () => {
+      const count = ui?.body?.querySelector(".ict-scene-count");
+      if (count) count.textContent = t("media.sceneSelected", { n: S.selected.size, total: S.scenes.length });
+      const applyBtn = ui?.panel?.querySelector(".ict-btn--primary");
+      if (applyBtn && !applyBtn.disabled) applyBtn.textContent = applyText();
+      ui?.setApplyEnabled?.(S.ready && S.selected.size > 0);
+    };
+    const syncCards = () => {
+      for (const card of ui?.body?.querySelectorAll(".ict-scene-card") || []) {
+        const i = Number(card.dataset.index);
+        const on = S.selected.has(i);
+        card.classList.toggle("is-selected", on);
+        const icon = card.querySelector(".ict-scene-check i");
+        if (icon) icon.className = on ? "icon-[lucide--circle-check]" : "icon-[lucide--circle]";
+      }
+      paintCount();
+    };
+    const renderGrid = (thumbs) => {
+      const grid = ui?.body?.querySelector(".ict-scene-grid");
+      if (!grid) return;
+      grid.innerHTML = "";
+      S.scenes.forEach((scene, i) => {
+        const card = document.createElement("button");
+        card.type = "button"; card.className = "ict-scene-card"; card.dataset.index = String(i);
+        const duration = Math.max(0, scene.end - scene.start);
+        card.innerHTML =
+          '<span class="ict-scene-thumb"><img alt="" /></span>' +
+          '<span class="ict-scene-meta"><b>#' + (i + 1) + '</b>' +
+            '<span>' + fmt(scene.start) + ' – ' + fmt(scene.end) + '</span>' +
+            '<small>' + duration.toFixed(2) + t("media.s") + '</small></span>' +
+          '<span class="ict-scene-check"><i class="icon-[lucide--circle]"></i></span>';
+        const img = card.querySelector("img");
+        if (thumbs[i]) img.src = thumbs[i];
+        card.addEventListener("click", () => {
+          if (S.selected.has(i)) S.selected.delete(i); else S.selected.add(i);
+          syncCards();
+        });
+        grid.appendChild(card);
+      });
+      syncCards();
+    };
+
+    const detect = async () => {
+      const ok = await getProbes().video.check();
+      ui.setApiReady(ok); ui.setWarn(ok);
+      if (!ok) { ui.setStatus(t("media.backendApiNotReadyRestart"), true); return; }
+      try {
+        const data = await T().request(T().API_VIDEO,
+          { ref: refOf(ctx), action: "detectScenes", threshold: 0.35 }, ui.signal);
+        S.scenes = Array.isArray(data.scenes) ? data.scenes : [];
+        S.scenes.forEach((_, i) => S.selected.add(i));
+        const status = ui.body.querySelector(".ict-scene-status");
+        const grid = ui.body.querySelector(".ict-scene-grid");
+        if (!S.scenes.length) {
+          if (status) { status.hidden = false; status.textContent = t("media.sceneNoScenes"); }
+          ui.setApplyEnabled(false);
+          return;
+        }
+        if (status) status.hidden = true;
+        if (grid) grid.hidden = false;
+        const mediaUrl = (NS.api?.resolveMediaUrl
+          ? await NS.api.resolveMediaUrl(ctxAsset(ctx)).catch(() => ctx.url)
+          : ctx.url) || ctx.url;
+        if (mediaUrl) sceneThumbs(mediaUrl, S.scenes, renderGrid, () => !!ui?.mask?.isConnected);
+        else renderGrid([]);
+        S.ready = true;
+        paintCount();
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+        ui.setStatus(String(error?.message || error), true);
+        toast("error", t("media.sceneSplit") + t("media.processingFailed"), String(error?.message || error));
+      }
+    };
+
+    T().openModal({
+      title: t("media.sceneSplit"), sub: t("media.sceneSplitSub"), width: 880,
+      applyLabel: applyText(), applyDisabled: true, cancelLabel: t("api.cancel"),
+      extraFoot: [
+        { label: t("media.sceneSelectAll"), onClick: () => {
+          S.scenes.forEach((_, i) => S.selected.add(i)); syncCards();
+        } },
+        { label: t("media.sceneSelectNone"), onClick: () => { S.selected.clear(); syncCards(); } },
+      ],
+      warn: T().warnHtml(),
+      build(body, modalUi) {
+        ui = modalUi;
+        body.innerHTML =
+          '<p class="ict-scene-status">' + t("media.sceneDetecting") + '</p>' +
+          '<div class="ict-scene-count"></div>' +
+          '<div class="ict-scene-grid" hidden></div>';
+        detect();
+      },
+      onApply: () => {
+        const segments = S.scenes
+          .filter((_, i) => S.selected.has(i))
+          .map((s) => ({ start: s.start, end: s.end }));
+        if (!segments.length) throw new Error(t("media.sceneNoScenes"));
+        return runRequest(T().API_VIDEO,
+          { ref: refOf(ctx), action: "splitExport", segments }, ctx,
+          { ui, kind: "video", label: t("media.sceneSplit"), done: t("media.sceneExportedNodes") });
+      },
+    });
+  };
+
   /* --------------------------- audio: waveform --------------------------- */
 
   function offlineContext(length = 1, sampleRate = 44100) {
