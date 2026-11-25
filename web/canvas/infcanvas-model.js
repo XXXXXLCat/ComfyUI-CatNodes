@@ -493,6 +493,18 @@ function switchDoc(id) {
   }
 }
 
+/* A text node keeps what the user is typing in the component's local draft
+   and only writes it into data.text on blur / Esc. Neither Ctrl+S nor a
+   refresh moves the caret, so saving from the keyboard used to serialise an
+   empty node. Everyone who is about to READ the graph (explicit save, canvas
+   exit, page unload) asks the open editor to commit first. Published on NS so
+   keys.js and the node component share one implementation and one event. */
+function flushPendingEdits() {
+  try { window.dispatchEvent(new CustomEvent("infcanvas:commit-edit")); }
+  catch (error) { /* non-browser caller (offline checks): nothing to flush */ }
+}
+NS.flushTextEdit = flushPendingEdits;
+
 async function saveActive(askName = false, docOverride = null, silent = false, expectedGen = null) {
   const doc = docOverride || activeDoc();
   if (!doc || !state.docs.includes(doc)) return false;
@@ -505,6 +517,7 @@ async function saveActive(askName = false, docOverride = null, silent = false, e
     if (input === null || !String(input).trim()) return false;
     name = String(input).trim();
   }
+  flushPendingEdits();
   if (doc.id === state.activeId) syncDocFromFlow(doc);
   const payload = {
     version: 2, engine: "vueflow",

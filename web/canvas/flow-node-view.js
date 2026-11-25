@@ -1586,6 +1586,24 @@ const IcNode = {
       editing.value = false;
       patch({ text: draft.value });
     };
+    /* The draft used to reach data.text ONLY on blur / Esc. Neither Ctrl+S
+       nor a page refresh takes the caret out of the textarea, so both wrote
+       an empty node while the typed text was still in `draft`. Flush on the
+       three boundaries where the value is about to be read: an explicit save
+       or a canvas exit (dispatched by the model / keys) and the page
+       unloading (refresh, tab close). */
+    const flushTextEdit = () => {
+      try { commitEdit(); } catch (error) { /* node already unmounting */ }
+    };
+    onMounted(() => {
+      window.addEventListener("infcanvas:commit-edit", flushTextEdit);
+      window.addEventListener("pagehide", flushTextEdit);
+    });
+    onBeforeUnmount(() => {
+      flushTextEdit();
+      window.removeEventListener("infcanvas:commit-edit", flushTextEdit);
+      window.removeEventListener("pagehide", flushTextEdit);
+    });
     const onEditKey = (event) => {
       if (event.key === "Escape" || event.key === "Esc") {
         event.preventDefault();
