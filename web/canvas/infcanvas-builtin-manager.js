@@ -170,6 +170,185 @@
     return btn;
   }
 
+  /* ---- Per-user default parameters for a read-only built-in ----------------
+   * The panel reuses the same utility classes as the API config dialog's
+   * value controls (bg-input / rounded-md / text-xs, native <select>, and the
+   * file's own makeSwitch). No new CSS, no custom colours. Fields are loaded
+   * lazily on first expand so opening the manager stays cheap.
+   */
+  const EDITABLE_TYPES = ["text", "textarea", "number", "slider", "select", "switch", "random"];
+  const CONTROL_CLASSES = "h-7 min-w-0 flex-1 rounded-md border-0 bg-input px-2 text-xs "
+    + "text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
+  function labelText(raw, fallback) {
+    const text = String(raw || "").trim();
+    return text.startsWith("field.") ? t(text) : (text || fallback);
+  }
+
+  /* Build one live control bound to `field.default`; `onInput` writes through
+     so the Save button can serialise every field without re-reading the DOM. */
+  function makeFieldControl(field, onInput) {
+    const type = field.type;
+    if (type === "switch") {
+      const wrap = el("div", "flex items-center justify-end");
+      /* makeSwitch passes (checked, btn, knob) to the callback and leaves the
+         visual state to us — update both datasets right here so the knob tracks
+         the click immediately. */
+      const sw = makeSwitch(field.default === true || field.default === "true",
+        (on, btn, knob) => {
+          field.default = on;
+          btn.dataset.state = on ? "checked" : "unchecked";
+          knob.dataset.state = btn.dataset.state;
+          onInput();
+        });
+      wrap.appendChild(sw);
+      return { node: wrap };
+    }
+    if (type === "select") {
+      const select = el("select", CONTROL_CLASSES);
+      const options = Array.isArray(field.options) ? field.options : [];
+      const current = String(field.default ?? "");
+      if (!options.includes(current)) {
+        const blank = document.createElement("option");
+        blank.value = current; blank.textContent = current;
+        select.appendChild(blank);
+      }
+      for (const value of options) {
+        const option = document.createElement("option");
+        option.value = value; option.textContent = value;
+        if (value === current) option.selected = true;
+        select.appendChild(option);
+      }
+      select.addEventListener("change", () => { field.default = select.value; onInput(); });
+      return { node: select };
+    }
+    if (["number", "slider", "random"].includes(type)) {
+      const input = el("input", CONTROL_CLASSES);
+      input.type = "number";
+      input.value = field.default == null ? "" : String(field.default);
+      if (typeof field.min === "number") input.min = String(field.min);
+      if (typeof field.max === "number") input.max = String(field.max);
+      if (typeof field.step === "number") input.step = String(field.step);
+      else input.step = "any";
+      input.spellcheck = false;
+      input.addEventListener("change", () => { field.default = input.value; onInput(); });
+      return { node: input };
+    }
+    const input = el("input", CONTROL_CLASSES);
+    input.type = "text";
+    input.value = field.default == null ? "" : String(field.default);
+    input.spellcheck = false;
+    input.addEventListener("change", () => { field.default = input.value; onInput(); });
+    return { node: input };
+  }
+
+  function makeParamsButton(item, row) {
+    const btn = el("button", BTN
+      + " h-8 shrink-0 gap-1 rounded-lg bg-secondary px-2 py-1 text-xs text-foreground hover:bg-accent");
+    btn.type = "button";
+    btn.appendChild(el("i", "icon-[lucide--sliders-horizontal] size-3.5"));
+    btn.appendChild(el("span", "", t("builtinMgr.params")));
+    let panel = null;
+    let loaded = false;
+    /* onInput is a no-op: makeFieldControl writes the new value straight back
+       into the field object, so Save can serialise it without a dirty flag. */
+    const markDirty = () => {};
+
+    const save = async () => {
+      if (pending) return;
+      pending = true;
+      try {
+        const fields = (panel?._fields || [])
+          .filter((f) => EDITABLE_TYPES.includes(f.type))
+          .map((f) => ({ nodeId: f.nodeId, key: f.key, default: f.default }));
+        const data = await api("/builtins/" + encodeURIComponent(item.id) + "/defaults",
+          jsonOptions("POST", { fields }));
+        if (data?.fields) {
+          panel._fields = data.fields;
+          paintFields();
+        }
+        NS.api?.toast?.("success", t("builtinMgr.paramsSaved"));
+        changed();
+      } catch (error) {
+        notifyError(error?.message || t("builtinMgr.saveFailed"));
+      } finally {
+        pending = false;
+      }
+    };
+
+    function paintFields() {
+      const box = panel?.querySelector?.("[data-builtin-params-fields]");
+      if (!box) return;
+      box.replaceChildren();
+      const fields = (panel._fields || []).filter((f) => EDITABLE_TYPES.includes(f.type));
+      if (!fields.length) {
+        box.appendChild(el("p", "py-2 text-xs text-muted-foreground", t("builtinMgr.paramsNone")));
+        return;
+      }
+      for (const field of fields) {
+        const line = el("div", "flex items-center gap-2 py-1");
+        const label = el("span", "w-32 shrink-0 truncate text-xs text-muted-foreground",
+          labelText(field.label, field.key));
+        bindTip(label, () => labelText(field.label, field.key), "top");
+        line.appendChild(label);
+        const control = makeFieldControl(field, markDirty);
+        line.appendChild(control.node);
+        if (field.overridden === true) {
+          const restore = el("button", BTN
+            + " h-7 shrink-0 rounded-md bg-transparent px-2 text-xs text-muted-foreground hover:bg-accent",
+          t("builtinMgr.paramsRestore"));
+          restore.type = "button";
+          restore.addEventListener("click", () => {
+            field.default = field.original;
+            paintFields();
+            NS.api?.toast?.("success", t("builtinMgr.paramsRestored"));
+          });
+          line.appendChild(restore);
+        }
+        box.appendChild(line);
+      }
+    }
+
+    async function ensureLoaded() {
+      if (loaded) return;
+      const box = panel?.querySelector?.("[data-builtin-params-fields]");
+      if (box) box.appendChild(el("p", "py-2 text-xs text-muted-foreground", "…"));
+      try {
+        const data = await api("/builtins/" + encodeURIComponent(item.id) + "/defaults");
+        panel._fields = Array.isArray(data?.fields) ? data.fields : [];
+        loaded = true;
+        paintFields();
+      } catch (error) {
+        notifyError(error?.message || t("builtinMgr.loadFailed"));
+        if (box) box.replaceChildren();
+      }
+    }
+
+    btn.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      if (!panel) {
+        panel = el("div", "mt-3 border-t pt-4");
+        panel.appendChild(el("p", "mb-2 text-xs leading-relaxed text-muted-foreground",
+          t("builtinMgr.paramsHint")));
+        const fieldsBox = el("div", "flex flex-col gap-0.5");
+        fieldsBox.setAttribute("data-builtin-params-fields", "");
+        panel.appendChild(fieldsBox);
+        const foot = el("div", "mt-3 flex justify-end");
+        const saveBtn = el("button", BTN
+          + " h-8 rounded-lg bg-primary px-3 text-xs text-primary-foreground hover:bg-primary/90",
+        t("builtinMgr.paramsSave"));
+        saveBtn.type = "button";
+        saveBtn.addEventListener("click", (e) => { e.stopPropagation(); save(); });
+        foot.appendChild(saveBtn);
+        panel.appendChild(foot);
+        row.appendChild(panel);
+      }
+      panel.hidden = !panel.hidden;
+      if (!panel.hidden) await ensureLoaded();
+    });
+    return btn;
+  }
+
   function renderRow(item) {
     const row = el("div", "mb-2 rounded-lg border bg-card p-4");
     /* Header: display name + (default pill | set-default button) + visibility switch.
@@ -178,6 +357,10 @@
     const head = el("div", "flex items-center gap-2");
     const name = el("span", "min-w-0 flex-1 truncate text-sm text-foreground", item.name);
     head.appendChild(name);
+    /* Per-user default editor. Only built-ins can be edited here (user files
+       shadow them and have their own inspector), so every manager row gets
+       the button; the panel loads fields lazily on first expand. */
+    head.appendChild(makeParamsButton(item, row));
     if (item.is_default) {
       const pill = el("span", "shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-sm font-bold text-foreground",
         t("builtinMgr.default"));

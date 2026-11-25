@@ -618,8 +618,17 @@ def _read_workflow_data(name: str) -> dict | None:
 
 
 def _read_effective_workflow(name: str) -> dict | None:
-    """User file wins; shipped template is the fallback."""
-    return _read_workflow_data(name) or _read_json_object(_builtin_workflow_path(name))
+    """User file wins; shipped template is the fallback.
+
+    For a built-in-only workflow the user's saved field-default overrides are
+    applied on top of the shipped template in memory. The template itself is
+    never written, and a user file with the same stem shadows it completely —
+    those overrides are for built-ins only and never touch user workflows.
+    """
+    data = _read_workflow_data(name) or _read_json_object(_builtin_workflow_path(name))
+    if data is not None and _is_builtin_only(name):
+        _apply_builtin_defaults(name, data)
+    return data
 
 
 def _api_nodes(data: Any) -> dict:
@@ -640,6 +649,13 @@ def _is_api_workflow(data: Any) -> bool:
 # Bundled templates are read-only, so a user's "hide this builtin" choice is
 # stored in api_settings.json as a list of stems (not in the shipped files).
 VISIBILITY_KEY = "hidden_builtins"
+
+# Per-user edited defaults for exposed fields of read-only bundled workflows.
+# api_settings.json -> {"builtin_field_defaults": {"<stem>": {"<nodeId>:<key>": value}}}
+# The shipped JSON is never written: overrides are applied on top of it at read
+# time (_read_effective_workflow), so every consumer — the generator node, the
+# fields panel and the run itself — sees the same effective value.
+BUILTIN_DEFAULTS_KEY = "builtin_field_defaults"
 
 # Node class -> ComfyUI model folder (folder_paths key). Derived from the actual
 # loader nodes in the bundled workflows and verified against extra_model_paths.yaml:
@@ -1110,6 +1126,41 @@ def _apply_field_defaults(workflow: dict, raw: Any, fields: list[dict]) -> int:
     return changed
 
 
+def _builtin_defaults_key(node_id: str, key: str) -> str:
+    """Composite key stored in api_settings for one exposed built-in field."""
+    return str(node_id) + ":" + str(key)
+
+
+def _load_builtin_defaults() -> dict:
+    """Raw builtin_field_defaults map from per-user api_settings."""
+    raw = _load_api_settings().get(BUILTIN_DEFAULTS_KEY)
+    return raw if isinstance(raw, dict) else {}
+
+
+def _apply_builtin_defaults(name: str, workflow: dict) -> int:
+    """Overlay saved per-user defaults onto an in-memory built-in workflow.
+
+    Only fields still exposed in the shipped sidecar are honoured; values are
+    coerced to the template's own types and clamped to its min/max exactly like
+    the user-workflow editor. Returns how many inputs were changed.
+    """
+    saved = _load_builtin_defaults().get(name)
+    if not isinstance(saved, dict) or not saved:
+        return 0
+    fields = _clean_fields(_load_fields(name), workflow)
+    allowed = {(field["nodeId"], field["key"]): field for field in fields}
+    # Reuse the editor's coercion/clamp routine by feeding it field-shaped items.
+    raw: list[dict] = []
+    for key, value in saved.items():
+        # ComfyUI UI-format node ids contain a colon themselves (e.g. "30:24"),
+        # so split from the RIGHT: the input key never has a colon.
+        parts = str(key).rsplit(":", 1)
+        if len(parts) != 2 or (parts[0], parts[1]) not in allowed:
+            continue
+        raw.append({"nodeId": parts[0], "key": parts[1], "default": value})
+    return _apply_field_defaults(workflow, raw, fields)
+
+
 def _node_input_options(class_type: str, key: str) -> dict:
     """Live options (min / max / step) for one input, straight from the node class.
 
@@ -1433,6 +1484,109 @@ async def api_builtin_visibility(request: web.Request) -> web.Response:
 OPENABLE_MODEL_FOLDERS = frozenset(
     set(MODEL_FOLDER_BY_NODE.values()) | set(MODEL_FOLDER_BY_KEY.values())
 ) - {"other"}
+
+
+def _public_builtin_fields(name: str, template: dict) -> list[dict]:
+    """Effective fields with the shipped original + override flag attached.
+
+    `default` is what runs today (saved override applied); `original` is the
+    value baked into the read-only template, so the UI can offer "restore"
+    without touching the shipped file.
+    """
+    fields = _public_fields(name, _read_effective_workflow(name) or template)
+    nodes = _api_nodes(template)
+    saved = _load_builtin_defaults().get(name) or {}
+    if not isinstance(saved, dict):
+        saved = {}
+    for field in fields:
+        original = ((nodes.get(field["nodeId"]) or {}).get("inputs") or {}).get(field["key"])
+        field["original"] = original if isinstance(original, (str, int, float, bool)) else ""
+        field["overridden"] = _builtin_defaults_key(field["nodeId"], field["key"]) in saved
+    return fields
+
+
+async def api_get_builtin_defaults(request: web.Request) -> web.Response:
+    """Exposed fields of a built-in with their effective (saved-overlaid) values.
+
+    Read-only template; overrides live in per-user api_settings. A user file
+    with the same stem shadows the built-in, so there is nothing to edit there.
+    """
+    name = _safe_workflow_name(request.match_info.get("name", ""))
+    if not _is_builtin_only(name):
+        return web.json_response({"error": _err(
+            "内置工作流不存在", "Built-in workflow not found")}, status=404)
+    template = _read_json_object(_builtin_workflow_path(name))
+    if template is None:
+        return web.json_response({"error": _err(
+            "工作流不存在", "Workflow not found")}, status=404)
+    return web.json_response({
+        "name": name,
+        "fields": _public_builtin_fields(name, template),
+    })
+
+
+async def api_save_builtin_defaults(request: web.Request) -> web.Response:
+    """Save per-user overrides for exposed fields of a read-only built-in.
+
+    Only fields declared in the shipped sidecar can be changed; values are
+    coerced/clamped by the same routine used for user workflows. The template
+    JSON on disk is never touched.
+    """
+    name = _safe_workflow_name(request.match_info.get("name", ""))
+    if not _is_builtin_only(name):
+        return web.json_response({"error": _err(
+            "内置工作流不存在", "Built-in workflow not found")}, status=404)
+    workflow = _read_json_object(_builtin_workflow_path(name))
+    if workflow is None:
+        return web.json_response({"error": _err(
+            "工作流不存在", "Workflow not found")}, status=404)
+    try:
+        payload = await request.json()
+    except Exception:
+        return web.json_response({"error": _err(
+            "请求体不是合法 JSON", "Invalid JSON body")}, status=400)
+    raw = payload.get("fields") if isinstance(payload, dict) else None
+    if not isinstance(raw, list):
+        return web.json_response({"error": _err(
+            "请求字段格式不正确", "Invalid fields payload")}, status=400)
+    fields = _clean_fields(_load_fields(name), workflow)
+    allowed = {(field["nodeId"], field["key"]): field for field in fields}
+    nodes = _api_nodes(workflow)
+    saved = dict(_load_builtin_defaults().get(name) or {})
+    if not isinstance(saved, dict):
+        saved = {}
+    for item in raw:
+        if not isinstance(item, dict) or "default" not in item:
+            continue
+        node_id = str(item.get("nodeId") or "")
+        key = str(item.get("key") or "")
+        spec = allowed.get((node_id, key))
+        if spec is None:
+            continue
+        current = ((nodes.get(node_id) or {}).get("inputs") or {}).get(key)
+        # A throwaway single-input workflow lets _apply_field_defaults do the
+        # coercion + min/max clamp; we then copy back only this one value.
+        probe: dict[str, Any] = {"n": {"class_type": "", "inputs": {key: current}}}
+        _apply_field_defaults(probe, [{
+            "nodeId": "n", "key": key, "default": item.get("default"),
+        }], [{
+            **spec, "nodeId": "n", "key": key,
+        }])
+        composite = _builtin_defaults_key(node_id, key)
+        value = probe["n"]["inputs"][key]
+        if value == current and isinstance(value, bool) == isinstance(current, bool):
+            # Back to the shipped value: drop the override so the template is
+            # the single source of truth again.
+            saved.pop(composite, None)
+        else:
+            saved[composite] = value
+    all_defaults = _load_builtin_defaults()
+    all_defaults[name] = saved
+    _save_api_settings(**{BUILTIN_DEFAULTS_KEY: all_defaults})
+    return web.json_response({
+        "name": name,
+        "fields": _public_builtin_fields(name, workflow),
+    })
 
 
 async def api_model_folder_path(request: web.Request) -> web.Response:
@@ -2792,6 +2946,8 @@ def register_routes() -> None:
         ("GET", "/api/infcanvas/builtins/manage", api_builtin_manage),
         ("POST", "/api/infcanvas/builtins/folder-path", api_model_folder_path),
         ("POST", "/api/infcanvas/builtins/{name}/visibility", api_builtin_visibility),
+        ("GET", "/api/infcanvas/builtins/{name}/defaults", api_get_builtin_defaults),
+        ("POST", "/api/infcanvas/builtins/{name}/defaults", api_save_builtin_defaults),
         ("PUT", "/api/infcanvas/workflows/order", api_reorder_workflows),
         ("POST", "/api/infcanvas/workflows", api_save_workflow),
         ("GET", "/api/infcanvas/workflows/{name}/fields", api_get_fields),
