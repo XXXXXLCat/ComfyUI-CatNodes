@@ -48,10 +48,6 @@
         "18:17",
         0
       ],
-      "images.image1": [
-        "27",
-        0
-      ],
       "system_prompt": [
         "18:14",
         0
@@ -283,15 +279,6 @@
     "class_type": "ResolutionSelector",
     "_meta": {
       "title": "Resolution Selector"
-    }
-  },
-  "27": {
-    "inputs": {
-      "image": "Qwen_image_2.1_00292.png"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "Load Image"
     }
   },
   "_mediaCaps": {
