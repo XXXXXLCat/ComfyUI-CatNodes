@@ -191,6 +191,9 @@ async function exit() {
   }
   state.exiting = true;
   try {
+    /* Leaving the canvas serialises every open doc; flush an in-progress text
+       edit first, otherwise the typed text dies with the closed editor. */
+    NS.flushTextEdit?.();
     for (const doc of Array.from(state.docs)) {
       if (doc.dirty) {
         const choice = await confirmDialog({
